@@ -1,21 +1,14 @@
 import { useState } from "react";
-import { Search, ShoppingCart, Heart, Home, LogIn, LogOut } from "lucide-react";
+import { Search, ShoppingCart, Heart, Home } from "lucide-react";
 import { CartProvider, useCart } from "@/app/context/CartContext";
 import { ShopHome } from "@/app/components/shop/ShopHome";
 import { CartPage } from "@/app/components/shop/Cart";
 import { OrderTrackingPage } from "@/app/components/shop/OrderTracking";
-import { supabase } from "@/services/supabase";
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<"shop" | "cart" | "order">("shop");
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
-  const [user, setUser] = useState<any>(null);
   const { cartCount } = useCart();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-  };
 
   const handleViewOrder = (orderId: string) => {
     setSelectedOrderId(orderId);
@@ -42,7 +35,7 @@ function AppContent() {
               </span>
             </button>
 
-            {/* Search - Only on shop page */}
+            {/* Search - Hidden for cart and order pages */}
             {currentPage === "shop" && (
               <div className="flex-1 max-w-xl">
                 <div className="flex items-center border border-border rounded-md overflow-hidden bg-input-background">
@@ -85,23 +78,6 @@ function AppContent() {
                 </div>
                 <span className="text-xs text-muted-foreground group-hover:text-primary">Giỏ hàng</span>
               </button>
-              {user ? (
-                <button
-                  onClick={handleLogout}
-                  className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group"
-                >
-                  <LogOut size={20} strokeWidth={1.5} />
-                  <span className="text-xs text-muted-foreground group-hover:text-primary">Đăng Xuất</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => {/* Placeholder for login */}}
-                  className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group"
-                >
-                  <LogIn size={20} strokeWidth={1.5} />
-                  <span className="text-xs text-muted-foreground group-hover:text-primary">Đăng Nhập</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
