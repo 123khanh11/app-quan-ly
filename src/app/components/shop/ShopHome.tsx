@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Heart, ShoppingCart, Search } from 'lucide-react'
-import { getProducts, Product } from '@/services/supabase'
+import { Heart, ShoppingCart, Search, LogIn, User, LogOut } from 'lucide-react'
+import { getProducts, Product, supabase } from '@/services/supabase'
 import { useCart } from '@/app/context/CartContext'
+import Link from 'next/link'
 
 export function ShopHome() {
   const [products, setProducts] = useState<Product[]>([])
@@ -9,12 +10,38 @@ export function ShopHome() {
   const [searchQuery, setSearchQuery] = useState('')
   const [wishlist, setWishlist] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
   const { addToCart } = useCart()
 
   // Load wishlist from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('wishlist')
     if (saved) setWishlist(JSON.parse(saved))
+  }, [])
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        setUser(data.session.user)
+      }
+    }
+
+    checkAuth()
+
+    // Subscribe to auth changes
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setUser(session.user)
+      } else {
+        setUser(null)
+      }
+    })
+
+    return () => {
+      subscription?.subscription.unsubscribe()
+    }
   }, [])
 
   // Fetch products
@@ -57,6 +84,11 @@ export function ShopHome() {
     localStorage.setItem('wishlist', JSON.stringify(updated))
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+  }
+
   const handleAddToCart = (product: Product) => {
     addToCart({
       id: product.id,
@@ -71,6 +103,44 @@ export function ShopHome() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header Auth */}
+      <div className="bg-gradient-to-r from-primary to-orange-500 text-white py-3 px-4">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <h2 className="font-semibold">E-commerce Shop</h2>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <div className="flex items-center gap-2">
+                  {user.user_metadata?.avatar_url && (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt="Avatar"
+                      className="w-6 h-6 rounded-full"
+                    />
+                  )}
+                  <span className="text-sm">{user.user_metadata?.full_name || user.email}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1 text-sm hover:bg-white/20 px-2 py-1 rounded transition-colors"
+                >
+                  <LogOut size={16} />
+                  Đăng Xuất
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="flex items-center gap-1 text-sm hover:bg-white/20 px-2 py-1 rounded transition-colors"
+              >
+                <LogIn size={16} />
+                Đăng Nhập
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Hero Banner */}
       <section className="bg-gradient-to-r from-primary to-orange-500 text-white py-16">
         <div className="max-w-6xl mx-auto px-4 text-center">
