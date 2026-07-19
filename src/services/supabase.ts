@@ -99,8 +99,9 @@ export async function addOrderItem(itemData: {
 export async function getOrders(email?: string): Promise<Order[]> {
   let query = supabase.from('orders').select('*')
 
+  // Search in note field instead of customer_email
   if (email) {
-    query = query.ilike('customer_email', `%${email}%`)
+    query = query.ilike('note', `%${email}%`)
   }
 
   const { data, error } = await query.order('created_at', { ascending: false })
