@@ -60,11 +60,11 @@ export function ShopHome() {
   const handleAddToCart = (product: Product) => {
     addToCart({
       id: product.id,
-      variant_id: product.id,
+      product_id: product.id,
       name: product.name,
       price: product.price,
       quantity: 1,
-      image: product.image_url,
+      image_url: product.image_url,
     })
     alert('✅ Đã thêm vào giỏ hàng!')
   }

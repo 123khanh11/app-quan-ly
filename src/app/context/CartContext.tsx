@@ -4,8 +4,8 @@ import { CartItem } from '@/services/supabase'
 interface CartContextType {
   cartItems: CartItem[]
   addToCart: (item: CartItem) => void
-  removeFromCart: (variantId: string) => void
-  updateQuantity: (variantId: string, quantity: number) => void
+  removeFromCart: (productId: string) => void
+  updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
   cartTotal: number
   cartCount: number
@@ -35,10 +35,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = (item: CartItem) => {
     setCartItems((prevItems) => {
-      const existingItem = prevItems.find((i) => i.variant_id === item.variant_id)
+      const existingItem = prevItems.find((i) => i.product_id === item.product_id)
       if (existingItem) {
         return prevItems.map((i) =>
-          i.variant_id === item.variant_id
+          i.product_id === item.product_id
             ? { ...i, quantity: i.quantity + item.quantity }
             : i
         )
@@ -47,18 +47,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const removeFromCart = (variantId: string) => {
-    setCartItems((prevItems) => prevItems.filter((i) => i.variant_id !== variantId))
+  const removeFromCart = (productId: string) => {
+    setCartItems((prevItems) => prevItems.filter((i) => i.product_id !== productId))
   }
 
-  const updateQuantity = (variantId: string, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(variantId)
+      removeFromCart(productId)
       return
     }
     setCartItems((prevItems) =>
       prevItems.map((i) =>
-        i.variant_id === variantId ? { ...i, quantity } : i
+        i.product_id === productId ? { ...i, quantity } : i
       )
     )
   }

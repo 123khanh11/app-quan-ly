@@ -20,23 +20,24 @@ export interface Product {
 
 export interface CartItem {
   id: string
-  variant_id: string
+  product_id: string
   name: string
   price: number
   quantity: number
-  image?: string
+  image_url?: string
 }
 
 export interface Order {
   id: string
-  order_number: string
-  customer_name: string
-  customer_email: string
-  customer_phone: string
-  total_amount: number
+  order_number?: string
+  customer_name?: string
+  customer_email?: string
+  customer_phone?: string
+  total_amount?: number
   status: string
   created_at: string
-  updated_at: string
+  updated_at?: string
+  [key: string]: any  // Allow other fields from database
 }
 
 export interface OrderItem {
@@ -50,9 +51,9 @@ export interface OrderItem {
 
 // Order Functions
 export async function createOrder(orderData: {
-  customer_name: string
-  customer_email: string
-  customer_phone: string
+  customer_name?: string
+  customer_email?: string
+  customer_phone?: string
   total_amount: number
 }): Promise<Order> {
   const { data, error } = await supabase
@@ -150,12 +151,13 @@ export async function getProductById(id: string): Promise<Product> {
   return data
 }
 
-export async function searchProducts(query: string): Promise<Product[]> {
+export async function getProductImages(productId: string): Promise<any[]> {
   const { data, error } = await supabase
-    .from('products')
+    .from('product_images')
     .select('*')
-    .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-    .eq('active', true)
+    .eq('product_id', productId)
+    .order('is_primary', { ascending: false })
+    .order('sort_order', { ascending: true })
 
   if (error) throw new Error(error.message)
   return data || []

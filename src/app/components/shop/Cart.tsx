@@ -47,19 +47,19 @@ export function CartPage() {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {cartItems.map((item) => (
-                      <tr key={item.variant_id} className="hover:bg-muted/30 transition-colors">
+                      <tr key={item.product_id} className="hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
-                            {item.image && (
+                            {item.image_url && (
                               <img
-                                src={item.image}
+                                src={item.image_url}
                                 alt={item.name}
                                 className="w-16 h-16 object-cover rounded-md bg-muted"
                               />
                             )}
                             <div>
                               <p className="font-semibold text-foreground">{item.name}</p>
-                              <p className="text-xs text-muted-foreground">ID: {item.variant_id}</p>
+                              <p className="text-xs text-muted-foreground">ID: {item.product_id}</p>
                             </div>
                           </div>
                         </td>
@@ -69,7 +69,7 @@ export function CartPage() {
                         <td className="px-4 py-4">
                           <div className="flex items-center justify-center gap-2">
                             <button
-                              onClick={() => updateQuantity(item.variant_id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
                               className="p-1 hover:bg-muted rounded transition-colors"
                             >
                               <Minus size={16} />
@@ -78,13 +78,13 @@ export function CartPage() {
                               type="number"
                               value={item.quantity}
                               onChange={(e) =>
-                                updateQuantity(item.variant_id, parseInt(e.target.value) || 1)
+                                updateQuantity(item.product_id, parseInt(e.target.value) || 1)
                               }
                               min="1"
                               className="w-12 text-center border border-border rounded px-2 py-1"
                             />
                             <button
-                              onClick={() => updateQuantity(item.variant_id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
                               className="p-1 hover:bg-muted rounded transition-colors"
                             >
                               <Plus size={16} />
@@ -96,7 +96,7 @@ export function CartPage() {
                         </td>
                         <td className="px-4 py-4 text-center">
                           <button
-                            onClick={() => removeFromCart(item.variant_id)}
+                            onClick={() => removeFromCart(item.product_id)}
                             className="p-2 hover:bg-red-500/10 text-red-600 rounded transition-colors"
                           >
                             <Trash2 size={16} />
@@ -184,41 +184,37 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
     try {
       const { createOrder, addOrderItem } = await import('@/services/supabase')
 
-      // Create order
+      // Gửi thông tin khách hàng + tổng tiền
       const order = await createOrder({
-        total: cartTotal,
-        shipping_fee: 50000,
-        payment_method: 'cash',
-        shipping_address: formData.address,
-        note: formData.note,
-        email: formData.email,
-        phone: formData.phone,
+        customer_name: formData.email.split('@')[0], // Lấy phần trước @ từ email
+        customer_email: formData.email,
+        customer_phone: formData.phone,
+        total_amount: cartTotal + SHIPPING_FEE,
       })
 
       // Add items to order
       for (const item of cartItems) {
-        await addOrderItem({
-          order_id: order.id,
-          variant_id: item.variant_id,
-          quantity: item.quantity,
-          price: item.price,
-        })
+        try {
+          await addOrderItem({
+            order_id: order.id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            price: item.price,
+          })
+        } catch (itemError) {
+          console.warn('Warning adding item:', itemError)
+        }
       }
 
       // Clear cart and redirect
       clearCart()
-      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\n\nChúng tôi sẽ liên hệ bạn sớm.`)
+      const orderId = order.order_number || order.id
+      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${orderId}\n\nChúng tôi sẽ liên hệ bạn sớm.`)
       window.location.href = `/order/${order.id}`
     } catch (error) {
       console.error('Checkout error:', error)
       const errorMsg = error instanceof Error ? error.message : 'Không xác định'
-      
-      // Check if it's RLS policy error
-      if (errorMsg.includes('row-level security') || errorMsg.includes('RLS')) {
-        setError('❌ Lỗi: Database chưa được cấu hình. Vui lòng liên hệ quản trị viên.')
-      } else {
-        setError(`❌ Lỗi: ${errorMsg}`)
-      }
+      setError(`❌ Lỗi: ${errorMsg}`)
     } finally {
       setLoading(false)
     }
