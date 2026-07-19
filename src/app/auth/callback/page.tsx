@@ -1,10 +1,7 @@
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { supabase } from '@/services/supabase'
 
 export default function AuthCallback() {
-  const router = useRouter()
-
   useEffect(() => {
     const handleCallback = async () => {
       try {
@@ -13,25 +10,25 @@ export default function AuthCallback() {
 
         if (error) {
           console.error('Auth error:', error)
-          router.push('/login?error=' + error.message)
+          window.location.href = '/login?error=' + encodeURIComponent(error.message)
           return
         }
 
         if (data.session) {
           // Đăng nhập thành công
           console.log('User:', data.session.user)
-          router.push('/')
+          window.location.href = '/'
         } else {
-          router.push('/login')
+          window.location.href = '/login'
         }
       } catch (err) {
         console.error('Callback error:', err)
-        router.push('/login')
+        window.location.href = '/login'
       }
     }
 
     handleCallback()
-  }, [router])
+  }, [])
 
   return (
     <div className="min-h-screen flex items-center justify-center">

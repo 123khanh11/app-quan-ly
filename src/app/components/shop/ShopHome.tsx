@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Heart, ShoppingCart, Search, LogIn, User, LogOut } from 'lucide-react'
 import { getProducts, Product, supabase } from '@/services/supabase'
 import { useCart } from '@/app/context/CartContext'
-import Link from 'next/link'
 
 export function ShopHome() {
   const [products, setProducts] = useState<Product[]>([])
@@ -129,13 +128,13 @@ export function ShopHome() {
                 </button>
               </>
             ) : (
-              <Link
+              <a
                 href="/login"
-                className="flex items-center gap-1 text-sm hover:bg-white/20 px-2 py-1 rounded transition-colors"
+                className="flex items-center gap-1 text-sm hover:bg-white/20 px-2 py-1 rounded transition-colors cursor-pointer"
               >
                 <LogIn size={16} />
                 Đăng Nhập
-              </Link>
+              </a>
             )}
           </div>
         </div>

@@ -1,17 +1,12 @@
-'use client'
-
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/services/supabase'
 import { GoogleLogin } from '@/app/components/auth/GoogleLogin'
 import { LogOut } from 'lucide-react'
 
 export default function LoginPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const error = searchParams.get('error')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -19,6 +14,10 @@ export default function LoginPage() {
         const { data, error } = await supabase.auth.getSession()
         if (data.session) {
           setUser(data.session.user)
+          // Redirect after short delay
+          setTimeout(() => {
+            window.location.href = '/'
+          }, 1000)
         }
       } catch (err) {
         console.error('Error checking auth:', err)
@@ -34,7 +33,9 @@ export default function LoginPage() {
       if (session) {
         setUser(session.user)
         if (event === 'SIGNED_IN') {
-          router.push('/')
+          setTimeout(() => {
+            window.location.href = '/'
+          }, 500)
         }
       } else {
         setUser(null)
@@ -44,7 +45,7 @@ export default function LoginPage() {
     return () => {
       subscription?.subscription.unsubscribe()
     }
-  }, [router])
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -102,7 +103,7 @@ export default function LoginPage() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => router.push('/')}
+                onClick={() => (window.location.href = '/')}
                 className="flex-1 bg-primary text-primary-foreground font-semibold py-2 rounded hover:bg-orange-600 transition-colors"
               >
                 Về Trang Chủ
@@ -144,7 +145,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => (window.location.href = '/')}
             className="text-primary hover:underline"
           >
             ← Quay Về Trang Chủ
