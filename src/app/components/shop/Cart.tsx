@@ -184,12 +184,13 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
     try {
       const { createOrder, addOrderItem } = await import('@/services/supabase')
 
-      // Gửi thông tin khách hàng + tổng tiền
+      // Tạo order với những cột thực tế
       const order = await createOrder({
-        customer_name: formData.email.split('@')[0], // Lấy phần trước @ từ email
-        customer_email: formData.email,
-        customer_phone: formData.phone,
-        total_amount: cartTotal + SHIPPING_FEE,
+        total: cartTotal,
+        shipping_fee: SHIPPING_FEE,
+        payment_method: 'cash',
+        shipping_address: formData.address,
+        note: `Email: ${formData.email}\nSĐT: ${formData.phone}`,
       })
 
       // Add items to order
@@ -208,8 +209,7 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
 
       // Clear cart and redirect
       clearCart()
-      const orderId = order.order_number || order.id
-      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${orderId}\n\nChúng tôi sẽ liên hệ bạn sớm.`)
+      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\n\nChúng tôi sẽ liên hệ bạn sớm.`)
       window.location.href = `/order/${order.id}`
     } catch (error) {
       console.error('Checkout error:', error)

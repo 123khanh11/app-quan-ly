@@ -10,7 +10,7 @@ const STATUS_STEPS = [
   { key: 'pending', label: 'Chờ Xác Nhận', icon: Clock },
   { key: 'processing', label: 'Đang Xử Lý', icon: CheckCircle2 },
   { key: 'shipped', label: 'Đang Giao Hàng', icon: Truck },
-  { key: 'delivered', label: 'Đã Giao Hàng', icon: CheckCircle2 },
+  { key: 'completed', label: 'Đã Giao Hàng', icon: CheckCircle2 },
 ]
 
 export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
@@ -118,23 +118,37 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Mã Đơn:</span>
-                <span className="font-semibold font-mono">{order.order_number}</span>
+                <span className="font-semibold font-mono">{order.id}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Ngày Đặt:</span>
                 <span className="font-semibold">
-                  {new Date(order.created_at).toLocaleDateString('vi-VN')}
+                  {order.created_at && new Date(order.created_at).toLocaleDateString('vi-VN')}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Trạng Thái:</span>
                 <span className={`font-semibold ${
-                  order.status === 'delivered' ? 'text-green-600' : 'text-orange-600'
+                  order.order_status === 'completed' ? 'text-green-600' : 'text-orange-600'
                 }`}>
-                  {order.status === 'pending' && '⏳ Chờ Xác Nhận'}
-                  {order.status === 'processing' && '📦 Đang Xử Lý'}
-                  {order.status === 'shipped' && '🚚 Đang Giao Hàng'}
-                  {order.status === 'delivered' && '✅ Đã Giao Hàng'}
+                  {order.order_status === 'pending' && '⏳ Chờ Xác Nhận'}
+                  {order.order_status === 'processing' && '📦 Đang Xử Lý'}
+                  {order.order_status === 'shipped' && '🚚 Đang Giao Hàng'}
+                  {order.order_status === 'completed' && '✅ Đã Giao Hàng'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Trạng Thái Thanh Toán:</span>
+                <span className={`font-semibold ${
+                  order.payment_status === 'paid' ? 'text-green-600' : 'text-orange-600'
+                }`}>
+                  {order.payment_status === 'paid' ? '✅ Đã Thanh Toán' : '⏳ Chờ Thanh Toán'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Phương Thức:</span>
+                <span className="font-semibold">
+                  {order.payment_method === 'cash' ? 'Tiền Mặt' : order.payment_method || 'N/A'}
                 </span>
               </div>
             </div>
@@ -144,29 +158,20 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
               <MapPin size={20} className="text-primary" />
-              Thông Tin Khách Hàng
+              Địa Chỉ Giao Hàng & Ghi Chú
             </h3>
             <div className="space-y-2 text-sm">
-              {order.customer_name && (
+              {order.shipping_address && (
                 <div>
-                  <p className="text-muted-foreground">Tên Khách:</p>
-                  <p className="font-semibold">{order.customer_name}</p>
+                  <p className="text-muted-foreground">Địa Chỉ:</p>
+                  <p className="font-semibold">{order.shipping_address}</p>
                 </div>
               )}
-              {order.customer_email && (
+              {order.note && (
                 <div>
-                  <p className="text-muted-foreground">Email:</p>
-                  <p className="font-semibold">{order.customer_email}</p>
+                  <p className="text-muted-foreground">Ghi Chú:</p>
+                  <p className="font-semibold whitespace-pre-wrap">{order.note}</p>
                 </div>
-              )}
-              {order.customer_phone && (
-                <div>
-                  <p className="text-muted-foreground">Số Điện Thoại:</p>
-                  <p className="font-semibold">{order.customer_phone}</p>
-                </div>
-              )}
-              {!order.customer_name && !order.customer_email && !order.customer_phone && (
-                <p className="text-muted-foreground italic">Không có thông tin khách hàng</p>
               )}
             </div>
           </div>
@@ -206,19 +211,27 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
 
           {/* Order Summary */}
           <div className="border-t border-border px-6 py-4 space-y-2">
-            {order.total_amount && (
+            {order.total && (
               <>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tổng Tiền:</span>
-                  <span className="font-semibold">{order.total_amount.toLocaleString('vi-VN')}đ</span>
+                  <span className="text-muted-foreground">Tạm Tính:</span>
+                  <span className="font-semibold">{order.total.toLocaleString('vi-VN')}đ</span>
                 </div>
+                {order.shipping_fee && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Phí Vận Chuyển:</span>
+                    <span className="font-semibold">{order.shipping_fee.toLocaleString('vi-VN')}đ</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-lg font-bold border-t border-border pt-2 mt-2">
-                  <span>Cần Thanh Toán:</span>
-                  <span className="text-primary">{order.total_amount.toLocaleString('vi-VN')}đ</span>
+                  <span>Tổng Cộng:</span>
+                  <span className="text-primary">
+                    {(Number(order.total) + (Number(order.shipping_fee) || 0)).toLocaleString('vi-VN')}đ
+                  </span>
                 </div>
               </>
             )}
-            {!order.total_amount && (
+            {!order.total && (
               <p className="text-muted-foreground italic">Không có thông tin tổng tiền</p>
             )}
           </div>

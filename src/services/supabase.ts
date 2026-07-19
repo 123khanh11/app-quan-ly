@@ -29,15 +29,16 @@ export interface CartItem {
 
 export interface Order {
   id: string
-  order_number?: string
-  customer_name?: string
-  customer_email?: string
-  customer_phone?: string
-  total_amount?: number
-  status: string
-  created_at: string
-  updated_at?: string
-  [key: string]: any  // Allow other fields from database
+  user_id?: string
+  total?: number
+  shipping_fee?: number
+  payment_method?: string
+  payment_status?: string
+  order_status?: string
+  shipping_address?: string
+  note?: string
+  created_at?: string
+  [key: string]: any
 }
 
 export interface OrderItem {
@@ -51,20 +52,25 @@ export interface OrderItem {
 
 // Order Functions
 export async function createOrder(orderData: {
-  customer_name?: string
-  customer_email?: string
-  customer_phone?: string
-  total_amount: number
+  user_id?: string
+  total: number
+  shipping_fee: number
+  payment_method: string
+  shipping_address: string
+  note?: string
 }): Promise<Order> {
   const { data, error } = await supabase
     .from('orders')
     .insert([
       {
-        customer_name: orderData.customer_name,
-        customer_email: orderData.customer_email,
-        customer_phone: orderData.customer_phone,
-        total_amount: orderData.total_amount,
-        status: 'pending',
+        user_id: orderData.user_id,
+        total: orderData.total,
+        shipping_fee: orderData.shipping_fee,
+        payment_method: orderData.payment_method,
+        payment_status: 'pending',
+        order_status: 'pending',
+        shipping_address: orderData.shipping_address,
+        note: orderData.note,
       },
     ])
     .select()
