@@ -1,33 +1,82 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCart } from '@/app/context/CartContext'
+import { calculateGHNShippingFee, getGHNDistricts, getGHNWards } from '@/services/ghn'
 
-const VIETNAM_PROVINCES = [
-  'Hà Nội', 'TP. Hồ Chí Minh', 'Hải Phòng', 'Đà Nẵng', 'Cần Thơ',
-  'An Giang', 'Bà Rịa Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu',
-  'Bến Tre', 'Bình Dương', 'Bình Phước', 'Bình Thuận', 'Cà Mau',
-  'Cao Bằng', 'Đắk Lắk', 'Đắk Nông', 'Điện Biên', 'Đồng Nai',
-  'Đồng Tháp', 'Gia Lai', 'Hà Giang', 'Hà Nam', 'Hà Tĩnh',
-  'Hải Dương', 'Hậu Giang', 'Hòa Bình', 'Huế', 'Khánh Hòa',
-  'Kiên Giang', 'Kon Tum', 'Lai Châu', 'Lâm Đồng', 'Lạng Sơn',
-  'Lào Cai', 'Long An', 'Nam Định', 'Nghệ An', 'Ninh Bình',
-  'Ninh Thuận', 'Phú Thọ', 'Phú Yên', 'Quảng Bình', 'Quảng Nam',
-  'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị', 'Sóc Trăng', 'Sơn La',
-  'Tây Ninh', 'Thái Bình', 'Thái Nguyên', 'Thanh Hóa', 'Thừa Thiên Huế',
-  'Tiền Giang', 'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
-]
+// GHN Province IDs mapping
+const PROVINCE_TO_GHN_ID: Record<string, number> = {
+  'Hà Nội': 1,
+  'TP. Hồ Chí Minh': 202,
+  'Hải Phòng': 15,
+  'Đà Nẵng': 48,
+  'Cần Thơ': 236,
+  'An Giang': 202,
+  'Bà Rịa Vũng Tàu': 221,
+  'Bắc Giang': 6,
+  'Bắc Kạn': 7,
+  'Bạc Liêu': 226,
+  'Bến Tre': 214,
+  'Bình Dương': 208,
+  'Bình Phước': 211,
+  'Bình Thuận': 220,
+  'Cà Mau': 227,
+  'Cao Bằng': 4,
+  'Đắk Lắk': 33,
+  'Đắk Nông': 34,
+  'Điện Biên': 11,
+  'Đồng Nai': 218,
+  'Đồng Tháp': 215,
+  'Gia Lai': 30,
+  'Hà Giang': 2,
+  'Hà Nam': 20,
+  'Hà Tĩnh': 23,
+  'Hải Dương': 18,
+  'Hậu Giang': 224,
+  'Hòa Bình': 14,
+  'Huế': 42,
+  'Khánh Hòa': 25,
+  'Kiên Giang': 229,
+  'Kon Tum': 28,
+  'Lai Châu': 12,
+  'Lâm Đồng': 37,
+  'Lạng Sơn': 9,
+  'Lào Cai': 10,
+  'Long An': 213,
+  'Nam Định': 21,
+  'Nghệ An': 22,
+  'Ninh Bình': 36,
+  'Ninh Thuận': 36,
+  'Phú Thọ': 26,
+  'Phú Yên': 27,
+  'Quảng Bình': 40,
+  'Quảng Nam': 49,
+  'Quảng Ngãi': 51,
+  'Quảng Ninh': 3,
+  'Quảng Trị': 41,
+  'Sóc Trăng': 225,
+  'Sơn La': 24,
+  'Tây Ninh': 209,
+  'Thái Bình': 19,
+  'Thái Nguyên': 17,
+  'Thanh Hóa': 38,
+  'Thừa Thiên Huế': 42,
+  'Tiền Giang': 216,
+  'Tuyên Quang': 8,
+  'Vĩnh Long': 223,
+  'Vĩnh Phúc': 16,
+  'Yên Bái': 5,
+}
 
-const VIETNAM_DISTRICTS = [
-  'Ba Đình', 'Hoàn Kiếm', 'Tây Hồ', 'Cầu Giấy', 'Đống Đa',
-  'Hai Bà Trưng', 'Thanh Xuân', 'Quận 1', 'Quận 2', 'Quận 3',
-  'Quận 4', 'Quận 5', 'Quận 6', 'Quận 7', 'Quận 8',
-  'Quận 9', 'Quận 10', 'Quận 11', 'Quận 12', 'Bình Tân'
-]
+const VIETNAM_PROVINCES = Object.keys(PROVINCE_TO_GHN_ID)
 
-const VIETNAM_WARDS = [
-  'Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 5',
-  'Phường 6', 'Phường 7', 'Phường 8', 'Phường 9', 'Phường 10',
-  'Xã 1', 'Xã 2', 'Xã 3', 'Xã 4', 'Xã 5'
-]
+interface District {
+  district_id: number
+  district_name: string
+}
+
+interface Ward {
+  ward_code: string
+  ward_name: string
+}
 
 interface CheckoutFormProps {
   onClose: () => void
@@ -38,15 +87,116 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [shippingFee, setShippingFee] = useState<number>(50000)
+  const [districts, setDistricts] = useState<District[]>([])
+  const [wards, setWards] = useState<Ward[]>([])
+  const [loadingDistricts, setLoadingDistricts] = useState(false)
+  const [loadingWards, setLoadingWards] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
     province: '',
     district: '',
+    districtId: 0,
     ward: '',
+    wardCode: '',
     detailedAddress: '',
     note: '',
   })
+
+  // Load districts when province changes
+  useEffect(() => {
+    const loadDistricts = async () => {
+      if (!formData.province) {
+        setDistricts([])
+        return
+      }
+
+      setLoadingDistricts(true)
+      try {
+        const result = await getGHNDistricts(PROVINCE_TO_GHN_ID[formData.province])
+        if (result.success && result.districts) {
+          setDistricts(result.districts)
+        } else {
+          console.error('Failed to load districts:', result.error)
+          setDistricts([])
+        }
+      } catch (err) {
+        console.error('Error loading districts:', err)
+        setDistricts([])
+      } finally {
+        setLoadingDistricts(false)
+      }
+    }
+
+    loadDistricts()
+  }, [formData.province])
+
+  // Load wards when district changes
+  useEffect(() => {
+    const loadWards = async () => {
+      if (!formData.districtId) {
+        setWards([])
+        return
+      }
+
+      setLoadingWards(true)
+      try {
+        const result = await getGHNWards(formData.districtId)
+        if (result.success && result.wards) {
+          setWards(result.wards)
+        } else {
+          console.error('Failed to load wards:', result.error)
+          setWards([])
+        }
+      } catch (err) {
+        console.error('Error loading wards:', err)
+        setWards([])
+      } finally {
+        setLoadingWards(false)
+      }
+    }
+
+    loadWards()
+  }, [formData.districtId])
+
+  // Calculate shipping fee when district/ward changes
+  useEffect(() => {
+    const calculateShipping = async () => {
+      if (!formData.districtId || !formData.wardCode) {
+        setShippingFee(50000) // Default fee
+        return
+      }
+
+      try {
+        // Calculate total weight (estimate: 500g per item)
+        const totalWeight = Math.max(cartItems.length * 500, 1000)
+
+        const result = await calculateGHNShippingFee({
+          service_type_id: 2, // Light goods
+          from_district_id: 1442, // Shop location (Hà Nội, Ba Đình area)
+          from_ward_code: '21211',
+          to_district_id: formData.districtId,
+          to_ward_code: formData.wardCode,
+          weight: totalWeight,
+          length: 20,
+          width: 20,
+          height: 20,
+        })
+
+        if (result.success && result.data) {
+          setShippingFee(result.data.total || 50000)
+        } else {
+          console.error('Failed to calculate shipping:', result.error)
+          setShippingFee(50000) // Fallback
+        }
+      } catch (err) {
+        console.error('Error calculating shipping fee:', err)
+        setShippingFee(50000) // Fallback
+      }
+    }
+
+    calculateShipping()
+  }, [formData.districtId, formData.wardCode, cartItems.length])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -128,7 +278,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
 
         <select
           value={formData.province}
-          onChange={(e) => setFormData({ ...formData, province: e.target.value, district: '', ward: '' })}
+          onChange={(e) => setFormData({ ...formData, province: e.target.value, district: '', districtId: 0, ward: '', wardCode: '' })}
           className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2"
           required
         >
@@ -141,31 +291,49 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
         </select>
 
         <select
-          value={formData.district}
-          onChange={(e) => setFormData({ ...formData, district: e.target.value, ward: '' })}
-          disabled={!formData.province}
+          value={formData.districtId}
+          onChange={(e) => {
+            const districtId = parseInt(e.target.value)
+            const district = districts.find((d) => d.district_id === districtId)
+            setFormData({
+              ...formData,
+              districtId,
+              district: district?.district_name || '',
+              ward: '',
+              wardCode: '',
+            })
+          }}
+          disabled={!formData.province || loadingDistricts}
           className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2 disabled:opacity-50"
           required
         >
-          <option value="">-- Chọn Quận/Huyện --</option>
-          {VIETNAM_DISTRICTS.map((d) => (
-            <option key={d} value={d}>
-              {d}
+          <option value="">-- {loadingDistricts ? 'Đang tải...' : 'Chọn Quận/Huyện'} --</option>
+          {districts.map((d) => (
+            <option key={d.district_id} value={d.district_id}>
+              {d.district_name}
             </option>
           ))}
         </select>
 
         <select
-          value={formData.ward}
-          onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
-          disabled={!formData.district}
+          value={formData.wardCode}
+          onChange={(e) => {
+            const wardCode = e.target.value
+            const ward = wards.find((w) => w.ward_code === wardCode)
+            setFormData({
+              ...formData,
+              wardCode,
+              ward: ward?.ward_name || '',
+            })
+          }}
+          disabled={!formData.districtId || loadingWards}
           className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2 disabled:opacity-50"
           required
         >
-          <option value="">-- Chọn Xã/Phường --</option>
-          {VIETNAM_WARDS.map((w) => (
-            <option key={w} value={w}>
-              {w}
+          <option value="">-- {loadingWards ? 'Đang tải...' : 'Chọn Xã/Phường'} --</option>
+          {wards.map((w) => (
+            <option key={w.ward_code} value={w.ward_code}>
+              {w.ward_name}
             </option>
           ))}
         </select>
