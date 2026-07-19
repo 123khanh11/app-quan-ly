@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Chrome, Loader } from 'lucide-react'
 import { supabase } from '@/services/supabase'
 
@@ -11,24 +11,52 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Handle OAuth callback
+  useEffect(() => {
+    const handleAuthChange = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        // User logged in successfully
+        onClose()
+      }
+    }
+
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          onClose()
+        }
+      }
+    )
+
+    handleAuthChange()
+
+    return () => {
+      subscription?.subscription.unsubscribe()
+    }
+  }, [onClose])
+
   const handleGoogleLogin = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const { error: signInError } = await supabase.auth.signInWithOAuth({
+      console.log('Starting Google login...')
+      
+      const { error: signInError, data } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}`,
-        },
       })
 
+      console.log('OAuth response:', { error: signInError, data })
+
       if (signInError) {
-        setError(signInError.message)
+        console.error('Sign in error:', signInError)
+        setError(signInError.message || 'Lỗi đăng nhập với Google')
       }
     } catch (err) {
       console.error('Google login error:', err)
-      setError(err instanceof Error ? err.message : 'Lỗi đăng nhập')
+      const errorMsg = err instanceof Error ? err.message : 'Lỗi đăng nhập'
+      setError(errorMsg)
     } finally {
       setLoading(false)
     }

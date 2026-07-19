@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, ShoppingCart, Heart, Home, LogIn, LogOut } from "lucide-react";
+import { Search, ShoppingCart, Heart, Home, LogIn, LogOut, X } from "lucide-react";
 import { CartProvider, useCart } from "@/app/context/CartContext";
 import { ShopHome } from "@/app/components/shop/ShopHome";
 import { CartPage } from "@/app/components/shop/Cart";
@@ -12,14 +12,19 @@ function AppContent() {
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
   const [user, setUser] = useState<any>(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { cartCount } = useCart();
 
   // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
+      console.log('Session data:', data);
       if (data.session) {
+        console.log('User found:', data.session.user);
         setUser(data.session.user);
+      } else {
+        console.log('No session found');
       }
     };
 
@@ -28,6 +33,7 @@ function AppContent() {
     // Listen to auth changes
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         if (session) {
           setUser(session.user);
         } else {
@@ -44,6 +50,7 @@ function AppContent() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setIsProfileOpen(false);
   };
 
   const handleViewOrder = (orderId: string) => {
@@ -118,31 +125,92 @@ function AppContent() {
 
                 {/* Auth Button */}
                 {user ? (
-                  <>
-                    <div className="flex items-center gap-2 pl-4 border-l border-border">
-                      {user.user_metadata?.avatar_url && (
+                  <div className="flex items-center gap-2 pl-4 border-l border-border relative">
+                    <button
+                      onClick={() => setIsProfileOpen(!isProfileOpen)}
+                      className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none"
+                      title="Click để xem thông tin"
+                    >
+                      {user.user_metadata?.avatar_url ? (
                         <img
                           src={user.user_metadata.avatar_url}
                           alt="Avatar"
-                          className="w-6 h-6 rounded-full"
+                          className="w-8 h-8 rounded-full object-cover cursor-pointer border border-border"
                         />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold cursor-pointer">
+                          {user.email?.charAt(0).toUpperCase() || 'U'}
+                        </div>
                       )}
-                      <span className="text-xs font-medium max-w-[80px] truncate">
-                        {user.user_metadata?.full_name || user.email}
-                      </span>
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group"
-                    >
-                      <LogOut size={20} strokeWidth={1.5} />
-                      <span className="text-xs text-muted-foreground group-hover:text-primary">Đăng Xuất</span>
                     </button>
-                  </>
+
+                    {/* Profile Dropdown Menu */}
+                    {isProfileOpen && (
+                      <div className="absolute right-0 top-full mt-2 bg-white border border-border rounded-lg shadow-xl z-50 w-80">
+                        {/* User Info Section */}
+                        <div className="p-4 border-b border-border flex gap-3">
+                          {user.user_metadata?.avatar_url ? (
+                            <img
+                              src={user.user_metadata.avatar_url}
+                              alt="Avatar"
+                              className="w-14 h-14 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold flex-shrink-0">
+                              {user.email?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-foreground text-sm">
+                              {user.user_metadata?.full_name || 'Người dùng'}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.email}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Đăng nhập lúc: {new Date().toLocaleDateString('vi-VN')}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Stats Section */}
+                        <div className="grid grid-cols-2 gap-0 p-4 border-b border-border">
+                          <div className="text-center py-2 border-r border-border">
+                            <p className="text-lg font-bold text-foreground">0</p>
+                            <p className="text-xs text-muted-foreground">Đơn hàng</p>
+                          </div>
+                          <div className="text-center py-2">
+                            <p className="text-lg font-bold text-foreground">0 ₫</p>
+                            <p className="text-xs text-muted-foreground">Tổng tiêu</p>
+                          </div>
+                        </div>
+
+                        {/* Logout Button */}
+                        <div className="p-4">
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 font-semibold py-2.5 px-4 rounded-lg transition-colors"
+                          >
+                            <LogOut size={18} />
+                            Đăng Xuất
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Close overlay when clicking outside */}
+                    {isProfileOpen && (
+                      <button
+                        onClick={() => setIsProfileOpen(false)}
+                        className="fixed inset-0 z-40"
+                        style={{ background: 'transparent' }}
+                      />
+                    )}
+                  </div>
                 ) : (
                   <button
                     onClick={() => setIsLoginOpen(true)}
-                    className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group"
+                    className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group pl-4 border-l border-border"
                   >
                     <LogIn size={20} strokeWidth={1.5} />
                     <span className="text-xs text-muted-foreground group-hover:text-primary">Đăng Nhập</span>

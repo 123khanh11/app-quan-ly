@@ -1,8 +1,20 @@
 import { useState } from 'react'
 import { Trash2, ShoppingCart, Plus, Minus } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
+import { CheckoutForm } from '@/app/components/checkout/CheckoutForm'
 
 const SHIPPING_FEE = 50000
+
+// Vietnamese provinces data
+const PROVINCES = [
+  { id: 1, name: 'Hà Nội', districts: ['Ba Đình', 'Hoàn Kiếm', 'Tây Hồ', 'Cầu Giấy', 'Đống Đa', 'Hai Bà Trưng', 'Thanh Xuân'] },
+  { id: 2, name: 'TP. Hồ Chí Minh', districts: ['Quận 1', 'Quận 2', 'Quận 3', 'Quận 4', 'Quận 5', 'Quận 7', 'Bình Thạnh'] },
+  { id: 3, name: 'Hải Phòng', districts: ['Hồng Bàng', 'Ngô Quyền', 'Lê Chân', 'Kiến An', 'Đô Sơn'] },
+  { id: 4, name: 'Đà Nẵng', districts: ['Hải Châu', 'Thanh Khê', 'Sơn Trà', 'Ngũ Hành Sơn', 'Liên Chiểu'] },
+  { id: 5, name: 'Cần Thơ', districts: ['Ninh Kiều', 'Bình Thủy', 'Cái Răng', 'Ô Môn', 'Thốt Nốt'] },
+]
+
+const WARDS = ['Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 5']
 
 export function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart()
@@ -169,28 +181,67 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
   const { cartItems, cartTotal, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [locating, setLocating] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
-    address: '',
+    province: '',
+    district: '',
+    ward: '',
+    detailedAddress: '',
     note: '',
   })
+
+  const selectedProvince = PROVINCES.find(p => p.name === formData.province)
+  const districts = selectedProvince?.districts || []
+
+  const handleLocate = () => {
+    setLocating(true)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords
+          setFormData({
+            ...formData,
+            detailedAddress: `Vĩ độ: ${latitude.toFixed(4)}, Kinh độ: ${longitude.toFixed(4)}`,
+          })
+          setLocating(false)
+        },
+        (error) => {
+          console.error('Geolocation error:', error)
+          setError('❌ Không thể lấy vị trí hiện tại. Vui lòng kiểm tra cài đặt GPS.')
+          setLocating(false)
+        }
+      )
+    } else {
+      setError('❌ Trình duyệt không hỗ trợ định vị.')
+      setLocating(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
+    if (!formData.province || !formData.district || !formData.ward || !formData.detailedAddress) {
+      setError('❌ Vui lòng điền đầy đủ thông tin địa chỉ.')
+      setLoading(false)
+      return
+    }
+
     try {
       const { createOrder, addOrderItem } = await import('@/services/supabase')
 
-      // Tạo order với những cột thực tế
+      const fullAddress = `${formData.detailedAddress}, ${formData.ward}, ${formData.district}, ${formData.province}`
+
+      // Tạo order
       const order = await createOrder({
         total: cartTotal,
         shipping_fee: SHIPPING_FEE,
         payment_method: 'cash',
-        shipping_address: formData.address,
-        note: `Email: ${formData.email}\nSĐT: ${formData.phone}`,
+        shipping_address: fullAddress,
+        note: `Email: ${formData.email}\nSĐT: ${formData.phone}\nGhi chú: ${formData.note}`,
       })
 
       // Add items to order
@@ -222,6 +273,7 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 border-t border-border pt-3">
+      {/* Contact Info */}
       <input
         type="email"
         placeholder="Email"
@@ -238,14 +290,73 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
         className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         required
       />
-      <textarea
-        placeholder="Địa chỉ giao hàng"
-        value={formData.address}
-        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-        className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-        rows={3}
-        required
-      />
+
+      {/* Address Details */}
+      <div className="pt-2 border-t border-border">
+        <p className="text-sm font-semibold text-foreground mb-2">📍 Địa Chỉ Chi Tiết</p>
+        
+        <select
+          value={formData.province}
+          onChange={(e) => setFormData({ ...formData, province: e.target.value, district: '', ward: '' })}
+          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2"
+          required
+        >
+          <option value="">-- Chọn Tỉnh/Thành phố --</option>
+          {PROVINCES.map(p => (
+            <option key={p.id} value={p.name}>{p.name}</option>
+          ))}
+        </select>
+
+        <select
+          value={formData.district}
+          onChange={(e) => setFormData({ ...formData, district: e.target.value, ward: '' })}
+          disabled={!formData.province}
+          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2 disabled:opacity-50"
+          required
+        >
+          <option value="">-- Chọn Quận/Huyện --</option>
+          {districts.map(d => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
+
+        <select
+          value={formData.ward}
+          onChange={(e) => setFormData({ ...formData, ward: e.target.value })}
+          disabled={!formData.district}
+          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2 disabled:opacity-50"
+          required
+        >
+          <option value="">-- Chọn Xã/Phường --</option>
+          {WARDS.map(w => (
+            <option key={w} value={w}>{w}</option>
+          ))}
+        </select>
+
+        {/* Detailed Address + GPS */}
+        <div className="flex gap-2 mb-2">
+          <textarea
+            placeholder="Địa chỉ chi tiết (số nhà, tên đường...)"
+            value={formData.detailedAddress}
+            onChange={(e) => setFormData({ ...formData, detailedAddress: e.target.value })}
+            className="flex-1 px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+            rows={2}
+            required
+          />
+          <button
+            type="button"
+            onClick={handleLocate}
+            disabled={locating}
+            className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center gap-1 text-sm font-semibold"
+            title="Dùng GPS để lấy vị trí hiện tại"
+          >
+            <MapPin size={16} />
+            {locating ? 'Đang...' : 'GPS'}
+          </button>
+        </div>
+      </div>
+
+      {/* Notes */}
       <textarea
         placeholder="Ghi chú (không bắt buộc)"
         value={formData.note}
@@ -253,6 +364,8 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
         className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
         rows={2}
       />
+
+      {/* Buttons */}
       <div className="flex gap-2">
         <button
           type="submit"
@@ -269,6 +382,7 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
           Hủy
         </button>
       </div>
+
       {error && (
         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           {error}
