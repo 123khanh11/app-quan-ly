@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getOrderDetails, Order, OrderItem } from '@/services/supabase'
-import { CheckCircle2, Clock, Truck, MapPin } from 'lucide-react'
+import { CheckCircle2, Clock, Truck } from 'lucide-react'
 
 interface OrderTrackingPageProps {
   orderId: string
@@ -157,8 +157,7 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
           {/* Shipping Address */}
           <div className="bg-card border border-border rounded-lg p-6">
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <MapPin size={20} className="text-primary" />
-              Địa Chỉ Giao Hàng & Ghi Chú
+              📍 Địa Chỉ Giao Hàng & Ghi Chú
             </h3>
             <div className="space-y-2 text-sm">
               {order.shipping_address && (

@@ -1,8 +1,33 @@
 import { useState } from 'react'
 import { useCart } from '@/app/context/CartContext'
-import { VIETNAM_LOCATIONS, getDistrictsByProvince, getWardsByDistrict } from '@/data/vietnamLocations'
 
-const SHIPPING_FEE = 50000
+const VIETNAM_PROVINCES = [
+  'Hà Nội', 'TP. Hồ Chí Minh', 'Hải Phòng', 'Đà Nẵng', 'Cần Thơ',
+  'An Giang', 'Bà Rịa Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu',
+  'Bến Tre', 'Bình Dương', 'Bình Phước', 'Bình Thuận', 'Cà Mau',
+  'Cao Bằng', 'Đắk Lắk', 'Đắk Nông', 'Điện Biên', 'Đồng Nai',
+  'Đồng Tháp', 'Gia Lai', 'Hà Giang', 'Hà Nam', 'Hà Tĩnh',
+  'Hải Dương', 'Hậu Giang', 'Hòa Bình', 'Huế', 'Khánh Hòa',
+  'Kiên Giang', 'Kon Tum', 'Lai Châu', 'Lâm Đồng', 'Lạng Sơn',
+  'Lào Cai', 'Long An', 'Nam Định', 'Nghệ An', 'Ninh Bình',
+  'Ninh Thuận', 'Phú Thọ', 'Phú Yên', 'Quảng Bình', 'Quảng Nam',
+  'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị', 'Sóc Trăng', 'Sơn La',
+  'Tây Ninh', 'Thái Bình', 'Thái Nguyên', 'Thanh Hóa', 'Thừa Thiên Huế',
+  'Tiền Giang', 'Tuyên Quang', 'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
+]
+
+const VIETNAM_DISTRICTS = [
+  'Ba Đình', 'Hoàn Kiếm', 'Tây Hồ', 'Cầu Giấy', 'Đống Đa',
+  'Hai Bà Trưng', 'Thanh Xuân', 'Quận 1', 'Quận 2', 'Quận 3',
+  'Quận 4', 'Quận 5', 'Quận 6', 'Quận 7', 'Quận 8',
+  'Quận 9', 'Quận 10', 'Quận 11', 'Quận 12', 'Bình Tân'
+]
+
+const VIETNAM_WARDS = [
+  'Phường 1', 'Phường 2', 'Phường 3', 'Phường 4', 'Phường 5',
+  'Phường 6', 'Phường 7', 'Phường 8', 'Phường 9', 'Phường 10',
+  'Xã 1', 'Xã 2', 'Xã 3', 'Xã 4', 'Xã 5'
+]
 
 interface CheckoutFormProps {
   onClose: () => void
@@ -12,6 +37,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
   const { cartItems, cartTotal, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [shippingFee, setShippingFee] = useState<number>(50000)
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
@@ -21,9 +47,6 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
     detailedAddress: '',
     note: '',
   })
-
-  const districts = formData.province ? getDistrictsByProvince(formData.province) : []
-  const wards = formData.district ? getWardsByDistrict(formData.province, formData.district) : []
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,12 +63,13 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
       const { createOrder, addOrderItem } = await import('@/services/supabase')
 
       const fullAddress = `${formData.detailedAddress}, ${formData.ward}, ${formData.district}, ${formData.province}`
+      const finalShippingFee = shippingFee || 50000
 
       // Tạo order
       const order = await createOrder({
-        total: cartTotal,
-        shipping_fee: SHIPPING_FEE,
-        payment_method: 'cash',
+        total: cartTotal + finalShippingFee,
+        shipping_fee: finalShippingFee,
+        payment_method: 'cod',
         shipping_address: fullAddress,
         note: `Email: ${formData.email}\nSĐT: ${formData.phone}\nGhi chú: ${formData.note}`,
       })
@@ -66,8 +90,9 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
 
       // Clear cart and redirect
       clearCart()
-      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\n\nChúng tôi sẽ liên hệ bạn sớm.`)
-      window.location.href = `/order/${order.id}`
+      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\nPhí vận chuyển: ${finalShippingFee.toLocaleString()} VNĐ\n\nChúng tôi sẽ liên hệ bạn sớm.`)
+      // Reload page to reset to home
+      window.location.href = '/'
     } catch (error) {
       console.error('Checkout error:', error)
       const errorMsg = error instanceof Error ? error.message : 'Không xác định'
@@ -108,9 +133,9 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
           required
         >
           <option value="">-- Chọn Tỉnh/Thành phố --</option>
-          {VIETNAM_LOCATIONS.map((p) => (
-            <option key={p.id} value={p.name}>
-              {p.name}
+          {VIETNAM_PROVINCES.map((p) => (
+            <option key={p} value={p}>
+              {p}
             </option>
           ))}
         </select>
@@ -123,9 +148,9 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
           required
         >
           <option value="">-- Chọn Quận/Huyện --</option>
-          {districts.map((d) => (
-            <option key={d.name} value={d.name}>
-              {d.name}
+          {VIETNAM_DISTRICTS.map((d) => (
+            <option key={d} value={d}>
+              {d}
             </option>
           ))}
         </select>
@@ -138,9 +163,9 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
           required
         >
           <option value="">-- Chọn Xã/Phường --</option>
-          {wards.map((w) => (
-            <option key={w.name} value={w.name}>
-              {w.name}
+          {VIETNAM_WARDS.map((w) => (
+            <option key={w} value={w}>
+              {w}
             </option>
           ))}
         </select>
@@ -163,6 +188,22 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
         className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
         rows={2}
       />
+
+      {/* Shipping Fee Summary */}
+      <div className="bg-muted p-3 rounded-md">
+        <div className="flex justify-between text-sm mb-2">
+          <span>Tiền hàng:</span>
+          <span className="font-semibold">{cartTotal.toLocaleString()} VNĐ</span>
+        </div>
+        <div className="flex justify-between text-sm border-t border-border pt-2">
+          <span>Phí vận chuyển:</span>
+          <span className="font-semibold">{shippingFee.toLocaleString()} VNĐ</span>
+        </div>
+        <div className="flex justify-between text-base font-bold border-t border-border pt-2 mt-2">
+          <span>Tổng cộng:</span>
+          <span className="text-primary">{(cartTotal + shippingFee).toLocaleString()} VNĐ</span>
+        </div>
+      </div>
 
       {/* Buttons */}
       <div className="flex gap-2">
