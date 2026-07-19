@@ -1,26 +1,21 @@
 import { useState } from "react";
-import { Search, ShoppingCart, Heart, User, ChevronDown, Star, ShoppingBag, Home } from "lucide-react";
+import { Search, ShoppingCart, Heart, Home, LogIn, LogOut } from "lucide-react";
 import { CartProvider, useCart } from "@/app/context/CartContext";
 import { ShopHome } from "@/app/components/shop/ShopHome";
 import { CartPage } from "@/app/components/shop/Cart";
 import { OrderTrackingPage } from "@/app/components/shop/OrderTracking";
-import LoginPage from "@/app/pages/login";
-import AuthCallbackPage from "@/app/pages/auth/callback";
+import { supabase } from "@/services/supabase";
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState<"home" | "shop" | "cart" | "order" | "login" | "auth-callback">("shop");
+  const [currentPage, setCurrentPage] = useState<"shop" | "cart" | "order">("shop");
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
+  const [user, setUser] = useState<any>(null);
   const { cartCount } = useCart();
 
-  // Handle URL changes
-  useState(() => {
-    const path = window.location.pathname;
-    if (path === "/login") {
-      setCurrentPage("login");
-    } else if (path === "/auth/callback") {
-      setCurrentPage("auth-callback");
-    }
-  }, []);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   const handleViewOrder = (orderId: string) => {
     setSelectedOrderId(orderId);
@@ -32,23 +27,23 @@ function AppContent() {
       className="min-h-screen bg-background"
       style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
     >
-      {/* ── HEADER ── (Only show on shop) */}
-      {currentPage === "shop" && (
-        <header className="bg-white border-b border-border sticky top-0 z-40 shadow-sm">
-          <div className="max-w-6xl mx-auto px-4">
-            {/* Top row */}
-            <div className="flex items-center gap-4 py-3">
-              {/* Logo */}
-              <button
-                onClick={() => setCurrentPage("shop")}
-                className="flex-shrink-0 mr-2 hover:opacity-80 transition-opacity"
-              >
-                <span className="text-xl font-extrabold tracking-tight text-foreground uppercase">
-                  Thời Trang<span className="text-primary"> Đẹp</span>
-                </span>
-              </button>
+      {/* ── HEADER ── */}
+      <header className="bg-white border-b border-border sticky top-0 z-40 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4">
+          {/* Top row */}
+          <div className="flex items-center gap-4 py-3">
+            {/* Logo */}
+            <button
+              onClick={() => setCurrentPage("shop")}
+              className="flex-shrink-0 mr-2 hover:opacity-80 transition-opacity"
+            >
+              <span className="text-xl font-extrabold tracking-tight text-foreground uppercase">
+                Thời Trang<span className="text-primary"> Đẹp</span>
+              </span>
+            </button>
 
-              {/* Search */}
+            {/* Search - Only on shop page */}
+            {currentPage === "shop" && (
               <div className="flex-1 max-w-xl">
                 <div className="flex items-center border border-border rounded-md overflow-hidden bg-input-background">
                   <input
@@ -61,47 +56,62 @@ function AppContent() {
                   </button>
                 </div>
               </div>
+            )}
 
-              {/* Icons */}
-              <div className="flex items-center gap-4 ml-auto">
+            {/* Icons */}
+            <div className="flex items-center gap-4 ml-auto">
+              <button
+                onClick={() => setCurrentPage("shop")}
+                className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group"
+              >
+                <Home size={20} strokeWidth={1.5} />
+                <span className="text-xs text-muted-foreground group-hover:text-primary">Cửa Hàng</span>
+              </button>
+              <button className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group">
+                <Heart size={20} strokeWidth={1.5} />
+                <span className="text-xs text-muted-foreground group-hover:text-primary">Yêu thích</span>
+              </button>
+              <button
+                onClick={() => setCurrentPage("cart")}
+                className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group relative"
+              >
+                <div className="relative">
+                  <ShoppingCart size={20} strokeWidth={1.5} />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                      {cartCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground group-hover:text-primary">Giỏ hàng</span>
+              </button>
+              {user ? (
                 <button
-                  onClick={() => setCurrentPage("shop")}
+                  onClick={handleLogout}
                   className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group"
                 >
-                  <Home size={20} strokeWidth={1.5} />
-                  <span className="text-xs text-muted-foreground group-hover:text-primary">Cửa Hàng</span>
+                  <LogOut size={20} strokeWidth={1.5} />
+                  <span className="text-xs text-muted-foreground group-hover:text-primary">Đăng Xuất</span>
                 </button>
-                <button className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group">
-                  <Heart size={20} strokeWidth={1.5} />
-                  <span className="text-xs text-muted-foreground group-hover:text-primary">Yêu thích</span>
-                </button>
+              ) : (
                 <button
-                  onClick={() => setCurrentPage("cart")}
-                  className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group relative"
+                  onClick={() => {/* Placeholder for login */}}
+                  className="flex flex-col items-center gap-0.5 text-foreground hover:text-primary transition-colors group"
                 >
-                  <div className="relative">
-                    <ShoppingCart size={20} strokeWidth={1.5} />
-                    {cartCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                        {cartCount}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs text-muted-foreground group-hover:text-primary">Giỏ hàng</span>
+                  <LogIn size={20} strokeWidth={1.5} />
+                  <span className="text-xs text-muted-foreground group-hover:text-primary">Đăng Nhập</span>
                 </button>
-              </div>
+              )}
             </div>
           </div>
-        </header>
-      )}
+        </div>
+      </header>
 
       {/* ── PAGE CONTENT ── */}
       <main>
         {currentPage === "shop" && <ShopHome />}
         {currentPage === "cart" && <CartPage />}
         {currentPage === "order" && <OrderTrackingPage orderId={selectedOrderId} />}
-        {currentPage === "login" && <LoginPage />}
-        {currentPage === "auth-callback" && <AuthCallbackPage />}
       </main>
     </div>
   );
