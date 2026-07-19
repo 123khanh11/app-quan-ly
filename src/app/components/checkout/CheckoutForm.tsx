@@ -168,19 +168,42 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
       }
 
       try {
-        // Calculate total weight (estimate: 500g per item)
-        const totalWeight = Math.max(cartItems.length * 500, 1000)
+        // Calculate total weight and dimensions from cart items
+        // Default: 500g per item, 20x20x20cm per item
+        let totalWeight = 0
+        let totalLength = 0
+        let totalWidth = 0
+        let totalHeight = 0
 
+        cartItems.forEach((item) => {
+          // Weight: default 500g per item
+          totalWeight += (item.weight || 500) * item.quantity
+
+          // Dimensions: default 20x20x20cm per item
+          totalLength = Math.max(totalLength, item.length || 20)
+          totalWidth = Math.max(totalWidth, item.width || 20)
+          totalHeight += (item.height || 20) * item.quantity
+        })
+
+        // Ensure minimum values
+        totalWeight = Math.max(totalWeight, 1000) // min 1kg
+        totalLength = Math.max(totalLength, 20)
+        totalWidth = Math.max(totalWidth, 20)
+        totalHeight = Math.max(totalHeight, 20)
+
+        // Use service_type_id 2 (Light goods) by default
         const result = await calculateGHNShippingFee({
-          service_type_id: 2, // Light goods
+          service_type_id: 2, // Light goods (Hàng nhẹ)
           from_district_id: 1442, // Shop location (Hà Nội, Ba Đình area)
           from_ward_code: '21211',
           to_district_id: formData.districtId,
           to_ward_code: formData.wardCode,
           weight: totalWeight,
-          length: 20,
-          width: 20,
-          height: 20,
+          length: totalLength,
+          width: totalWidth,
+          height: totalHeight,
+          insurance_value: 0,
+          coupon: null,
         })
 
         if (result.success && result.data) {
@@ -196,7 +219,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
     }
 
     calculateShipping()
-  }, [formData.districtId, formData.wardCode, cartItems.length])
+  }, [formData.districtId, formData.wardCode, cartItems])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

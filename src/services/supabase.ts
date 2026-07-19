@@ -25,6 +25,10 @@ export interface CartItem {
   price: number
   quantity: number
   image_url?: string
+  weight?: number // grams (for GHN shipping calculation)
+  length?: number // cm (for GHN shipping calculation)
+  width?: number // cm (for GHN shipping calculation)
+  height?: number // cm (for GHN shipping calculation)
 }
 
 export interface Order {
