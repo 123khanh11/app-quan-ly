@@ -64,7 +64,7 @@ export function ShopHome() {
       name: product.name,
       price: product.price,
       quantity: 1,
-      image: product.image,
+      image: product.image_url,
     })
     alert('✅ Đã thêm vào giỏ hàng!')
   }
@@ -121,7 +121,7 @@ export function ShopHome() {
                   {/* Product Image */}
                   <div className="relative overflow-hidden aspect-[3/4] bg-muted">
                     <img
-                      src={product.image}
+                      src={product.image_url}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

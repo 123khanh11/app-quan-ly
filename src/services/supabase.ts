@@ -10,9 +10,12 @@ export interface Product {
   id: string
   name: string
   price: number
-  image: string
+  sale_price?: number
+  image_url: string
   description: string
   active: boolean
+  category_id?: string
+  sku?: string
 }
 
 export interface CartItem {
@@ -26,49 +29,41 @@ export interface CartItem {
 
 export interface Order {
   id: string
-  user_id?: string
-  total: number
-  shipping_fee: number
-  payment_method: string
-  payment_status: string
-  order_status: string
-  shipping_address: string
-  note?: string
+  order_number: string
+  customer_name: string
+  customer_email: string
+  customer_phone: string
+  total_amount: number
+  status: string
   created_at: string
-  email?: string
-  phone?: string
+  updated_at: string
 }
 
 export interface OrderItem {
   id: string
   order_id: string
-  variant_id: string
+  product_id: string
   quantity: number
   price: number
+  created_at: string
 }
 
 // Order Functions
 export async function createOrder(orderData: {
-  total: number
-  shipping_fee: number
-  payment_method: string
-  shipping_address: string
-  note?: string
-  email?: string
-  phone?: string
+  customer_name: string
+  customer_email: string
+  customer_phone: string
+  total_amount: number
 }): Promise<Order> {
   const { data, error } = await supabase
     .from('orders')
     .insert([
       {
-        user_id: null,
-        total: orderData.total,
-        shipping_fee: orderData.shipping_fee,
-        payment_method: orderData.payment_method,
-        payment_status: 'pending',
-        order_status: 'pending',
-        shipping_address: orderData.shipping_address,
-        note: orderData.note,
+        customer_name: orderData.customer_name,
+        customer_email: orderData.customer_email,
+        customer_phone: orderData.customer_phone,
+        total_amount: orderData.total_amount,
+        status: 'pending',
       },
     ])
     .select()
@@ -80,7 +75,7 @@ export async function createOrder(orderData: {
 
 export async function addOrderItem(itemData: {
   order_id: string
-  variant_id: string
+  product_id: string
   quantity: number
   price: number
 }): Promise<OrderItem> {
@@ -98,7 +93,7 @@ export async function getOrders(email?: string): Promise<Order[]> {
   let query = supabase.from('orders').select('*')
 
   if (email) {
-    query = query.ilike('email', `%${email}%`)
+    query = query.ilike('customer_email', `%${email}%`)
   }
 
   const { data, error } = await query.order('created_at', { ascending: false })
