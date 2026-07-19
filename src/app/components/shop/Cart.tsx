@@ -168,6 +168,7 @@ export function CartPage() {
 function CheckoutForm({ onClose }: { onClose: () => void }) {
   const { cartItems, cartTotal, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
@@ -178,6 +179,7 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError(null)
 
     try {
       const { createOrder, addOrderItem } = await import('@/services/supabase')
@@ -209,7 +211,14 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
       window.location.href = `/order/${order.id}`
     } catch (error) {
       console.error('Checkout error:', error)
-      alert(`❌ Lỗi: ${error instanceof Error ? error.message : 'Không xác định'}`)
+      const errorMsg = error instanceof Error ? error.message : 'Không xác định'
+      
+      // Check if it's RLS policy error
+      if (errorMsg.includes('row-level security') || errorMsg.includes('RLS')) {
+        setError('❌ Lỗi: Database chưa được cấu hình. Vui lòng liên hệ quản trị viên.')
+      } else {
+        setError(`❌ Lỗi: ${errorMsg}`)
+      }
     } finally {
       setLoading(false)
     }
@@ -264,6 +273,11 @@ function CheckoutForm({ onClose }: { onClose: () => void }) {
           Hủy
         </button>
       </div>
+      {error && (
+        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+          {error}
+        </div>
+      )}
     </form>
   )
 }
