@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useCart } from '@/app/context/CartContext'
-import { calculateGHNShippingFee, getGHNDistricts, getGHNWards } from '@/services/ghn'
+import { calculateShippingFee, getDistricts, getWards } from '@/services/ghn-api'
 
 // GHN Province IDs mapping
 const PROVINCE_TO_GHN_ID: Record<string, number> = {
@@ -113,7 +113,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
 
       setLoadingDistricts(true)
       try {
-        const result = await getGHNDistricts(PROVINCE_TO_GHN_ID[formData.province])
+        const result = await getDistricts(PROVINCE_TO_GHN_ID[formData.province])
         if (result.success && result.districts) {
           setDistricts(result.districts)
         } else {
@@ -141,7 +141,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
 
       setLoadingWards(true)
       try {
-        const result = await getGHNWards(formData.districtId)
+        const result = await getWards(formData.districtId)
         if (result.success && result.wards) {
           setWards(result.wards)
         } else {
@@ -194,10 +194,12 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
         // Shop location: Hà Đông, Hà Nội (Phường Dương Nội)
         // District ID for Hà Đông: 1455
         // Ward code for Phường Dương Nội: 21617
-        const result = await calculateGHNShippingFee({
-          service_type_id: 2, // Light goods (Hàng nhẹ)
-          from_district_id: 1455, // Hà Đông, Hà Nội ✅ UPDATED
-          from_ward_code: '21617', // Phường Dương Nội ✅ UPDATED
+        
+        // Get service type first (service_id = 2 for light goods)
+        const result = await calculateShippingFee({
+          service_id: 2, // Light goods (Hàng nhẹ)
+          from_district_id: 1455, // Hà Đông, Hà Nội
+          from_ward_code: '21617', // Phường Dương Nội
           to_district_id: formData.districtId,
           to_ward_code: formData.wardCode,
           weight: totalWeight,
