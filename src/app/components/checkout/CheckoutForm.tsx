@@ -191,11 +191,13 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
         totalWidth = Math.max(totalWidth, 20)
         totalHeight = Math.max(totalHeight, 20)
 
-        // Use service_type_id 2 (Light goods) by default
+        // Shop location: Hà Đông, Hà Nội (Phường Dương Nội)
+        // District ID for Hà Đông: 1455
+        // Ward code for Phường Dương Nội: 21617
         const result = await calculateGHNShippingFee({
           service_type_id: 2, // Light goods (Hàng nhẹ)
-          from_district_id: 1442, // Shop location (Hà Nội, Ba Đình area)
-          from_ward_code: '21211',
+          from_district_id: 1455, // Hà Đông, Hà Nội ✅ UPDATED
+          from_ward_code: '21617', // Phường Dương Nội ✅ UPDATED
           to_district_id: formData.districtId,
           to_ward_code: formData.wardCode,
           weight: totalWeight,
