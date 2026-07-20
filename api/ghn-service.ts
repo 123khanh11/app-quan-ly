@@ -1,5 +1,10 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { GHN_SERVICES } from '../../src/data/ghn-locations.ts';
+
+const SERVICES = [
+  { service_id: 0, service_name: 'Chuyển phát nhanh', service_name_en: 'Express' },
+  { service_id: 1, service_name: 'Chuyển phát chuẩn', service_name_en: 'Standard' },
+  { service_id: 2, service_name: 'Chuyển phát nhanh hôm nay', service_name_en: 'Same day' },
+];
 
 const GHN_TOKEN = process.env.GHN_TOKEN || '';
 const GHN_SHOP_ID = process.env.GHN_SHOP_ID || '';
@@ -40,14 +45,14 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       console.log('GHN API error:', data.message, '- Using local data');
       res.status(200).json({
         success: true,
-        data: GHN_SERVICES,
+        data: SERVICES,
       });
     }
   } catch (error) {
     console.error('Error:', error);
     res.status(200).json({
       success: true,
-      data: GHN_SERVICES,
+      data: SERVICES,
     });
   }
 };
