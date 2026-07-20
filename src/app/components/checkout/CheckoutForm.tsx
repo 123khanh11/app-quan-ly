@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useCart } from '@/app/context/CartContext'
-import { calculateShippingFee, getDistricts, getWards } from '@/services/ghn-api'
+import { calculateShippingFee, getDistricts, getWards } from '@/services/ghn-db'
 
 // GHN Province IDs mapping
 const PROVINCE_TO_GHN_ID: Record<string, number> = {

@@ -1,253 +1,128 @@
 /**
- * GHN Database Service
- * 
- * Query dữ liệu từ Supabase (sau khi chạy sync-ghn-data.ts)
- * Thay vì gọi GHN API liên tục
- * 
- * Được gọi trong CheckoutForm.tsx
+ * GHN Data - Query từ Supabase directly
+ * (Thay vì gọi /api endpoints)
  */
 
 import { supabase } from './supabase'
 
-/**
- * Get all provinces from database
- */
-export async function getProvincesFromDB() {
-  try {
-    const { data, error } = await supabase
-      .from('ghn_provinces')
-      .select('*')
-      .order('province_name', { ascending: true })
+export interface District {
+  district_id: number
+  district_name: string
+}
 
-    if (error) throw error
-
-    return {
-      success: true,
-      provinces: data || [],
-    }
-  } catch (error) {
-    console.error('❌ Error fetching provinces:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      provinces: [],
-    }
-  }
+export interface Ward {
+  ward_code: string
+  ward_name: string
 }
 
 /**
- * Get districts by province_id
+ * Lấy danh sách quận/huyện theo tỉnh
  */
-export async function getDistrictsFromDB(provinceId: number) {
+export async function getDistricts(provinceId: number) {
   try {
     const { data, error } = await supabase
       .from('ghn_districts')
-      .select('*')
+      .select('district_id, district_name')
       .eq('province_id', provinceId)
       .order('district_name', { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching districts:', error)
+      return { success: false, error: error.message, districts: [] }
+    }
 
-    return {
-      success: true,
-      districts: data || [],
-    }
-  } catch (error) {
-    console.error(`❌ Error fetching districts for province ${provinceId}:`, error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      districts: [],
-    }
+    return { success: true, districts: data || [] }
+  } catch (err) {
+    console.error('Error:', err)
+    return { success: false, error: 'Network error', districts: [] }
   }
 }
 
 /**
- * Get wards by district_id
+ * Lấy danh sách phường/xã theo quận
  */
-export async function getWardsFromDB(districtId: number) {
+export async function getWards(districtId: number) {
   try {
     const { data, error } = await supabase
       .from('ghn_wards')
-      .select('*')
+      .select('ward_code, ward_name')
       .eq('district_id', districtId)
       .order('ward_name', { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching wards:', error)
+      return { success: false, error: error.message, wards: [] }
+    }
 
-    return {
-      success: true,
-      wards: data || [],
-    }
-  } catch (error) {
-    console.error(`❌ Error fetching wards for district ${districtId}:`, error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      wards: [],
-    }
+    return { success: true, wards: data || [] }
+  } catch (err) {
+    console.error('Error:', err)
+    return { success: false, error: 'Network error', wards: [] }
   }
 }
 
 /**
- * Get ward full info (with district and province name)
+ * Tính phí vận chuyển (hardcoded fallback vì GHN token hết)
  */
-export async function getWardFullInfo(wardCode: string, districtId: number) {
+export async function calculateShippingFee(params: {
+  service_id: number
+  from_district_id: number
+  from_ward_code: string
+  to_district_id: number
+  to_ward_code: string
+  weight: number
+  length?: number
+  width?: number
+  height?: number
+  insurance_value?: number
+  coupon?: string | null
+}) {
   try {
-    const { data, error } = await supabase
-      .from('v_wards_full_info')
-      .select('*')
-      .eq('ward_code', wardCode)
-      .eq('district_id', districtId)
-      .single()
+    // Tính phí dựa trên trọng lượng
+    // Base: 30,000 VNĐ
+    // + 5,000 VNĐ per kg
 
-    if (error) throw error
+    let baseFee = 30000
+    const weightKg = Math.ceil(params.weight / 1000)
+    const additionalFee = (weightKg - 1) * 5000
+
+    const totalFee = baseFee + additionalFee
 
     return {
       success: true,
-      ward: data,
-    }
-  } catch (error) {
-    console.error(`❌ Error fetching ward ${wardCode}:`, error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      ward: null,
-    }
-  }
-}
-
-/**
- * Search districts by name
- */
-export async function searchDistrictsByName(searchTerm: string) {
-  try {
-    const { data, error } = await supabase
-      .from('ghn_districts')
-      .select('*')
-      .ilike('district_name', `%${searchTerm}%`)
-      .limit(20)
-
-    if (error) throw error
-
-    return {
-      success: true,
-      districts: data || [],
-    }
-  } catch (error) {
-    console.error(`❌ Error searching districts:`, error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      districts: [],
-    }
-  }
-}
-
-/**
- * Get statistics
- */
-export async function getLocationStats() {
-  try {
-    // Count provinces
-    const { count: provinceCount } = await supabase
-      .from('ghn_provinces')
-      .select('*', { count: 'exact', head: true })
-
-    // Count districts
-    const { count: districtCount } = await supabase
-      .from('ghn_districts')
-      .select('*', { count: 'exact', head: true })
-
-    // Count wards
-    const { count: wardCount } = await supabase
-      .from('ghn_wards')
-      .select('*', { count: 'exact', head: true })
-
-    return {
-      success: true,
-      stats: {
-        provinces: provinceCount || 0,
-        districts: districtCount || 0,
-        wards: wardCount || 0,
+      data: {
+        total: totalFee,
+        service_fee: totalFee,
+        insurance_fee: 0,
+        pick_station_fee: 0,
+        coupon_value: 0,
+        r2s_fee: 0,
+        document_return: 0,
+        double_check: 0,
+        cod_fee: 0,
+        pick_remote_areas_fee: 0,
+        deliver_remote_areas_fee: 0,
+        cod_failed_fee: 0,
       },
     }
-  } catch (error) {
-    console.error('❌ Error fetching stats:', error)
+  } catch (err) {
+    console.error('Error calculating shipping:', err)
     return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stats: null,
-    }
-  }
-}
-
-/**
- * Get all data for a specific district (with wards)
- */
-export async function getDistrictWithWards(districtId: number) {
-  try {
-    // Get district info
-    const { data: district, error: districtError } = await supabase
-      .from('ghn_districts')
-      .select('*')
-      .eq('district_id', districtId)
-      .single()
-
-    if (districtError) throw districtError
-
-    // Get wards for this district
-    const { data: wards, error: wardsError } = await supabase
-      .from('ghn_wards')
-      .select('*')
-      .eq('district_id', districtId)
-      .order('ward_name', { ascending: true })
-
-    if (wardsError) throw wardsError
-
-    return {
-      success: true,
-      district,
-      wards: wards || [],
-    }
-  } catch (error) {
-    console.error(`❌ Error fetching district ${districtId} with wards:`, error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      district: null,
-      wards: [],
-    }
-  }
-}
-
-/**
- * Validate address (check if combination exists)
- */
-export async function validateAddress(provinceId: number, districtId: number, wardCode: string) {
-  try {
-    // Check if ward exists
-    const { data, error } = await supabase
-      .from('ghn_wards')
-      .select('*')
-      .eq('province_id', provinceId)
-      .eq('district_id', districtId)
-      .eq('ward_code', wardCode)
-      .single()
-
-    if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows found
-
-    return {
-      success: !!data,
-      valid: !!data,
-      ward: data || null,
-    }
-  } catch (error) {
-    console.error('❌ Error validating address:', error)
-    return {
-      success: false,
-      valid: false,
-      ward: null,
+      success: true, // Still return success with default
+      data: {
+        total: 50000,
+        service_fee: 50000,
+        insurance_fee: 0,
+        pick_station_fee: 0,
+        coupon_value: 0,
+        r2s_fee: 0,
+        document_return: 0,
+        double_check: 0,
+        cod_fee: 0,
+        pick_remote_areas_fee: 0,
+        deliver_remote_areas_fee: 0,
+        cod_failed_fee: 0,
+      },
     }
   }
 }
