@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "env": {
+    "GHN_TOKEN": "@GHN_TOKEN",
+    "GHN_SHOP_ID": "@GHN_SHOP_ID",
+    "GHN_API_URL": "@GHN_API_URL"
+  }
+}
