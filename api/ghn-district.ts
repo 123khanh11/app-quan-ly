@@ -1,4 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
+import { GHN_DISTRICTS } from '../../src/data/ghn-locations';
 
 const GHN_TOKEN = process.env.GHN_TOKEN || '';
 const GHN_SHOP_ID = process.env.GHN_SHOP_ID || '';
@@ -39,11 +40,13 @@ export default async (req: VercelRequest, res: VercelResponse) => {
         data: data.data || [],
       });
     } else {
-      // Fallback to mock data
-      console.log('GHN API error:', data.message, '- Using mock data');
+      // Fallback to local data if token is invalid
+      const provinceIdNum = parseInt(String(province_id));
+      const localDistricts = GHN_DISTRICTS[provinceIdNum] || MOCK_DISTRICTS;
+      console.log('GHN API error:', data.message, '- Using local data');
       res.status(200).json({
         success: true,
-        data: MOCK_DISTRICTS,
+        data: localDistricts,
       });
     }
   } catch (error) {
