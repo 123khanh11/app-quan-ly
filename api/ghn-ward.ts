@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { GHN_WARDS } from '../../src/data/ghn-locations';
+import { GHN_WARDS } from '../../src/data/ghn-locations.ts';
 
 const GHN_TOKEN = process.env.GHN_TOKEN || '';
 const GHN_SHOP_ID = process.env.GHN_SHOP_ID || '';
