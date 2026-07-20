@@ -1,20 +1,20 @@
 /**
  * GHN API Client - Frontend
  * 
- * Gọi backend API thay vì gọi GHN API trực tiếp
+ * Gọi Vercel Serverless Functions thay vì gọi GHN API trực tiếp
  * Token được bảo vệ trên server
  * 
- * API Base URL: http://localhost:5000 (dev) hoặc /api (production)
+ * Endpoints: /api/ghn-* (Vercel serverless functions)
  */
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api'
+const API_BASE_URL = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3000/api'
 
 // ============================================
 // 1. LẤY DANH SÁCH TỈNH/THÀNH PHỐ
 // ============================================
 export async function getProvinces() {
   try {
-    const response = await fetch(`${API_BASE_URL}/ghn/province`, {
+    const response = await fetch(`${API_BASE_URL}/ghn-province`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ export async function getProvinces() {
 // ============================================
 export async function getDistricts(province_id: number) {
   try {
-    const response = await fetch(`${API_BASE_URL}/ghn/district?province_id=${province_id}`, {
+    const response = await fetch(`${API_BASE_URL}/ghn-district?province_id=${province_id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ export async function getDistricts(province_id: number) {
 // ============================================
 export async function getWards(district_id: number) {
   try {
-    const response = await fetch(`${API_BASE_URL}/ghn/ward?district_id=${district_id}`, {
+    const response = await fetch(`${API_BASE_URL}/ghn-ward?district_id=${district_id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export async function getWards(district_id: number) {
 export async function getServices(from_district: number, to_district: number) {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/ghn/service?from_district=${from_district}&to_district=${to_district}`,
+      `${API_BASE_URL}/ghn-service?from_district=${from_district}&to_district=${to_district}`,
       {
         method: 'GET',
         headers: {
@@ -175,7 +175,7 @@ export interface CalculateFeeParams {
 
 export async function calculateShippingFee(params: CalculateFeeParams) {
   try {
-    const response = await fetch(`${API_BASE_URL}/ghn/fee`, {
+    const response = await fetch(`${API_BASE_URL}/ghn-fee`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
