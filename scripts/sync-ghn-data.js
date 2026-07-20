@@ -25,7 +25,7 @@ dotenv.config({ path: envPath });
 
 const GHN_TOKEN = process.env.GHN_TOKEN || '';
 const GHN_SHOP_ID = process.env.GHN_SHOP_ID || '';
-const GHN_API_URL = process.env.GHN_API_URL || 'https://dev-online-gateway.ghn.vn/shiip/public-api/v2';
+const GHN_API_URL = process.env.GHN_API_URL || 'https://online-gateway.ghn.vn/shiip/public-api';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || '';
@@ -109,9 +109,9 @@ async function syncProvinces() {
 
     // Insert new data
     const provinceData = provinces.map(p => ({
-      province_id: p.province_id,
-      province_name: p.province_name,
-      province_name_en: p.province_name_en || '',
+      province_id: p.ProvinceID,
+      province_name: p.ProvinceName,
+      province_name_en: p.ProvinceName || '',
       created_at: new Date().toISOString(),
     }));
 
@@ -149,12 +149,12 @@ async function syncDistricts(provinces) {
 
   for (const province of provinces) {
     try {
-      console.log(`  📍 ${province.province_name} (${province.province_id})...`);
+      console.log(`  📍 ${province.ProvinceName} (${province.ProvinceID})...`);
 
-      const districts = await callGHN(`/master-data/district?province_id=${province.province_id}`);
+      const districts = await callGHN(`/master-data/district?province_id=${province.ProvinceID}`);
 
       if (!districts || districts.length === 0) {
-        console.warn(`  ⚠️ No districts found for ${province.province_name}`);
+        console.warn(`  ⚠️ No districts found for ${province.ProvinceName}`);
         failedProvinces.push(province);
         continue;
       }
@@ -163,11 +163,11 @@ async function syncDistricts(provinces) {
 
       // Prepare data
       const districtData = districts.map(d => ({
-        province_id: province.province_id,
-        district_id: d.district_id,
-        district_name: d.district_name,
-        district_name_en: d.district_name_en || '',
-        support_type: d.support_type || 0,
+        province_id: province.ProvinceID,
+        district_id: d.DistrictID,
+        district_name: d.DistrictName,
+        district_name_en: d.DistrictName || '',
+        support_type: d.SupportType || 0,
         created_at: new Date().toISOString(),
       }));
 
@@ -188,7 +188,7 @@ async function syncDistricts(provinces) {
         console.log(`    ✅ Inserted ${data.length} districts`);
       }
     } catch (error) {
-      console.error(`    ❌ Error syncing ${province.province_name}:`, error.message);
+      console.error(`    ❌ Error syncing ${province.ProvinceName}:`, error.message);
       failedProvinces.push(province);
     }
 
@@ -200,7 +200,7 @@ async function syncDistricts(provinces) {
 
   if (failedProvinces.length > 0) {
     console.warn(`⚠️ Failed provinces (${failedProvinces.length}):`);
-    failedProvinces.forEach(p => console.warn(`  - ${p.province_name}`));
+    failedProvinces.forEach(p => console.warn(`  - ${p.ProvinceName}`));
   }
 
   return totalDistricts;
@@ -256,10 +256,10 @@ async function syncWards(provinces) {
       const wardsToInsert = wards.map(w => ({
         province_id: district.province_id,
         district_id: district.district_id,
-        ward_code: w.ward_code,
-        ward_name: w.ward_name,
-        ward_name_en: w.ward_name_en || '',
-        support_type: w.support_type || 0,
+        ward_code: w.WardCode,
+        ward_name: w.WardName,
+        ward_name_en: w.WardName || '',
+        support_type: w.SupportType || 0,
         created_at: new Date().toISOString(),
       }));
 
