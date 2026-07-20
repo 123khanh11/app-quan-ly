@@ -1,4 +1,4 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
+// Vercel Serverless Function - Get districts by province from GHN
 
 const DISTRICTS: Record<number, Array<{ district_id: number; district_name: string }>> = {
   1: [ // Hà Nội
@@ -35,11 +35,7 @@ const DISTRICTS: Record<number, Array<{ district_id: number; district_name: stri
   ],
 };
 
-const GHN_TOKEN = process.env.GHN_TOKEN || '';
-const GHN_SHOP_ID = process.env.GHN_SHOP_ID || '';
-const GHN_API_URL = process.env.GHN_API_URL || 'https://dev-online-gateway.ghn.vn/shiip/public-api/v2';
-
-export default async (req: VercelRequest, res: VercelResponse) => {
+export default async function handler(req: any, res: any) {
   try {
     const { province_id } = req.query;
 
@@ -50,6 +46,11 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       });
     }
 
+    const GHN_TOKEN = process.env.GHN_TOKEN || '';
+    const GHN_SHOP_ID = process.env.GHN_SHOP_ID || '';
+    const GHN_API_URL = process.env.GHN_API_URL || 'https://dev-online-gateway.ghn.vn/shiip/public-api/v2';
+
+    // Try to fetch from GHN API
     const response = await fetch(`${GHN_API_URL}/master-data/district?province_id=${province_id}`, {
       method: 'GET',
       headers: {
@@ -61,28 +62,32 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     const data = await response.json();
 
-    if (data.code === 200) {
-      res.status(200).json({
+    if (data.code === 200 && data.data && Array.isArray(data.data)) {
+      // Success - return GHN data
+      return res.status(200).json({
         success: true,
-        data: data.data || [],
+        source: 'GHN',
+        data: data.data,
       });
     } else {
-      // Fallback to local data if token is invalid
+      // Fallback to local data
       const provinceIdNum = parseInt(String(province_id));
       const localDistricts = DISTRICTS[provinceIdNum] || [];
-      console.log('GHN API error:', data.message, '- Using local data');
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
+        source: 'local',
         data: localDistricts,
       });
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error fetching districts:', error);
+    // Fallback to local data on network error
     const { province_id } = req.query;
     const provinceIdNum = parseInt(String(province_id || 0));
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
+      source: 'local',
       data: DISTRICTS[provinceIdNum] || [],
     });
   }
-};
+}

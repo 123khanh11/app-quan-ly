@@ -1,4 +1,4 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
+// Vercel Serverless Function - Get wards by district from GHN
 
 const WARDS: Record<number, Array<{ ward_code: string; ward_name: string }>> = {
   1455: [ // Hà Đông
@@ -21,11 +21,7 @@ const WARDS: Record<number, Array<{ ward_code: string; ward_name: string }>> = {
   ],
 };
 
-const GHN_TOKEN = process.env.GHN_TOKEN || '';
-const GHN_SHOP_ID = process.env.GHN_SHOP_ID || '';
-const GHN_API_URL = process.env.GHN_API_URL || 'https://dev-online-gateway.ghn.vn/shiip/public-api/v2';
-
-export default async (req: VercelRequest, res: VercelResponse) => {
+export default async function handler(req: any, res: any) {
   try {
     const { district_id } = req.query;
 
@@ -36,6 +32,11 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       });
     }
 
+    const GHN_TOKEN = process.env.GHN_TOKEN || '';
+    const GHN_SHOP_ID = process.env.GHN_SHOP_ID || '';
+    const GHN_API_URL = process.env.GHN_API_URL || 'https://dev-online-gateway.ghn.vn/shiip/public-api/v2';
+
+    // Try to fetch from GHN API
     const response = await fetch(`${GHN_API_URL}/master-data/ward?district_id=${district_id}`, {
       method: 'GET',
       headers: {
@@ -47,28 +48,32 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     const data = await response.json();
 
-    if (data.code === 200) {
-      res.status(200).json({
+    if (data.code === 200 && data.data && Array.isArray(data.data)) {
+      // Success - return GHN data
+      return res.status(200).json({
         success: true,
-        data: data.data || [],
+        source: 'GHN',
+        data: data.data,
       });
     } else {
-      // Fallback to local data if token is invalid
+      // Fallback to local data
       const districtIdNum = parseInt(String(district_id));
       const localWards = WARDS[districtIdNum] || [];
-      console.log('GHN API error:', data.message, '- Using local data');
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
+        source: 'local',
         data: localWards,
       });
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error fetching wards:', error);
+    // Fallback to local data on network error
     const { district_id } = req.query;
     const districtIdNum = parseInt(String(district_id || 0));
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
+      source: 'local',
       data: WARDS[districtIdNum] || [],
     });
   }
-};
+}
