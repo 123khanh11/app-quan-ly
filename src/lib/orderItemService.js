@@ -12,10 +12,7 @@ export const orderItemService = {
         .from('order_items')
         .select(`
           *,
-          product_variants(
-            *,
-            products(*)
-          )
+          products(*)
         `)
         .eq('order_id', orderId);
 
@@ -34,7 +31,7 @@ export const orderItemService = {
         .from('order_items')
         .insert([{
           order_id: orderItem.order_id,
-          variant_id: orderItem.variant_id,
+          product_id: orderItem.product_id,
           quantity: parseInt(orderItem.quantity),
           price: parseFloat(orderItem.price),
           created_at: new Date().toISOString(),

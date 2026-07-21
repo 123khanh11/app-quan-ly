@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/InventoryPage.css';
 import { productService } from '../lib/productService';
-import { supabase } from '../lib/supabaseClient';
 
 function InventoryPage() {
-  const [variants, setVariants] = useState([]);
+  const [products, setProducts] = useState([]);
   const [lowStockItems, setLowStockItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,34 +21,11 @@ function InventoryPage() {
   const fetchInventoryData = async () => {
     try {
       setLoading(true);
-      
-      // Get all product variants with product info
-      const { data: allVariants, error: variantError } = await supabase
-        .from('product_variants')
-        .select(`
-          *,
-          products(id, name, price, sku, image_url)
-        `)
-        .order('products(name)', { ascending: true });
-
-      if (variantError) throw variantError;
-
-      // Transform data
-      const transformedVariants = allVariants?.map(v => ({
-        id: v.id,
-        product_id: v.product_id,
-        product_name: v.products?.name,
-        product_price: v.products?.price,
-        sku: v.sku,
-        size: v.size,
-        color: v.color,
-        stock_quantity: v.stock,
-      })) || [];
-
-      setVariants(transformedVariants);
-
-      // Get low stock items
-      const low = await productService.getLowStockProducts(10);
+      const [allProducts, low] = await Promise.all([
+        productService.getAllProducts(),
+        productService.getLowStockProducts(10),
+      ]);
+      setProducts(allProducts);
       setLowStockItems(low);
       setError('');
     } catch (error) {
@@ -60,8 +36,8 @@ function InventoryPage() {
     }
   };
 
-  const handleUpdateStock = async (variantId, currentStock) => {
-    if (editingStockId === variantId) {
+  const handleUpdateStock = async (productId, currentStock) => {
+    if (editingStockId === productId) {
       try {
         const quantity = parseInt(newStockValue);
         if (isNaN(quantity) || quantity < 0) {
@@ -69,7 +45,7 @@ function InventoryPage() {
           return;
         }
 
-        await productService.updateStock(variantId, quantity);
+        await productService.updateStock(productId, quantity);
         await fetchInventoryData();
         alert('Cập nhật kho hàng thành công!');
         setEditingStockId(null);
@@ -78,32 +54,32 @@ function InventoryPage() {
         alert('Lỗi: ' + error.message);
       }
     } else {
-      setEditingStockId(variantId);
+      setEditingStockId(productId);
       setNewStockValue(currentStock.toString());
     }
   };
 
-  const sortedProducts = [...variants].sort((a, b) => {
+  const sortedProducts = [...products].sort((a, b) => {
     switch (sortBy) {
       case 'name':
-        return a.product_name.localeCompare(b.product_name);
+        return a.name.localeCompare(b.name);
       case 'stock-low':
         return a.stock_quantity - b.stock_quantity;
       case 'stock-high':
         return b.stock_quantity - a.stock_quantity;
       case 'price-low':
-        return a.product_price - b.product_price;
+        return a.price - b.price;
       case 'price-high':
-        return b.product_price - a.product_price;
+        return b.price - a.price;
       default:
         return 0;
     }
   });
 
   const displayedProducts = showLowStockOnly ? lowStockItems : sortedProducts;
-  const totalStock = variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
+  const totalStock = products.reduce((sum, p) => sum + (p.stock_quantity || 0), 0);
   const lowStockCount = lowStockItems.length;
-  const stockValue = variants.reduce((sum, v) => sum + ((v.product_price || 0) * (v.stock_quantity || 0)), 0);
+  const stockValue = products.reduce((sum, p) => sum + ((p.price || 0) * (p.stock_quantity || 0)), 0);
 
   if (loading) return <div className="inventory-page"><div className="loading">Đang tải...</div></div>;
 
@@ -209,15 +185,15 @@ function InventoryPage() {
             </tr>
           </thead>
           <tbody>
-            {displayedProducts.map(variant => (
-              <tr key={variant.id} className={variant.stock_quantity < 10 ? 'low-stock' : ''}>
-                <td className="product-name">{variant.product_name}</td>
-                <td className="sku">{variant.sku || '-'}</td>
+            {displayedProducts.map(product => (
+              <tr key={product.id} className={product.stock_quantity < 10 ? 'low-stock' : ''}>
+                <td className="product-name">{product.name}</td>
+                <td className="sku">{product.sku || '-'}</td>
                 <td className="price">
-                  {variant.product_price?.toLocaleString('vi-VN')} ₫
+                  {product.price?.toLocaleString('vi-VN')} ₫
                 </td>
                 <td className="stock-quantity">
-                  {editingStockId === variant.id ? (
+                  {editingStockId === product.id ? (
                     <div className="stock-edit">
                       <input
                         type="number"
@@ -228,36 +204,36 @@ function InventoryPage() {
                       />
                     </div>
                   ) : (
-                    <span className={`stock-badge ${variant.stock_quantity < 10 ? 'low' : 'normal'}`}>
-                      {variant.stock_quantity || 0}
+                    <span className={`stock-badge ${product.stock_quantity < 10 ? 'low' : 'normal'}`}>
+                      {product.stock_quantity || 0}
                     </span>
                   )}
                 </td>
                 <td className="status">
-                  {variant.stock_quantity < 5 && (
+                  {product.stock_quantity < 5 && (
                     <span className="status-badge critical">🔴 Rất Ít</span>
                   )}
-                  {variant.stock_quantity >= 5 && variant.stock_quantity < 10 && (
+                  {product.stock_quantity >= 5 && product.stock_quantity < 10 && (
                     <span className="status-badge warning">🟡 Ít</span>
                   )}
-                  {variant.stock_quantity >= 10 && variant.stock_quantity < 50 && (
+                  {product.stock_quantity >= 10 && product.stock_quantity < 50 && (
                     <span className="status-badge normal">🟢 OK</span>
                   )}
-                  {variant.stock_quantity >= 50 && (
+                  {product.stock_quantity >= 50 && (
                     <span className="status-badge good">💚 Đủ</span>
                   )}
                 </td>
                 <td className="value">
-                  {((variant.product_price || 0) * (variant.stock_quantity || 0)).toLocaleString('vi-VN')} ₫
+                  {((product.price || 0) * (product.stock_quantity || 0)).toLocaleString('vi-VN')} ₫
                 </td>
                 <td className="actions">
                   <button
-                    onClick={() => handleUpdateStock(variant.id, variant.stock_quantity || 0)}
-                    className={`btn-update-stock ${editingStockId === variant.id ? 'saving' : ''}`}
+                    onClick={() => handleUpdateStock(product.id, product.stock_quantity || 0)}
+                    className={`btn-update-stock ${editingStockId === product.id ? 'saving' : ''}`}
                   >
-                    {editingStockId === variant.id ? '✅ Lưu' : '✏️ Sửa'}
+                    {editingStockId === product.id ? '✅ Lưu' : '✏️ Sửa'}
                   </button>
-                  {editingStockId === variant.id && (
+                  {editingStockId === product.id && (
                     <button
                       onClick={() => {
                         setEditingStockId(null);

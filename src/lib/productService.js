@@ -5,7 +5,7 @@ import { supabase } from './supabaseClient';
  */
 
 export const productService = {
-  // Get all products with category info
+  // Get all products with category info and variant stock
   async getAllProducts() {
     try {
       const { data, error } = await supabase
@@ -13,13 +13,13 @@ export const productService = {
         .select(`
           *,
           categories(id, name, slug),
-          product_variants(id, size, color, sku, stock, price)
+          product_variants(id, stock)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Transform to include total stock
+      // Transform to include calculated stock
       return data?.map(product => ({
         ...product,
         stock_quantity: product.product_variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0,
@@ -64,7 +64,7 @@ export const productService = {
     }
   },
 
-  // Create new product
+  // Create new product (no stock - managed via variants)
   async createProduct(product) {
     try {
       const { data, error } = await supabase
@@ -89,7 +89,7 @@ export const productService = {
     }
   },
 
-  // Update product
+  // Update product (no stock field - managed via variants)
   async updateProduct(id, updates) {
     try {
       const { data, error } = await supabase
@@ -131,7 +131,7 @@ export const productService = {
     }
   },
 
-  // Get low stock products (stock < minimum threshold) from variants
+  // Get low stock products from variants
   async getLowStockProducts(threshold = 10) {
     try {
       const { data, error } = await supabase
@@ -145,7 +145,6 @@ export const productService = {
 
       if (error) throw error;
       
-      // Transform data
       return data?.map(variant => ({
         id: variant.products?.id,
         name: variant.products?.name,
@@ -163,7 +162,7 @@ export const productService = {
     }
   },
 
-  // Update stock quantity for a variant
+  // Update stock for a specific variant
   async updateStock(variantId, newQuantity) {
     try {
       const { data, error } = await supabase

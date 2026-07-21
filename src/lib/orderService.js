@@ -129,7 +129,7 @@ export const orderService = {
           *,
           order_items(*)
         `)
-        .eq('order_status', status)
+        .eq('status', status)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/OrdersPage.css';
 import { orderService } from '../lib/orderService';
+import { orderItemService } from '../lib/orderItemService';
+import { parseAddress, formatAddress } from '../lib/parseAddress';
 
 function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -13,14 +15,13 @@ function OrdersPage() {
   const [filterStatus, setFilterStatus] = useState('all');
 
   const [formData, setFormData] = useState({
-    user_id: '',
-    total: '',
-    shipping_fee: '',
-    payment_method: 'cod',
-    payment_status: 'pending',
-    order_status: 'pending',
+    customer_name: '',
+    customer_email: '',
+    customer_phone: '',
     shipping_address: '',
-    note: '',
+    total_amount: '',
+    status: 'pending',
+    notes: '',
   });
 
   useEffect(() => {
@@ -52,21 +53,23 @@ function OrdersPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!formData.total) {
-        alert('Vui lòng nhập tổng tiền');
-        return;
-      }
-
+      const address = parseAddress(formData.shipping_address);
+      
       if (editingId) {
-        await orderService.updateOrder(editingId, formData);
-        alert('Cập nhật thành công!');
+        await orderService.updateOrder(editingId, {
+          ...formData,
+          ...address,
+        });
       } else {
-        await orderService.createOrder(formData);
-        alert('Tạo đơn hàng thành công!');
+        await orderService.createOrder({
+          ...formData,
+          ...address,
+        });
       }
 
       await fetchOrders();
       resetForm();
+      alert(editingId ? 'Cập nhật thành công!' : 'Tạo đơn hàng thành công!');
     } catch (error) {
       alert('Lỗi: ' + error.message);
     }
@@ -74,14 +77,18 @@ function OrdersPage() {
 
   const handleEdit = (order) => {
     setFormData({
-      user_id: order.user_id || '',
-      total: order.total || '',
-      shipping_fee: order.shipping_fee || '',
-      payment_method: order.payment_method || 'cod',
-      payment_status: order.payment_status || 'pending',
-      order_status: order.order_status || 'pending',
-      shipping_address: order.shipping_address || '',
-      note: order.note || '',
+      customer_name: order.customer_name,
+      customer_email: order.customer_email,
+      customer_phone: order.customer_phone,
+      shipping_address: formatAddress({
+        street: order.shipping_street,
+        ward: order.shipping_ward,
+        district: order.shipping_district,
+        city: order.shipping_city,
+      }),
+      total_amount: order.total_amount,
+      status: order.status,
+      notes: order.notes,
     });
     setEditingId(order.id);
     setShowForm(true);
@@ -108,16 +115,33 @@ function OrdersPage() {
     }
   };
 
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      fetchOrders();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const results = await orderService.searchOrders(searchQuery);
+      setOrders(results);
+    } catch (error) {
+      alert('Lỗi tìm kiếm: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
-      user_id: '',
-      total: '',
-      shipping_fee: '',
-      payment_method: 'cod',
-      payment_status: 'pending',
-      order_status: 'pending',
+      customer_name: '',
+      customer_email: '',
+      customer_phone: '',
       shipping_address: '',
-      note: '',
+      total_amount: '',
+      status: 'pending',
+      notes: '',
     });
     setEditingId(null);
     setShowForm(false);
@@ -125,7 +149,7 @@ function OrdersPage() {
 
   const filteredOrders = filterStatus === 'all'
     ? orders
-    : orders.filter(o => o.order_status === filterStatus);
+    : orders.filter(o => o.status === filterStatus);
 
   if (loading) return <div className="orders-page"><div className="loading">Đang tải...</div></div>;
 
@@ -149,60 +173,42 @@ function OrdersPage() {
           
           <div className="form-grid">
             <div className="form-group">
-              <label>Tổng Tiền *</label>
+              <label>Tên Khách Hàng *</label>
               <input
-                type="number"
-                name="total"
-                value={formData.total}
+                type="text"
+                name="customer_name"
+                value={formData.customer_name}
                 onChange={handleInputChange}
-                step="0.01"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Phí Vận Chuyển</label>
+              <label>Email</label>
               <input
-                type="number"
-                name="shipping_fee"
-                value={formData.shipping_fee}
+                type="email"
+                name="customer_email"
+                value={formData.customer_email}
                 onChange={handleInputChange}
-                step="0.01"
               />
             </div>
 
             <div className="form-group">
-              <label>Phương Thức Thanh Toán</label>
-              <select
-                name="payment_method"
-                value={formData.payment_method}
+              <label>Số Điện Thoại *</label>
+              <input
+                type="tel"
+                name="customer_phone"
+                value={formData.customer_phone}
                 onChange={handleInputChange}
-              >
-                <option value="cod">Thanh toán khi nhận</option>
-                <option value="card">Thẻ tín dụng</option>
-                <option value="bank">Chuyển khoản</option>
-                <option value="wallet">Ví điện tử</option>
-              </select>
+                required
+              />
             </div>
 
             <div className="form-group">
-              <label>Trạng Thái Thanh Toán</label>
+              <label>Trạng Thái</label>
               <select
-                name="payment_status"
-                value={formData.payment_status}
-                onChange={handleInputChange}
-              >
-                <option value="pending">⏳ Chờ thanh toán</option>
-                <option value="completed">✅ Đã thanh toán</option>
-                <option value="failed">❌ Thất bại</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Trạng Thái Đơn Hàng</label>
-              <select
-                name="order_status"
-                value={formData.order_status}
+                name="status"
+                value={formData.status}
                 onChange={handleInputChange}
               >
                 <option value="pending">⏳ Chờ xử lý</option>
@@ -213,23 +219,35 @@ function OrdersPage() {
             </div>
 
             <div className="form-group full-width">
-              <label>Địa Chỉ Giao Hàng</label>
-              <textarea
+              <label>Địa Chỉ Giao Hàng *</label>
+              <input
+                type="text"
                 name="shipping_address"
                 value={formData.shipping_address}
                 onChange={handleInputChange}
-                placeholder="Số nhà, đường, phường, quận, thành phố"
-                rows="2"
+                placeholder="Số nhà, đường, phường, quận, thành phố, mã bưu điện"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Tổng Tiền</label>
+              <input
+                type="number"
+                name="total_amount"
+                value={formData.total_amount}
+                onChange={handleInputChange}
+                step="0.01"
               />
             </div>
 
             <div className="form-group full-width">
               <label>Ghi Chú</label>
               <textarea
-                name="note"
-                value={formData.note}
+                name="notes"
+                value={formData.notes}
                 onChange={handleInputChange}
-                rows="2"
+                rows="3"
               />
             </div>
           </div>
@@ -246,6 +264,26 @@ function OrdersPage() {
       )}
 
       <div className="orders-controls">
+        <form onSubmit={handleSearch} className="search-form">
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo tên, email, điện thoại..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button type="submit" className="btn-search">🔍 Tìm</button>
+          <button 
+            type="button" 
+            onClick={() => {
+              setSearchQuery('');
+              fetchOrders();
+            }}
+            className="btn-secondary"
+          >
+            Đặt lại
+          </button>
+        </form>
+
         <div className="filter-buttons">
           {['all', 'pending', 'processing', 'completed', 'cancelled'].map(status => (
             <button
@@ -264,11 +302,11 @@ function OrdersPage() {
           <thead>
             <tr>
               <th>ID</th>
+              <th>Khách Hàng</th>
+              <th>Điện Thoại</th>
+              <th>Địa Chỉ</th>
               <th>Tổng Tiền</th>
-              <th>Phí Vận Chuyển</th>
-              <th>Phương Thức TT</th>
-              <th>Trạng Thái TT</th>
-              <th>Trạng Thái Đơn</th>
+              <th>Trạng Thái</th>
               <th>Ngày Tạo</th>
               <th>Thao Tác</th>
             </tr>
@@ -277,24 +315,29 @@ function OrdersPage() {
             {filteredOrders.map(order => (
               <tr key={order.id}>
                 <td className="id-cell">#{order.id.slice(0, 8)}</td>
+                <td className="name-cell">{order.note}</td>
+                <td>-</td>
+                <td className="address-cell">
+                  <button
+                    onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
+                    className="btn-view-address"
+                  >
+                    {selectedOrder?.id === order.id ? '✕' : '📍 Xem'}
+                  </button>
+                  {selectedOrder?.id === order.id && (
+                    <div className="address-popup">
+                      <p><strong>Đường:</strong> {order.shipping_street || '-'}</p>
+                      <p><strong>Phường:</strong> {order.shipping_ward || '-'}</p>
+                      <p><strong>Quận:</strong> {order.shipping_district || '-'}</p>
+                      <p><strong>Thành phố:</strong> {order.shipping_city || '-'}</p>
+                      <p><strong>Đầy đủ:</strong> {order.shipping_address}</p>
+                    </div>
+                  )}
+                </td>
                 <td className="amount-cell">
                   {order.total?.toLocaleString('vi-VN')} ₫
                 </td>
-                <td className="fee-cell">
-                  {order.shipping_fee?.toLocaleString('vi-VN') || '0'} ₫
-                </td>
-                <td className="payment-method-cell">
-                  {order.payment_method === 'cod' ? 'COD' : 
-                   order.payment_method === 'card' ? 'Thẻ' :
-                   order.payment_method === 'bank' ? 'Chuyển khoản' : 'Ví'}
-                </td>
-                <td className="payment-status-cell">
-                  <span className={`badge payment-${order.payment_status}`}>
-                    {order.payment_status === 'pending' ? '⏳ Chờ' :
-                     order.payment_status === 'completed' ? '✅ OK' : '❌ Thất bại'}
-                  </span>
-                </td>
-                <td className="order-status-cell">
+                <td>
                   <select
                     value={order.order_status}
                     onChange={(e) => handleStatusChange(order.id, e.target.value)}
@@ -308,15 +351,6 @@ function OrdersPage() {
                 </td>
                 <td>{new Date(order.created_at).toLocaleDateString('vi-VN')}</td>
                 <td className="actions-cell">
-                  <button
-                    onClick={() => {
-                      setSelectedOrder(selectedOrder?.id === order.id ? null : order);
-                    }}
-                    className="btn-view"
-                    title="Xem chi tiết"
-                  >
-                    👁️
-                  </button>
                   <button
                     onClick={() => handleEdit(order)}
                     className="btn-edit"
@@ -337,24 +371,6 @@ function OrdersPage() {
           </tbody>
         </table>
       </div>
-
-      {selectedOrder && (
-        <div className="order-detail-popup">
-          <div className="popup-content">
-            <button className="close-btn" onClick={() => setSelectedOrder(null)}>✕</button>
-            <h3>Chi Tiết Đơn Hàng</h3>
-            <div className="detail-content">
-              <p><strong>ID:</strong> {selectedOrder.id}</p>
-              <p><strong>Tổng Tiền:</strong> {selectedOrder.total?.toLocaleString('vi-VN')} ₫</p>
-              <p><strong>Phí Vận Chuyển:</strong> {selectedOrder.shipping_fee?.toLocaleString('vi-VN')} ₫</p>
-              <p><strong>Địa Chỉ Giao Hàng:</strong></p>
-              <p className="address-text">{selectedOrder.shipping_address || '(Không có)'}</p>
-              <p><strong>Ghi Chú:</strong> {selectedOrder.note || '(Không có)'}</p>
-              <p><strong>Ngày Tạo:</strong> {new Date(selectedOrder.created_at).toLocaleDateString('vi-VN')}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {filteredOrders.length === 0 && (
         <div className="empty-state">

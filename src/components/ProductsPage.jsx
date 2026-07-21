@@ -15,6 +15,7 @@ function ProductsPage() {
     name: '',
     description: '',
     price: '',
+    stock_quantity: '',
     category_id: '',
     image_url: '',
     sku: '',
@@ -88,6 +89,7 @@ function ProductsPage() {
       name: product.name,
       description: product.description,
       price: product.price,
+      stock_quantity: product.stock_quantity,
       category_id: product.category_id || '',
       image_url: product.image_url || '',
       sku: product.sku || '',
@@ -113,6 +115,7 @@ function ProductsPage() {
       name: '',
       description: '',
       price: '',
+      stock_quantity: '',
       category_id: '',
       image_url: '',
       sku: '',
@@ -190,6 +193,17 @@ function ProductsPage() {
                 onChange={handleInputChange}
                 step="0.01"
                 required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Số Lượng Tồn Kho</label>
+              <input
+                type="number"
+                name="stock_quantity"
+                value={formData.stock_quantity}
+                onChange={handleInputChange}
+                min="0"
               />
             </div>
 
