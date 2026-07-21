@@ -69,11 +69,11 @@ export async function getOrderById(id) {
   return data
 }
 
-// Cập nhật trạng thái
-export async function updateOrderStatus(id, status) {
+// Cập nhật trạng thái - ⚠️ DÙNG order_status (không phải status)
+export async function updateOrderStatus(id, newOrderStatus) {
   const { error } = await supabase
     .from('orders')
-    .update({ status, updated_at: new Date() })
+    .update({ order_status: newOrderStatus, updated_at: new Date() })
     .eq('id', id)
   
   if (error) console.error('Lỗi:', error)
@@ -124,10 +124,10 @@ export function OrderList() {
     loadOrders()
   }, [])
 
-  const handleStatusChange = async (orderId, newStatus) => {
-    await updateOrderStatus(orderId, newStatus)
+  const handleStatusChange = async (orderId, newOrderStatus) => {
+    await updateOrderStatus(orderId, newOrderStatus)
     setOrders(orders.map(o => 
-      o.id === orderId ? { ...o, status: newStatus } : o
+      o.id === orderId ? { ...o, order_status: newOrderStatus } : o
     ))
   }
 
