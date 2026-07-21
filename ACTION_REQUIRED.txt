@@ -1,0 +1,67 @@
+═══════════════════════════════════════════════════════════════════════════════
+  ⚠️ CẦN HÀNH ĐỘNG: Chọn Cách Deploy
+═══════════════════════════════════════════════════════════════════════════════
+
+Git Email: ✅ FIXED (khanhtrade123zz@gmail.com)
+Commit: ✅ DONE
+Status: ⏳ WAITING FOR YOUR ACTION
+
+───────────────────────────────────────────────────────────────────────────────
+
+🎯 BẠN CÓ 2 LỰA CHỌN:
+
+───────────────────────────────────────────────────────────────────────────────
+
+CÁCH 1: Deploy Bằng Vercel CLI (NHANH - 1 PHÚT)
+  
+  Mở CMD:
+  cd "c:\Users\baomu\OneDrive\Documents\app quản ly"
+  npm run build
+  vercel --prod
+
+  ✅ Ưu điểm: Nhanh, không cần GitHub
+  ❌ Nhược điểm: Phải deploy manual mỗi lần
+
+───────────────────────────────────────────────────────────────────────────────
+
+CÁCH 2: Setup GitHub + Auto Deploy (CHUYÊN NGHIỆP - 5 PHÚT)
+
+  B1: Tạo repo GitHub
+      https://github.com/new → app-quan-ly
+  
+  B2: Update Git remote (thay YOUR_USERNAME):
+      cd "c:\Users\baomu\OneDrive\Documents\app quản ly"
+      git remote set-url origin https://github.com/YOUR_USERNAME/app-quan-ly.git
+  
+      Ví dụ:
+      git remote set-url origin https://github.com/khanhtrade/app-quan-ly.git
+  
+  B3: Push lên GitHub
+      git push -u origin master
+  
+  B4: Connect Vercel tới GitHub
+      https://vercel.com → app-ql-v2 → Settings → Git → Connect GitHub
+
+  ✅ Ưu điểm: Tự động deploy khi push
+  ✅ Hiệu quả cho team
+  ❌ Cần setup lần đầu
+
+───────────────────────────────────────────────────────────────────────────────
+
+📋 CHỌN:
+
+  □ CÁCH 1: Deploy ngay bằng Vercel CLI
+  
+  □ CÁCH 2: Setup GitHub (cần GitHub username của bạn)
+
+───────────────────────────────────────────────────────────────────────────────
+
+📝 FILES:
+  - SETUP_GITHUB_VERCEL.md (Hướng dẫn chi tiết)
+  - deploy-direct.bat (Deploy Cách 1)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+BƯỚC TIẾP THEO: Báo tôi biết cách nào bạn chọn! 🚀
+
+═══════════════════════════════════════════════════════════════════════════════

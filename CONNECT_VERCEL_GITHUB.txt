@@ -1,0 +1,44 @@
+═══════════════════════════════════════════════════════════════════════════════
+  ✅ CODE PUSHED TO GITHUB!
+═══════════════════════════════════════════════════════════════════════════════
+
+Repo: https://github.com/123khanh11/app-quan-ly ✅
+
+Bước cuối: Connect Vercel → GitHub
+
+═══════════════════════════════════════════════════════════════════════════════
+
+BƯỚC 1: Vào Vercel Dashboard
+  https://vercel.com/dashboard
+
+BƯỚC 2: Chọn Project
+  Click vào: app-ql-v2
+
+BƯỚC 3: Settings → Git
+  Bên trái → Settings
+  Scroll xuống → Git
+  Click "Connect Git Repository"
+
+BƯỚC 4: Select Repository
+  Chọn: 123khanh11/app-quan-ly
+  Click "Select" hoặc "Connect"
+
+BƯỚC 5: Save
+  Click "Save" / "Done"
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ XONG!
+
+Từ lúc này:
+  - Mỗi push lên GitHub → Vercel tự động build & deploy
+  - Có thể xem logs tại: https://vercel.com/dashboard
+  - App live tại: https://app-ql-v2-qctqdmd4u-quanly1.vercel.app
+
+═══════════════════════════════════════════════════════════════════════════════
+
+QUICK LINK:
+  Vercel: https://vercel.com/dashboard
+  GitHub: https://github.com/123khanh11/app-quan-ly
+
+═══════════════════════════════════════════════════════════════════════════════

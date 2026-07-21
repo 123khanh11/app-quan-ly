@@ -1,0 +1,43 @@
+═══════════════════════════════════════════════════════════════════════════════
+  📋 TẠO REPOSITORY GITHUB
+═══════════════════════════════════════════════════════════════════════════════
+
+Username: 123khanh11 ✅
+
+BƯỚC 1: Vào GitHub
+  https://github.com/new
+
+BƯỚC 2: Điền thông tin
+  Repository name: app-quan-ly
+  Description: Order Management System
+  Visibility: Public (hoặc Private)
+  ☐ Add .gitignore
+  ☐ Add license
+
+BƯỚC 3: Click "Create Repository"
+
+BƯỚC 4: Khi xong, terminal sẽ tự động push!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Sau khi tạo repo GitHub, quay lại terminal và chạy:
+
+cd "c:\Users\baomu\OneDrive\Documents\app quản ly"
+git push -u origin master
+
+(Nó sẽ hỏi GitHub credentials → Login)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+XONG! Sau đó:
+
+1. Vào https://vercel.com/dashboard
+2. Vào project app-ql-v2
+3. Settings → Git
+4. Connect GitHub
+5. Select repository: 123khanh11/app-quan-ly
+6. Save
+
+Từ lúc này, mỗi push lên GitHub → Vercel tự động deploy! 🚀
+
+═══════════════════════════════════════════════════════════════════════════════

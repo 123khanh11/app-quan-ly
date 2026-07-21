@@ -15,7 +15,6 @@ function ProductsPage() {
     name: '',
     description: '',
     price: '',
-    stock_quantity: '',
     category_id: '',
     image_url: '',
     sku: '',
@@ -89,7 +88,6 @@ function ProductsPage() {
       name: product.name,
       description: product.description,
       price: product.price,
-      stock_quantity: product.stock_quantity,
       category_id: product.category_id || '',
       image_url: product.image_url || '',
       sku: product.sku || '',
@@ -115,7 +113,6 @@ function ProductsPage() {
       name: '',
       description: '',
       price: '',
-      stock_quantity: '',
       category_id: '',
       image_url: '',
       sku: '',
@@ -197,17 +194,6 @@ function ProductsPage() {
             </div>
 
             <div className="form-group">
-              <label>Số Lượng Tồn Kho</label>
-              <input
-                type="number"
-                name="stock_quantity"
-                value={formData.stock_quantity}
-                onChange={handleInputChange}
-                min="0"
-              />
-            </div>
-
-            <div className="form-group">
               <label>URL Hình Ảnh</label>
               <input
                 type="url"
@@ -264,9 +250,6 @@ function ProductsPage() {
               )}
               <div className="product-details">
                 <span className="price">{product.price?.toLocaleString('vi-VN')} ₫</span>
-                <span className={`stock ${product.stock_quantity > 10 ? 'high' : 'low'}`}>
-                  Kho: {product.stock_quantity || 0}
-                </span>
               </div>
               {product.sku && (
                 <p className="sku">SKU: {product.sku}</p>
