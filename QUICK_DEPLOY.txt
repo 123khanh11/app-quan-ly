@@ -1,0 +1,57 @@
+🚀 QUICK DEPLOY - VERCEL + SUPABASE
+
+==============================================================
+BƯỚC 1: GITHUB (5 phút)
+==============================================================
+
+1. Tạo repo trên GitHub:
+   → https://github.com/new
+   → Tên: app-quan-ly
+   → Create
+
+2. Mở PowerShell tại thư mục project:
+   → cd "c:\Users\baomu\OneDrive\Documents\app quản ly"
+
+3. Chạy lệnh:
+   → git init
+   → git config user.email "your-email@example.com"
+   → git config user.name "Your Name"
+   → git add .
+   → git commit -m "Initial commit"
+   → git remote add origin https://github.com/USERNAME/REPO.git
+   → git branch -M main
+   → git push -u origin main
+
+==============================================================
+BƯỚC 2: VERCEL (3 phút)
+==============================================================
+
+1. Vào: https://vercel.com
+2. Click "New Project"
+3. Chọn GitHub → Authorize → Chọn repo
+4. Cấu hình:
+   - Framework: Other
+   - Build: npm install && npm run build
+   - Output: dist
+5. Environment Variables:
+   - VITE_SUPABASE_URL = https://edtxexnhpbipcecceoop.supabase.co
+   - VITE_SUPABASE_ANON_KEY = sb_publishable_iWrqwcmaNjqUYjC5ndYd2A_xOkv0Tz7
+6. Click "Deploy"
+
+==============================================================
+BƯỚC 3: KIỂM TRA (1 phút)
+==============================================================
+
+URL của bạn: https://app-quan-ly.vercel.app
+
+Kiểm tra:
+✓ Trang load bình thường
+✓ Xem danh sách đơn hàng
+✓ Xem chi tiết đơn hàng
+✓ Cập nhật trạng thái
+
+==============================================================
+HOÀN THÀNH! 🎉
+==============================================================
+
+Chia sẻ URL: https://app-quan-ly.vercel.app

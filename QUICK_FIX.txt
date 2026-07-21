@@ -1,0 +1,85 @@
+════════════════════════════════════════════════════════════════
+  QUICK FIX: Hiển Thị Địa Chỉ Giao Hàng trong App Quản Lý
+════════════════════════════════════════════════════════════════
+
+🔴 PROBLEM:
+  App code đã có, nhưng không hiển thị địa chỉ giao hàng
+
+🟢 ROOT CAUSE:
+  App chưa restart → cache cũ không load code mới
+
+⚡ QUICK FIX (2 phút):
+
+  1. Stop app (Ctrl+C)
+  
+  2. In terminal, run these 3 commands:
+     flutter clean
+     flutter pub get
+     flutter run -d chrome
+  
+  3. Wait for app to restart (1-2 minutes)
+  
+  4. Go to Orders tab → expand any order → see address!
+
+════════════════════════════════════════════════════════════════
+
+✅ VERIFY IT WORKS:
+
+  App should show:
+  
+  📍 Địa Chỉ Giao Hàng
+  🏙️ Tỉnh/Thành phố: TP. Hồ Chí Minh
+  🏘️ Quận/Huyện: Quận 1
+  🏘️ Xã/Phường: Phường Bến Thành
+  🏠 Địa chỉ chi tiết: Số 123 Lê Lợi
+
+════════════════════════════════════════════════════════════════
+
+📝 WHAT WAS DONE (Background):
+
+  ✅ Database: orders table has shipping_address field
+  ✅ Website: Form saves address with format "detail, ward, district, province"
+  ✅ App Code: OrdersScreen.dart has UI code to display address
+  ✅ Parser: AddressParser.dart parses address format correctly
+  ✅ Model: Order.dart maps shipping_address field from database
+  ✅ Service: OrderService.dart fetches with select('*')
+
+════════════════════════════════════════════════════════════════
+
+❌ IF STILL NO ADDRESS:
+
+  1. Check console for errors
+  2. Verify database: 
+     SELECT shipping_address FROM orders LIMIT 5;
+     (Should show addresses like "Số 123 Lê Lợi, ...")
+  3. Make sure using correct field: order_status (not status)
+
+════════════════════════════════════════════════════════════════
+
+📂 FILES INVOLVED:
+
+  Database:          Supabase (orders table)
+  Website:           web/checkout.html (saves address)
+  App Code:
+    - lib/screens/orders_screen.dart     (UI display)
+    - lib/services/order_service.dart    (Fetch from DB)
+    - lib/models/order.dart              (Data model)
+    - lib/utils/address_parser.dart      (Parse format)
+    - lib/main.dart                      (Supabase init)
+
+════════════════════════════════════════════════════════════════
+
+🚀 DEPLOY AFTER VERIFY:
+
+  flutter build web
+  vercel deploy --prod
+
+  Then test on: https://appmanagement-six.vercel.app
+
+════════════════════════════════════════════════════════════════
+
+⏱️ TIME: 2 minutes total (flutter clean + pub get + run)
+✨ COMPLEXITY: Easy (no code changes needed)
+🎯 RISK: None (reversible)
+
+════════════════════════════════════════════════════════════════

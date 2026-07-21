@@ -1,0 +1,211 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    👤 TẠO TÀI KHOẢN - HƯỚNG DẪN TỪNG BƯỚC
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ KHÔNG DÙNG SQL!
+✅ CHỈ DÙNG DASHBOARD UI!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+BƯỚC 1: Mở Supabase Dashboard
+─────────────────────────────────────────────────────────────────────────────
+
+URL: https://supabase.com/dashboard
+
+Tìm kiếm thanh địa chỉ (Address Bar) của trình duyệt
+Nhập: https://supabase.com/dashboard
+Nhấn Enter
+
+═════════════════════════════════════════════════════════════════════════════════
+
+BƯỚC 2: Đăng Nhập Tài Khoản Supabase
+─────────────────────────────────────────────────────────────────────────────
+
+Nếu chưa đăng nhập:
+1. Click "Sign In"
+2. Nhập email
+3. Nhập password
+4. Click "Sign In"
+
+Nếu đã đăng nhập → Bỏ qua bước này
+
+═════════════════════════════════════════════════════════════════════════════════
+
+BƯỚC 3: Chọn Project
+─────────────────────────────────────────────────────────────────────────────
+
+1. Nhìn trang chủ Supabase
+2. Tìm project của bạn
+3. Click vào project đó
+
+Tên project: edtxexnhpbipcecceoop (hoặc tên khác)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+BƯỚC 4: Vào Authentication
+─────────────────────────────────────────────────────────────────────────────
+
+1. Nhìn menu bên trái
+2. Tìm "Authentication"
+3. Click vào "Authentication"
+
+Menu bên trái sẽ có:
+├── Project Settings
+├── Database
+├── Authentication  ← Click đây
+├── Storage
+├── SQL Editor
+└── v.v.
+
+═════════════════════════════════════════════════════════════════════════════════
+
+BƯỚC 5: Chọn Tab "Users"
+─────────────────────────────────────────────────────────────────────────────
+
+1. Sau khi vào Authentication
+2. Nhìn các tab ở trên
+3. Click tab "Users"
+
+Các tab có thể:
+├── Providers
+├── Users  ← Click đây
+├── Policies
+└── v.v.
+
+═════════════════════════════════════════════════════════════════════════════════
+
+BƯỚC 6: Thêm User Mới
+─────────────────────────────────────────────────────────────────────────────
+
+1. Nhìn nút ở trên cùng bên phải
+2. Tìm nút "Add user"
+3. Click vào nó
+
+Nút có thể có tên:
+• "Add user"
+• "Invite user"
+• "Create new user"
+• Hoặc dấu "+" hoặc biểu tượng khác
+
+═════════════════════════════════════════════════════════════════════════════════
+
+BƯỚC 7: Điền Thông Tin
+─────────────────────────────────────────────────────────────────────────────
+
+Sẽ có form hiện lên. Điền:
+
+Email:
+  admin@example.com
+
+Password:
+  password123
+
+(Mật khẩu phải ≥ 6 ký tự)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+BƯỚC 8: Lưu User
+─────────────────────────────────────────────────────────────────────────────
+
+1. Nhìn nút lưu ở dưới form
+2. Tìm nút "Save" hoặc "Create" hoặc "Send Invite"
+3. Click vào nó
+
+Sẽ hiện thông báo: ✓ User created successfully
+
+═════════════════════════════════════════════════════════════════════════════════
+
+✓ HOÀN THÀNH - TÀI KHOẢN ĐÃ ĐƯỢC TẠO!
+─────────────────────────────────────────────────────────────────────────────
+
+Bạn sẽ thấy user mới trong danh sách:
+• Email: admin@example.com
+• Status: Active
+
+═════════════════════════════════════════════════════════════════════════════════
+
+LẶP LẠI: Tạo Thêm 2 Tài Khoản Khác
+─────────────────────────────────────────────────────────────────────────────
+
+Tài khoản 2 - NHÂN VIÊN:
+  Email: staff@example.com
+  Password: staff123
+
+Tài khoản 3 - KHÁCH HÀNG:
+  Email: user@example.com
+  Password: user123
+
+(Làm lại từ BƯỚC 6)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+BƯỚC 9: ĐĂNG NHẬP VÀO ỨNG DỤNG
+─────────────────────────────────────────────────────────────────────────────
+
+1. Mở trình duyệt
+2. Nhập URL: http://localhost:8000
+
+Sẽ hiện trang đăng nhập
+
+3. Nhập email: admin@example.com
+4. Nhập password: password123
+5. Click "Đăng Nhập"
+
+═════════════════════════════════════════════════════════════════════════════════
+
+✓ XONG! BẠN ĐÃ VÀO ỨNG DỤNG
+─────────────────────────────────────────────────────────────────────────────
+
+Bạn sẽ thấy:
+• Dashboard
+• Menu Sản phẩm
+• Menu Đơn hàng
+• Menu Danh mục
+• Menu Tài khoản
+
+═════════════════════════════════════════════════════════════════════════════════
+
+💡 TÓM TẮT 3 BƯỚC NHANH
+
+BƯỚC 1: Tạo Tài Khoản
+  ├─ https://supabase.com/dashboard
+  ├─ Authentication → Users
+  ├─ Add user
+  └─ Nhập email & password
+
+BƯỚC 2: Mở Ứng Dụng
+  ├─ http://localhost:8000
+  └─ Sẽ hiện trang đăng nhập
+
+BƯỚC 3: Đăng Nhập
+  ├─ Nhập email
+  ├─ Nhập password
+  ├─ Click "Đăng Nhập"
+  └─ ✓ Vào được app!
+
+═════════════════════════════════════════════════════════════════════════════════
+
+❓ GẶP SỰ CỐ?
+
+"Không tìm nút Add user"
+→ Chắc bạn không ở tab "Users"
+→ Kiểm tra lại BƯỚC 5
+
+"Form không hiện"
+→ Refresh browser (F5)
+→ Hoặc thử browser khác
+
+"Lỗi khi nhập password"
+→ Password quá ngắn (<6 ký tự)?
+→ Thử password dài hơn
+
+"Không đăng nhập được"
+→ Kiểm tra email đúng chưa?
+→ Kiểm tra password đúng chưa?
+→ Tài khoản có trong Supabase chưa?
+
+═════════════════════════════════════════════════════════════════════════════════
+
+✨ CHÚC BẠN THÀNH CÔNG! 🎉
+
+═════════════════════════════════════════════════════════════════════════════════

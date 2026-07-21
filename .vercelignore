@@ -1,0 +1,16 @@
+lib
+web
+node_modules
+.dart_tool
+.vscode
+.git
+.gitignore
+.env
+.env.example
+pubspec.*
+package.json
+package-lock.json
+*.md
+*.bat
+*.log
+*.yaml
