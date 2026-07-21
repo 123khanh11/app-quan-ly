@@ -242,6 +242,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
 
       // Tạo order
       const order = await createOrder({
+        user_id: formData.email, // Lưu email as customer identifier
         total: cartTotal + finalShippingFee,
         shipping_fee: finalShippingFee,
         payment_method: 'cod',

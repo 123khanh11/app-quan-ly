@@ -71,6 +71,7 @@ export async function createOrder(orderData: {
         total: orderData.total,
         shipping_fee: orderData.shipping_fee,
         payment_method: orderData.payment_method,
+        payment_status: 'pending', // Thêm payment_status
         order_status: 'pending',
         shipping_address: orderData.shipping_address,
         note: orderData.note,
