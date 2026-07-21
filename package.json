@@ -1,9 +1,25 @@
 {
-  "dependencies": {
-    "@supabase/server": "^1.3.0",
-    "@supabase/supabase-js": "^2.110.2"
-  },
+  "name": "app-quan-ly-order",
+  "version": "1.0.0",
+  "description": "Order Management Application",
+  "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "build:flutter": "echo 'Flutter build already exists'"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^4.5.0",
+    "@vitejs/plugin-react": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
+

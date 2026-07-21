@@ -1,0 +1,215 @@
+═══════════════════════════════════════════════════════════════════════════════
+                   HƯỚNG DẪN CẬP NHẬT WEB (KHÔNG DÙNG GIT)
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 TÌNH HUỐNG: Bạn muốn cập nhật code web lên Vercel
+
+✅ CODE ĐÃ LƯU:
+   - 5 services (productService, orderItemService, dashboardService, ...)
+   - 5 pages (Dashboard, Orders, Products, Inventory, Sales)
+   - 5 CSS files (styling cho tất cả)
+   - Navigation system (main.jsx)
+
+───────────────────────────────────────────────────────────────────────────────
+
+📝 CÁCH 1: DÙNG CMD SCRIPT (NHANH NHẤT)
+───────────────────────────────────────────────────────────────────────────────
+
+Bước 1: Mở Command Prompt
+   Windows Key + R
+   Gõ: cmd
+   Enter
+
+Bước 2: Chạy update script
+   cd "c:\Users\baomu\OneDrive\Documents\app quản ly"
+   update-web.cmd
+
+Script sẽ tự động:
+   ✓ Build code
+   ✓ Deploy to Vercel
+   ✓ Hiển thị URL live
+
+Xong! ✅
+
+───────────────────────────────────────────────────────────────────────────────
+
+📝 CÁCH 2: DÙNG CMD THỦ CÔNG (CHI TIẾT)
+───────────────────────────────────────────────────────────────────────────────
+
+Bước 1: Mở Command Prompt
+   Windows Key + R → cmd → Enter
+
+Bước 2: Chuyển tới thư mục dự án
+   cd "c:\Users\baomu\OneDrive\Documents\app quản ly"
+
+Bước 3: Cài đặt dependencies (nếu chưa có)
+   npm install
+
+Bước 4: Build code
+   npm run build
+
+   Kỳ vọng output:
+   ✓ 90 modules transformed
+   ✓ built in 1.74s
+   ✓ 0 errors
+
+Bước 5: Deploy to Vercel
+   vercel deploy --prod
+
+   Kỳ vọng:
+   • Chọn YES khi hỏi
+   • Xem URL live được tạo
+   • Mở URL để test
+
+Xong! ✅
+
+───────────────────────────────────────────────────────────────────────────────
+
+📝 CÁCH 3: DÙNG NPM COMMANDS RIÊNG
+───────────────────────────────────────────────────────────────────────────────
+
+Build + Test Locally:
+   cd "c:\Users\baomu\OneDrive\Documents\app quản ly"
+   npm run build
+   npm run preview
+
+   → Mở http://localhost:4173 để test
+
+Deploy to Vercel:
+   vercel deploy --prod
+
+───────────────────────────────────────────────────────────────────────────────
+
+⚡ QUICK COMMANDS
+───────────────────────────────────────────────────────────────────────────────
+
+Dùng trong Command Prompt:
+
+# Build code
+npm run build
+
+# Test locally
+npm run preview
+
+# Deploy to Vercel
+vercel deploy --prod
+
+# Check status
+vercel --version
+
+# Deploy dry run (xem trước không deploy)
+vercel deploy
+
+───────────────────────────────────────────────────────────────────────────────
+
+🔍 VERIFY BUILD
+───────────────────────────────────────────────────────────────────────────────
+
+Sau khi chạy "npm run build", kiểm tra output:
+
+✅ Expected:
+   ✓ 90 modules transformed
+   ✓ dist/index.html                   0.38 kB
+   ✓ dist/assets/index-*.css          15.14 kB
+   ✓ dist/assets/index-*.js          385.37 kB
+   ✓ built in 1.74s
+
+❌ Nếu có error:
+   - Đọc error message
+   - Fix trong src/
+   - Chạy lại npm run build
+
+───────────────────────────────────────────────────────────────────────────────
+
+📁 FILES ĐÃ LƯU
+───────────────────────────────────────────────────────────────────────────────
+
+Services (3 files):
+   ✓ src/lib/productService.js
+   ✓ src/lib/orderItemService.js
+   ✓ src/lib/dashboardService.js
+
+Components (4 pages + 1 existing):
+   ✓ src/components/Dashboard.jsx
+   ✓ src/components/ProductManagement.jsx
+   ✓ src/components/InventoryDashboard.jsx
+   ✓ src/components/SalesReport.jsx
+   ✓ src/components/OrderManagement.jsx (existing)
+
+Styles (5 files):
+   ✓ src/App.css
+   ✓ src/components/Dashboard.css
+   ✓ src/components/ProductManagement.css
+   ✓ src/components/InventoryDashboard.css
+   ✓ src/components/SalesReport.css
+
+Config:
+   ✓ src/main.jsx (with navigation)
+
+───────────────────────────────────────────────────────────────────────────────
+
+🚀 DEPLOYMENT URL
+───────────────────────────────────────────────────────────────────────────────
+
+Live URL:
+   https://order-management-web-green.vercel.app
+
+Khi deploy xong, bạn sẽ nhận được URL
+Mở URL để test tất cả features
+
+───────────────────────────────────────────────────────────────────────────────
+
+❓ TROUBLESHOOTING
+───────────────────────────────────────────────────────────────────────────────
+
+Vấn đề: npm command not found
+Giải pháp: 
+   - Cài Node.js từ nodejs.org
+   - Restart Command Prompt
+
+Vấn đề: Build failed with errors
+Giải pháp:
+   - Đọc error message kỹ
+   - Fix code trong src/
+   - Chạy lại npm run build
+
+Vấn đề: Vercel command not found
+Giải pháp:
+   - npm install -g vercel
+   - Chạy lại vercel deploy --prod
+
+Vấn đề: Deploy bị lỗi
+Giải pháp:
+   - Check environment variables trong Vercel dashboard
+   - Verify Supabase keys đúng
+   - Xem Vercel build logs
+
+───────────────────────────────────────────────────────────────────────────────
+
+✅ CHECKLIST TRƯỚC KHI DEPLOY
+───────────────────────────────────────────────────────────────────────────────
+
+Trước khi deploy:
+   [ ] npm run build - Build thành công (0 errors)
+   [ ] Kiểm tra dist/ folder có 3 files (index.html, css, js)
+   [ ] Environment variables đã set trong Vercel
+   [ ] Supabase keys đúng
+
+───────────────────────────────────────────────────────────────────────────────
+
+🎯 TÓMLẠI
+───────────────────────────────────────────────────────────────────────────────
+
+Code đã lưu ✅
+
+Cách nhanh nhất:
+   1. Mở CMD
+   2. cd "c:\Users\baomu\OneDrive\Documents\app quản ly"
+   3. npm run build
+   4. vercel deploy --prod
+
+Xong! Web sẽ live trên https://order-management-web-green.vercel.app
+
+═══════════════════════════════════════════════════════════════════════════════
+                              Sẵn sàng deploy!
+═══════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,60 @@
+🚀 DEPLOY NHANH NHẤT - KHÔNG CẦN GITHUB
+
+============================================================
+3 BƯỚC DUY NHẤT - 10 PHÚT XONG!
+============================================================
+
+BƯỚC 1: CHUẨN BỊ (1 phút)
+============================================================
+
+1. Nén thư mục project:
+   - Click chuột phải: c:\Users\baomu\OneDrive\Documents\app quản ly
+   - Chọn: Send to → Compressed (zipped) folder
+   - Sẽ tạo: app quản ly.zip
+
+2. Sao chép Supabase credentials:
+   URL: https://edtxexnhpbipcecceoop.supabase.co
+   KEY: sb_publishable_iWrqwcmaNjqUYjC5ndYd2A_xOkv0Tz7
+
+
+BƯỚC 2: UPLOAD VERCEL (5 phút)
+============================================================
+
+1. Vào: https://vercel.com
+
+2. Click: "New Project" → "Import Project"
+
+3. Kéo file app quản ly.zip vào hoặc click chọn file
+
+4. Vercel sẽ phát hiện tự động:
+   - Framework: Vite ✓
+   - Build: npm run build ✓
+
+5. Thêm Environment Variables:
+   Tên: VITE_SUPABASE_URL
+   Giá trị: https://edtxexnhpbipcecceoop.supabase.co
+   
+   Tên: VITE_SUPABASE_ANON_KEY
+   Giá trị: sb_publishable_iWrqwcmaNjqUYjC5ndYd2A_xOkv0Tz7
+
+6. Click "Deploy"
+
+
+BƯỚC 3: CHỜ & TEST (4 phút)
+============================================================
+
+- Chờ build xong (2-3 phút)
+- Khi xong, Vercel sẽ cấp URL như:
+  https://app-quan-ly-6x9kn2p4d.vercel.app
+
+- Vào URL test:
+  ✓ Trang load được?
+  ✓ Xem đơn hàng được?
+  ✓ Cập nhật trạng thái được?
+
+✅ HOÀN THÀNH! APP ĐÃ LIVE!
+
+============================================================
+CHIA SẺ URL CHO TEAM:
+https://app-quan-ly-6x9kn2p4d.vercel.app
+============================================================

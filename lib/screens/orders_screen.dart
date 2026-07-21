@@ -469,51 +469,31 @@ Widget _buildAddressSection(String? shippingAddress, String? email, String? phon
   print('DEBUG: email = $email');
   print('DEBUG: phone = $phone');
   
-  // Nếu có shipping address, parse và hiển thị
+  // Nếu có shipping address, hiển thị trực tiếp
   if (shippingAddress != null && shippingAddress.isNotEmpty) {
-    final address = parseShippingAddress(shippingAddress);
-    print('DEBUG: Parsed address - province=${address.province}, district=${address.district}, ward=${address.ward}, detailed=${address.detailedAddress}');
-    
-    // Check if all fields are empty
-    final allEmpty = address.province.isEmpty &&
-        address.district.isEmpty &&
-        address.ward.isEmpty &&
-        address.detailedAddress.isEmpty;
-
-    if (!allEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (address.province.isNotEmpty)
-            _AddressRow(
-              icon: '🏙️',
-              label: 'Tỉnh/Thành phố',
-              value: address.province,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Hiển thị địa chỉ đầy đủ
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            shippingAddress,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
-          if (address.province.isNotEmpty) const SizedBox(height: 8),
-          if (address.district.isNotEmpty)
-            _AddressRow(
-              icon: '🏘️',
-              label: 'Quận/Huyện',
-              value: address.district,
-            ),
-          if (address.district.isNotEmpty) const SizedBox(height: 8),
-          if (address.ward.isNotEmpty)
-            _AddressRow(
-              icon: '🏘️',
-              label: 'Xã/Phường',
-              value: address.ward,
-            ),
-          if (address.ward.isNotEmpty) const SizedBox(height: 8),
-          if (address.detailedAddress.isNotEmpty)
-            _AddressRow(
-              icon: '🏠',
-              label: 'Địa chỉ chi tiết',
-              value: address.detailedAddress,
-            ),
-        ],
-      );
-    }
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Parse và hiển thị chi tiết
+        ..._buildDetailedAddress(shippingAddress),
+      ],
+    );
   }
 
   // Nếu không có shipping address, hiển thị email/phone nếu có
@@ -543,6 +523,64 @@ Widget _buildAddressSection(String? shippingAddress, String? email, String? phon
         ),
     ],
   );
+}
+
+/// Tách và hiển thị chi tiết địa chỉ
+List<Widget> _buildDetailedAddress(String shippingAddress) {
+  try {
+    final address = parseShippingAddress(shippingAddress);
+    print('DEBUG: Parsed address - province=${address.province}, district=${address.district}, ward=${address.ward}, detailed=${address.detailedAddress}');
+    
+    final widgets = <Widget>[];
+    
+    if (address.detailedAddress.isNotEmpty) {
+      widgets.add(
+        _AddressRow(
+          icon: '🏠',
+          label: 'Chi tiết',
+          value: address.detailedAddress,
+        ),
+      );
+      widgets.add(const SizedBox(height: 6));
+    }
+    
+    if (address.ward.isNotEmpty) {
+      widgets.add(
+        _AddressRow(
+          icon: '🏘️',
+          label: 'Xã/Phường',
+          value: address.ward,
+        ),
+      );
+      widgets.add(const SizedBox(height: 6));
+    }
+    
+    if (address.district.isNotEmpty) {
+      widgets.add(
+        _AddressRow(
+          icon: '🏘️',
+          label: 'Quận/Huyện',
+          value: address.district,
+        ),
+      );
+      widgets.add(const SizedBox(height: 6));
+    }
+    
+    if (address.province.isNotEmpty) {
+      widgets.add(
+        _AddressRow(
+          icon: '🏙️',
+          label: 'Tỉnh/Thành phố',
+          value: address.province,
+        ),
+      );
+    }
+    
+    return widgets;
+  } catch (e) {
+    print('ERROR parsing address: $e');
+    return [];
+  }
 }
 
 class _AddressRow extends StatelessWidget {
