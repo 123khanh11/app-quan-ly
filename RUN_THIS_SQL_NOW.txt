@@ -1,0 +1,59 @@
+═══════════════════════════════════════════════════════════════════════════════
+  ⚠️ LỖI: Policy "Allow authenticated to insert products" already exists
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ GIẢI PHÁP
+
+1. Vào Supabase SQL Editor
+   https://supabase.com → Project → SQL Editor
+
+2. XÓA script cũ (nếu còn ở editor)
+
+3. Copy script MỚI từ: FIX_STOCK_QUANTITY_ERROR.sql
+   (Script mới này DROP tất cả policies trước rồi CREATE lại)
+
+4. Paste vào SQL editor
+
+5. Click RUN
+
+6. Khi xong, refresh browser & test thêm sản phẩm
+
+═══════════════════════════════════════════════════════════════════════════════
+
+FULL SCRIPT (Copy-paste cái này):
+
+DROP POLICY IF EXISTS "Allow authenticated users to insert products" ON products;
+DROP POLICY IF EXISTS "Allow authenticated users to update products" ON products;
+DROP POLICY IF EXISTS "Allow authenticated users to delete products" ON products;
+DROP POLICY IF EXISTS "Allow authenticated to insert products" ON products;
+DROP POLICY IF EXISTS "Allow all to read products" ON products;
+DROP POLICY IF EXISTS "Allow authenticated to update products" ON products;
+DROP POLICY IF EXISTS "Allow authenticated to delete products" ON products;
+DROP POLICY IF EXISTS "Allow public select products" ON products;
+
+CREATE POLICY "Enable insert for authenticated users only"
+  ON products
+  FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable select for all users"
+  ON products
+  FOR SELECT
+  USING (true);
+
+CREATE POLICY "Enable update for authenticated users only"
+  ON products
+  FOR UPDATE
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable delete for authenticated users only"
+  ON products
+  FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+ALTER TABLE products DROP COLUMN IF EXISTS stock_quantity;
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Xong bước này → Thêm sản phẩm sẽ hoạt động! 🚀
