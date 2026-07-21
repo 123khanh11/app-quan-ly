@@ -41,12 +41,13 @@ function ProductsPage() {
 
   const fetchCategories = async () => {
     try {
-      const { data, error } = await fetch('http://localhost:3000/api/categories')
-        .then(res => res.json())
-        .catch(() => ({ data: [] }));
-      if (data) {
-        setCategories(data);
-      }
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name', { ascending: true });
+      
+      if (error) throw error;
+      setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
