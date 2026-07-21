@@ -1,0 +1,80 @@
+═══════════════════════════════════════════════════════════════════════════════
+  🚨 BẠNPHẢI CHẠY SQL SCRIPT TRÊN SUPABASE - ĐỨC LỖI VẪNXUẤT HIỆN
+═══════════════════════════════════════════════════════════════════════════════
+
+HƯỚNG DẪN TỪNG BƯỚC:
+
+BƯỚC 1: TRUY CẬP SUPABASE
+  1. Vào: https://supabase.com
+  2. Đăng nhập account của bạn
+  3. Chọn project của bạn
+
+BƯỚC 2: MỞ SQL EDITOR
+  1. Bên trái → SQL Editor
+  2. Click "New Query" (hoặc "+ New" nếu không thấy)
+
+BƯỚC 3: COPY SCRIPT
+  File: SUPABASE_FIX_NGAY.sql
+  
+  Copy toàn bộ script này:
+  
+------- BẮT ĐẦU COPY -------
+
+-- Xóa column stock_quantity (nếu tồn tại)
+ALTER TABLE products DROP COLUMN IF EXISTS stock_quantity;
+
+-- Xóa tất cả policies cũ
+DROP POLICY IF EXISTS "Allow authenticated users to insert products" ON products;
+DROP POLICY IF EXISTS "Allow authenticated users to update products" ON products;
+DROP POLICY IF EXISTS "Allow authenticated users to delete products" ON products;
+DROP POLICY IF EXISTS "Allow authenticated to insert products" ON products;
+DROP POLICY IF EXISTS "Allow all to read products" ON products;
+DROP POLICY IF EXISTS "Allow authenticated to update products" ON products;
+DROP POLICY IF EXISTS "Allow authenticated to delete products" ON products;
+DROP POLICY IF EXISTS "Allow public select products" ON products;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON products;
+DROP POLICY IF EXISTS "Enable select for all users" ON products;
+DROP POLICY IF EXISTS "Enable update for authenticated users only" ON products;
+DROP POLICY IF EXISTS "Enable delete for authenticated users only" ON products;
+
+-- Tạo policies mới
+CREATE POLICY "products_insert_auth" ON products FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "products_select_all" ON products FOR SELECT USING (true);
+CREATE POLICY "products_update_auth" ON products FOR UPDATE USING (auth.role() = 'authenticated') WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "products_delete_auth" ON products FOR DELETE USING (auth.role() = 'authenticated');
+
+------- KẾT THÚC COPY -------
+
+BƯỚC 4: PASTE VÀO SUPABASE
+  1. Dán script vào SQL editor (Ctrl+V)
+  2. Select hết (Ctrl+A)
+  3. Xóa text cũ nếu có
+
+BƯỚC 5: CHẠY SCRIPT
+  1. Click nút "RUN" (xanh lá)
+  2. Hoặc nhấn Ctrl + Enter
+  3. Chờ hoàn tất
+
+BƯỚC 6: KIỂM TRA RESULT
+  - Nó sẽ show "0 rows" hoặc không có lỗi → ✅ OK
+  - Nếu có lỗi → Screenshot lỗi lại cho tôi
+
+BƯỚC 7: TEST APP
+  1. Quay lại app: https://app-ql-v2.vercel.app
+  2. Refresh browser (Ctrl+F5)
+  3. Products page
+  4. Click "Thêm Sản Phẩm"
+  5. Nhập dữ liệu & click "Thêm"
+  6. ✅ Should work now!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️ QUAN TRỌNG:
+
+- Nếu chưa chạy SQL script → App sẽ vẫn báo lỗi stock_quantity
+- Script cần chạy 1 lần duy nhất
+- Sau đó, ứng dụng sẽ hoạt động bình thường
+
+═══════════════════════════════════════════════════════════════════════════════
+
+CÓ VẤN ĐỀ? Screenshot lỗi & báo cho tôi
