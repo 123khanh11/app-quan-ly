@@ -1,0 +1,106 @@
+═══════════════════════════════════════════════════════════════════════════════
+  🎉 APP QUẢN LÝ ĐÓN HÀNG - SẼ DEPLOY LÊN VERCEL
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 NHỮNG GÌ ĐÃ HOÀN THÀNH:
+
+✅ Web App React + Vite (5 Pages, 6 Services)
+✅ Dashboard Analytics (fix tất cả queries)
+✅ Orders Management (fix search, status)
+✅ Products & Inventory (fix stock queries)
+✅ Google Login / Gmail Sign In
+✅ Database Schema (bổ sung 30+ fields)
+✅ Accessibility & SEO improvements
+✅ Production build (0 errors)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 DEPLOY NGAY:
+
+Cách 1 (Dễ Nhất):
+  → Double-click file: deploy-now.bat
+
+Cách 2 (Manual):
+  → Mở CMD
+  → cd "c:\Users\baomu\OneDrive\Documents\app quản ly"
+  → npm run build && vercel --prod --yes
+
+Thời gian: ~5-7 phút
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📊 TẤT CẢ FIXES:
+
+Dashboard:
+  - getSalesByDate() - Fix: total_amount → total ✅
+  - getTopProductsBySales() - Fix: join product_variants ✅
+  - getRevenueByCategory() - Fix: join product_variants ✅
+
+Orders:
+  - searchOrders() - Fix: thêm shipping_address search ✅
+  - support customer_name, customer_email, customer_phone fields ✅
+
+UI:
+  - Thêm nút "Đăng nhập bằng Gmail" ✅
+  - Google OAuth integration (Supabase) ✅
+
+Database:
+  - Bổ sung 30+ fields cho tất cả tables
+  - Script: ADD_MISSING_COLUMNS.sql
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📝 FILES QUAN TRỌNG:
+
+Deploy:
+  - deploy-now.bat (Double-click để deploy)
+  - DEPLOY_NGAY_BAY_GIO.md
+  - DEPLOY_VERCEL_CMD.md
+
+Hướng dẫn:
+  - NHUNG_TRUONG_CAN_THEM.md (Fields cần thêm vào DB)
+  - HUONG_DAN_FIX_SCHEMA.md (Hướng dẫn fix schema)
+  - DANG_NHAP_BANG_GMAIL.md (Setup Google OAuth)
+  - ADD_MISSING_COLUMNS.sql (SQL script)
+
+Code:
+  - src/components/LoginPage.jsx (Google Login)
+  - src/lib/dashboardService.js (Fix queries)
+  - src/lib/orderService.js (Fix search)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 NEXT STEPS:
+
+1. DEPLOY
+   → Double-click deploy-now.bat
+
+2. VERIFY
+   → Test link deployment
+   → Check Google Login button
+   → Test Dashboard, Orders, Products
+
+3. SETUP DATABASE (Một lần duy nhất)
+   → Vào Supabase SQL Editor
+   → Copy script từ ADD_MISSING_COLUMNS.sql
+   → Run → Done
+
+4. SETUP GOOGLE OAUTH (Tùy chọn)
+   → Follow DANG_NHAP_BANG_GMAIL.md
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📞 LIÊN HỆ:
+
+Nếu có vấn đề:
+  - Check DEPLOY_NGAY_BAY_GIO.md
+  - Check console log: vercel logs app-ql-v2 --prod
+  - Xóa cache: rmdir /s /q node_modules && npm install
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎉 READY TO DEPLOY!
+
+Thực hiện ngay: Deploy Code → Cập nhật Database → App Hoạt Động
+
+═══════════════════════════════════════════════════════════════════════════════
