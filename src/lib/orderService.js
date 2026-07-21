@@ -190,7 +190,7 @@ export const orderService = {
           *,
           order_items(*)
         `)
-        .or(`customer_name.ilike.%${query}%,customer_email.ilike.%${query}%,customer_phone.ilike.%${query}%`)
+        .or(`customer_name.ilike.%${query}%,customer_email.ilike.%${query}%,customer_phone.ilike.%${query}%,shipping_address.ilike.%${query}%`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

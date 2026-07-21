@@ -70,7 +70,7 @@ export const dashboardService = {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('created_at, total_amount')
+        .select('created_at, total')
         .gte('created_at', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: true });
 
@@ -83,7 +83,7 @@ export const dashboardService = {
         if (!salesByDate[date]) {
           salesByDate[date] = { total: 0, count: 0 };
         }
-        salesByDate[date].total += order.total_amount || 0;
+        salesByDate[date].total += order.total || 0;
         salesByDate[date].count += 1;
       });
 
@@ -104,10 +104,14 @@ export const dashboardService = {
       const { data, error } = await supabase
         .from('order_items')
         .select(`
-          product_id,
+          variant_id,
           quantity,
           price,
-          products(id, name, price)
+          product_variants(
+            id,
+            product_id,
+            products(id, name, price)
+          )
         `)
         .order('quantity', { ascending: false })
         .limit(limit);
@@ -117,11 +121,12 @@ export const dashboardService = {
       // Group by product
       const productSales = {};
       data?.forEach(item => {
-        const productId = item.product_id;
+        const productId = item.product_variants?.product_id;
+        const productName = item.product_variants?.products?.name || 'Unknown';
         if (!productSales[productId]) {
           productSales[productId] = {
             productId,
-            name: item.products?.name || 'Unknown',
+            name: productName,
             quantity: 0,
             revenue: 0,
           };
@@ -170,9 +175,12 @@ export const dashboardService = {
         .select(`
           price,
           quantity,
-          products(
-            category_id,
-            categories(id, name)
+          product_variants(
+            product_id,
+            products(
+              category_id,
+              categories(id, name)
+            )
           )
         `);
 
@@ -181,8 +189,8 @@ export const dashboardService = {
       // Group by category
       const categoryRevenue = {};
       data?.forEach(item => {
-        const categoryId = item.products?.category_id;
-        const categoryName = item.products?.categories?.name || 'Unknown';
+        const categoryId = item.product_variants?.products?.category_id;
+        const categoryName = item.product_variants?.products?.categories?.name || 'Unknown';
         if (!categoryRevenue[categoryId]) {
           categoryRevenue[categoryId] = {
             categoryId,
