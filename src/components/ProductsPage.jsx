@@ -71,16 +71,32 @@ function ProductsPage() {
         return;
       }
 
-      if (editingId) {
-        await productService.updateProduct(editingId, formData);
-        if (formData.initial_stock !== '') {
-          await productService.updateProductStock(editingId, parseInt(formData.initial_stock, 10) || 0);
-        }
-        alert('Cập nhật thành công!');
-      } else {
-        await productService.createProduct(formData);
-        alert('Tạo sản phẩm thành công!');
-      }
+      // Chuẩn hóa dữ liệu trước khi gửi
+const productData = {
+  ...formData,
+  category_id: formData.category_id?.trim()
+    ? formData.category_id
+    : null,
+};
+
+console.log("FORM DATA:", formData);
+console.log("SEND DATA:", productData);
+
+if (editingId) {
+  await productService.updateProduct(editingId, productData);
+
+  if (formData.initial_stock !== '') {
+    await productService.updateProductStock(
+      editingId,
+      parseInt(formData.initial_stock, 10) || 0
+    );
+  }
+
+  alert('Cập nhật thành công!');
+} else {
+  await productService.createProduct(productData);
+  alert('Tạo sản phẩm thành công!');
+}
 
       await fetchProducts();
       resetForm();

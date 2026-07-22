@@ -105,6 +105,8 @@ export const productService = {
       let error = null;
 
       // Primary attempt: insert without stock_quantity column using explicit select
+      console.log("Payload gửi lên Supabase:");
+      console.log(basePayload);
       const res1 = await supabase
         .from('products')
         .insert([basePayload])
