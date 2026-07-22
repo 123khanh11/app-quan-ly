@@ -87,19 +87,31 @@ export const productService = {
   // Create new product with default variant for stock
   async createProduct(product) {
     try {
-      const initialStock = parseInt(product.initial_stock ?? product.stock_quantity ?? 0, 10) || 0;
-      const categoryId = product.category_id || null;
-      const skuValue = product.sku?.trim() ? product.sku.trim() : null;
+      const initialStock =
+    parseInt(product.initial_stock ?? product.stock_quantity ?? 0, 10) || 0;
 
+const categoryId =
+    product.category_id &&
+    product.category_id.trim() !== ""
+        ? product.category_id
+        : null;
+
+const skuValue =
+    product.sku && product.sku.trim() !== ""
+        ? product.sku.trim()
+        : null;
       const basePayload = {
-          name: product.name,
-          description: product.description || '',
-          price: parseFloat(product.price) || 0,
-          category_id: categoryId,
-          image_url: product.image_url || null,
-          sku: skuValue,
-          created_at: new Date().toISOString(),
-      };
+    name: product.name,
+    description: product.description || '',
+    price: parseFloat(product.price) || 0,
+    category_id: categoryId,
+    image_url: product.image_url || null,
+    sku: skuValue,
+    created_at: new Date().toISOString(),
+};
+
+console.log("===== Payload =====");
+console.log(basePayload);
 
       let data = null;
       let error = null;
