@@ -5,14 +5,17 @@ import { supabase } from './supabaseClient';
  */
 
 export const orderItemService = {
-  // Get all order items for an order
+  // Get all order items for an order with variant and product info
   async getOrderItems(orderId) {
     try {
       const { data, error } = await supabase
         .from('order_items')
         .select(`
           *,
-          products(*)
+          product_variants(
+            *,
+            products(*)
+          )
         `)
         .eq('order_id', orderId);
 
@@ -31,10 +34,9 @@ export const orderItemService = {
         .from('order_items')
         .insert([{
           order_id: orderItem.order_id,
-          product_id: orderItem.product_id,
-          quantity: parseInt(orderItem.quantity),
-          price: parseFloat(orderItem.price),
-          created_at: new Date().toISOString(),
+          variant_id: orderItem.variant_id,
+          quantity: parseInt(orderItem.quantity, 10) || 1,
+          price: parseFloat(orderItem.price) || 0,
         }])
         .select()
         .single();
@@ -53,9 +55,8 @@ export const orderItemService = {
       const { data, error } = await supabase
         .from('order_items')
         .update({
-          quantity: parseInt(updates.quantity),
-          price: parseFloat(updates.price),
-          updated_at: new Date().toISOString(),
+          quantity: parseInt(updates.quantity, 10) || 1,
+          price: parseFloat(updates.price) || 0,
         })
         .eq('id', id)
         .select()
@@ -87,9 +88,9 @@ export const orderItemService = {
 
   // Calculate order total
   calculateTotal(items) {
-    return items.reduce((total, item) => {
-      return total + (item.price * item.quantity);
-    }, 0);
+    return items?.reduce((total, item) => {
+      return total + ((item.price || 0) * (item.quantity || 0));
+    }, 0) || 0;
   },
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ProductsPage.css';
 import { productService } from '../lib/productService';
+import { supabase } from '../lib/supabaseClient';
 
 function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -15,6 +16,7 @@ function ProductsPage() {
     name: '',
     description: '',
     price: '',
+    initial_stock: '',
     category_id: '',
     image_url: '',
     sku: '',
@@ -71,6 +73,9 @@ function ProductsPage() {
 
       if (editingId) {
         await productService.updateProduct(editingId, formData);
+        if (formData.initial_stock !== '') {
+          await productService.updateProductStock(editingId, parseInt(formData.initial_stock, 10) || 0);
+        }
         alert('Cập nhật thành công!');
       } else {
         await productService.createProduct(formData);
@@ -89,6 +94,7 @@ function ProductsPage() {
       name: product.name,
       description: product.description,
       price: product.price,
+      initial_stock: product.stock_quantity ?? '',
       category_id: product.category_id || '',
       image_url: product.image_url || '',
       sku: product.sku || '',
@@ -114,6 +120,7 @@ function ProductsPage() {
       name: '',
       description: '',
       price: '',
+      initial_stock: '',
       category_id: '',
       image_url: '',
       sku: '',
@@ -191,6 +198,18 @@ function ProductsPage() {
                 onChange={handleInputChange}
                 step="0.01"
                 required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Số Lượng Tồn Kho</label>
+              <input
+                type="number"
+                name="initial_stock"
+                value={formData.initial_stock}
+                onChange={handleInputChange}
+                min="0"
+                placeholder="0"
               />
             </div>
 

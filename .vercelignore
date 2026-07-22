@@ -8,8 +8,6 @@ node_modules
 .env
 .env.example
 pubspec.*
-package.json
-package-lock.json
 *.md
 *.bat
 *.log

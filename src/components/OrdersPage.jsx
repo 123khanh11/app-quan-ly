@@ -77,18 +77,13 @@ function OrdersPage() {
 
   const handleEdit = (order) => {
     setFormData({
-      customer_name: order.customer_name,
-      customer_email: order.customer_email,
-      customer_phone: order.customer_phone,
-      shipping_address: formatAddress({
-        street: order.shipping_street,
-        ward: order.shipping_ward,
-        district: order.shipping_district,
-        city: order.shipping_city,
-      }),
-      total_amount: order.total_amount,
-      status: order.status,
-      notes: order.notes,
+      customer_name: order.customer_name || '',
+      customer_email: order.customer_email || '',
+      customer_phone: order.customer_phone || '',
+      shipping_address: order.shipping_address || '',
+      total_amount: order.total ?? order.total_amount ?? '',
+      status: order.order_status || order.status || 'pending',
+      notes: order.note || order.notes || '',
     });
     setEditingId(order.id);
     setShowForm(true);
@@ -149,7 +144,7 @@ function OrdersPage() {
 
   const filteredOrders = filterStatus === 'all'
     ? orders
-    : orders.filter(o => o.status === filterStatus);
+    : orders.filter(o => (o.order_status || o.status) === filterStatus);
 
   if (loading) return <div className="orders-page"><div className="loading">Đang tải...</div></div>;
 
@@ -225,7 +220,7 @@ function OrdersPage() {
                 name="shipping_address"
                 value={formData.shipping_address}
                 onChange={handleInputChange}
-                placeholder="Số nhà, đường, phường, quận, thành phố, mã bưu điện"
+                placeholder="Nhập địa chỉ giao hàng chi tiết"
                 required
               />
             </div>
@@ -315,41 +310,25 @@ function OrdersPage() {
             {filteredOrders.map(order => (
               <tr key={order.id}>
                 <td className="id-cell">#{order.id.slice(0, 8)}</td>
-                <td className="name-cell">{order.note}</td>
-                <td>-</td>
-                <td className="address-cell">
-                  <button
-                    onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
-                    className="btn-view-address"
-                  >
-                    {selectedOrder?.id === order.id ? '✕' : '📍 Xem'}
-                  </button>
-                  {selectedOrder?.id === order.id && (
-                    <div className="address-popup">
-                      <p><strong>Đường:</strong> {order.shipping_street || '-'}</p>
-                      <p><strong>Phường:</strong> {order.shipping_ward || '-'}</p>
-                      <p><strong>Quận:</strong> {order.shipping_district || '-'}</p>
-                      <p><strong>Thành phố:</strong> {order.shipping_city || '-'}</p>
-                      <p><strong>Đầy đủ:</strong> {order.shipping_address}</p>
-                    </div>
-                  )}
-                </td>
+                <td className="name-cell">{order.customer_name || 'Khách lẻ'}</td>
+                <td>{order.customer_phone || '-'}</td>
+                <td className="address-cell">{order.shipping_address || '-'}</td>
                 <td className="amount-cell">
-                  {order.total?.toLocaleString('vi-VN')} ₫
+                  {(order.total ?? order.total_amount ?? 0).toLocaleString('vi-VN')} ₫
                 </td>
                 <td>
                   <select
-                    value={order.order_status}
+                    value={order.order_status || order.status || 'pending'}
                     onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                    className={`status-select status-${order.order_status}`}
+                    className={`status-select status-${order.order_status || order.status || 'pending'}`}
                   >
                     <option value="pending">⏳ Chờ</option>
                     <option value="processing">⚙️ Đang</option>
-                    <option value="completed">✅ OK</option>
+                    <option value="completed">✅ Hoàn thành</option>
                     <option value="cancelled">❌ Hủy</option>
                   </select>
                 </td>
-                <td>{new Date(order.created_at).toLocaleDateString('vi-VN')}</td>
+                <td>{order.created_at ? new Date(order.created_at).toLocaleDateString('vi-VN') : '-'}</td>
                 <td className="actions-cell">
                   <button
                     onClick={() => handleEdit(order)}

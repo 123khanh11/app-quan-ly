@@ -42,4 +42,30 @@ ORDER BY column_name;
 -- STEP 4: If stock_quantity column exists, drop it
 ALTER TABLE products DROP COLUMN IF EXISTS stock_quantity;
 
+-- STEP 5: RLS policies for product_variants (stock is stored here)
+DROP POLICY IF EXISTS "Enable insert variants for authenticated" ON product_variants;
+DROP POLICY IF EXISTS "Enable select variants for all" ON product_variants;
+DROP POLICY IF EXISTS "Enable update variants for authenticated" ON product_variants;
+DROP POLICY IF EXISTS "Enable delete variants for authenticated" ON product_variants;
+
+CREATE POLICY "Enable insert variants for authenticated"
+  ON product_variants FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable select variants for all"
+  ON product_variants FOR SELECT
+  USING (true);
+
+CREATE POLICY "Enable update variants for authenticated"
+  ON product_variants FOR UPDATE
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable delete variants for authenticated"
+  ON product_variants FOR DELETE
+  USING (auth.role() = 'authenticated');
+
+-- STEP 6: Refresh PostgREST schema cache
+NOTIFY pgrst, 'reload schema';
+
 -- Done! Refresh browser and try creating a product again

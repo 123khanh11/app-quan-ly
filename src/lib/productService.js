@@ -11,18 +11,38 @@ export const productService = {
       const { data, error } = await supabase
         .from('products')
         .select(`
-          *,
+          id,
+          name,
+          description,
+          price,
+          category_id,
+          image_url,
+          sku,
+          created_at,
           categories(id, name, slug),
           product_variants(id, stock)
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        // Fallback if joined query fails
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('products')
+          .select('id, name, description, price, category_id, image_url, sku, created_at')
+          .order('created_at', { ascending: false });
+
+        if (fallbackError) throw fallbackError;
+        return fallbackData?.map(product => ({
+          ...product,
+          stock_quantity: product.stock_quantity ?? product.stock ?? 0,
+        })) || [];
+      }
       
-      // Transform to include calculated stock
+      // Transform to include calculated stock and default variant for inventory updates
       return data?.map(product => ({
         ...product,
-        stock_quantity: product.product_variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0,
+        stock_quantity: product.stock_quantity ?? product.product_variants?.reduce((sum, v) => sum + (v.stock || 0), 0) ?? 0,
+        default_variant_id: product.product_variants?.[0]?.id || null,
       })) || [];
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -35,7 +55,7 @@ export const productService = {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('id, name, description, price, category_id, image_url, sku, created_at')
         .eq('category_id', categoryId)
         .order('name', { ascending: true });
 
@@ -52,7 +72,7 @@ export const productService = {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('id, name, description, price, category_id, image_url, sku, created_at')
         .eq('id', id)
         .single();
 
@@ -64,25 +84,69 @@ export const productService = {
     }
   },
 
-  // Create new product (no stock - managed via variants)
+  // Create new product with default variant for stock
   async createProduct(product) {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .insert([{
+      const initialStock = parseInt(product.initial_stock ?? product.stock_quantity ?? 0, 10) || 0;
+      const categoryId = product.category_id || null;
+      const skuValue = product.sku?.trim() ? product.sku.trim() : null;
+
+      const basePayload = {
           name: product.name,
           description: product.description || '',
-          price: parseFloat(product.price),
-          category_id: product.category_id,
+          price: parseFloat(product.price) || 0,
+          category_id: categoryId,
           image_url: product.image_url || null,
-          sku: product.sku || '',
+          sku: skuValue,
           created_at: new Date().toISOString(),
-        }])
-        .select()
+      };
+
+      let data = null;
+      let error = null;
+
+      // Primary attempt: insert without stock_quantity column using explicit select
+      const res1 = await supabase
+        .from('products')
+        .insert([basePayload])
+        .select('id, name, description, price, category_id, image_url, sku, created_at')
         .single();
 
+      data = res1.data;
+      error = res1.error;
+
+      // Fallback attempt: if schema cache or DB requires stock_quantity field
+      if (error && (error.code === 'PGRST204' || error.message?.includes('stock_quantity'))) {
+        console.warn('Retrying product creation with stock_quantity column in payload...');
+        const res2 = await supabase
+          .from('products')
+          .insert([{ ...basePayload, stock_quantity: initialStock }])
+          .select()
+          .single();
+
+        data = res2.data;
+        error = res2.error;
+      }
+
       if (error) throw error;
-      return data;
+
+      // Insert default variant for stock tracking if variant table exists
+      try {
+        const { data: variant } = await supabase
+          .from('product_variants')
+          .insert([{
+            product_id: data.id,
+            stock: initialStock,
+            sku: skuValue ? `${skuValue}-default` : null,
+            price: parseFloat(product.price) || 0,
+          }])
+          .select('id, stock')
+          .single();
+
+        return { ...data, default_variant_id: variant?.id || null, stock_quantity: initialStock };
+      } catch (vErr) {
+        console.warn('Could not insert product variant:', vErr);
+        return { ...data, stock_quantity: initialStock };
+      }
     } catch (error) {
       console.error('Error creating product:', error);
       throw error;
@@ -92,20 +156,38 @@ export const productService = {
   // Update product (no stock field - managed via variants)
   async updateProduct(id, updates) {
     try {
-      const { data, error } = await supabase
+      const categoryId = updates.category_id || null;
+      const skuValue = updates.sku?.trim() ? updates.sku.trim() : null;
+
+      const basePayload = {
+        name: updates.name,
+        description: updates.description || '',
+        price: parseFloat(updates.price) || 0,
+        category_id: categoryId,
+        image_url: updates.image_url || null,
+        sku: skuValue,
+        updated_at: new Date().toISOString(),
+      };
+
+      let { data, error } = await supabase
         .from('products')
-        .update({
-          name: updates.name,
-          description: updates.description || '',
-          price: parseFloat(updates.price),
-          category_id: updates.category_id,
-          image_url: updates.image_url || null,
-          sku: updates.sku || '',
-          updated_at: new Date().toISOString(),
-        })
+        .update(basePayload)
         .eq('id', id)
-        .select()
+        .select('id, name, description, price, category_id, image_url, sku')
         .single();
+
+      if (error && (error.code === 'PGRST204' || error.message?.includes('stock_quantity'))) {
+        const initialStock = parseInt(updates.initial_stock ?? updates.stock_quantity ?? 0, 10) || 0;
+        const res2 = await supabase
+          .from('products')
+          .update({ ...basePayload, stock_quantity: initialStock })
+          .eq('id', id)
+          .select()
+          .single();
+
+        data = res2.data;
+        error = res2.error;
+      }
 
       if (error) throw error;
       return data;
@@ -158,6 +240,52 @@ export const productService = {
       })) || [];
     } catch (error) {
       console.error('Error fetching low stock products:', error);
+      throw error;
+    }
+  },
+
+  // Update stock on a product's default variant
+  async updateProductStock(productId, newQuantity) {
+    try {
+      const { data: variant } = await supabase
+        .from('product_variants')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1)
+        .maybeSingle();
+
+      if (variant) {
+        return this.updateStock(variant.id, newQuantity);
+      }
+      return this.ensureDefaultVariant(productId, newQuantity);
+    } catch (error) {
+      console.error('Error updating product stock:', error);
+      throw error;
+    }
+  },
+
+  // Ensure a product has at least one variant (for legacy products without variants)
+  async ensureDefaultVariant(productId, stock = 0, price = 0) {
+    try {
+      const { data: existing } = await supabase
+        .from('product_variants')
+        .select('id')
+        .eq('product_id', productId)
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) return existing;
+
+      const { data, error } = await supabase
+        .from('product_variants')
+        .insert([{ product_id: productId, stock, price }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error ensuring default variant:', error);
       throw error;
     }
   },

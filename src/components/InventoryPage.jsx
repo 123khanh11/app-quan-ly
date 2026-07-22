@@ -36,8 +36,8 @@ function InventoryPage() {
     }
   };
 
-  const handleUpdateStock = async (productId, currentStock) => {
-    if (editingStockId === productId) {
+  const handleUpdateStock = async (product, currentStock) => {
+    if (editingStockId === product.id) {
       try {
         const quantity = parseInt(newStockValue);
         if (isNaN(quantity) || quantity < 0) {
@@ -45,7 +45,14 @@ function InventoryPage() {
           return;
         }
 
-        await productService.updateStock(productId, quantity);
+        let variantId = product.default_variant_id || product.variant_id;
+        if (!variantId) {
+          const variant = await productService.ensureDefaultVariant(product.id, quantity, product.price || 0);
+          variantId = variant.id;
+        } else {
+          await productService.updateStock(variantId, quantity);
+        }
+
         await fetchInventoryData();
         alert('Cập nhật kho hàng thành công!');
         setEditingStockId(null);
@@ -54,7 +61,7 @@ function InventoryPage() {
         alert('Lỗi: ' + error.message);
       }
     } else {
-      setEditingStockId(productId);
+      setEditingStockId(product.id);
       setNewStockValue(currentStock.toString());
     }
   };
@@ -228,7 +235,7 @@ function InventoryPage() {
                 </td>
                 <td className="actions">
                   <button
-                    onClick={() => handleUpdateStock(product.id, product.stock_quantity || 0)}
+                    onClick={() => handleUpdateStock(product, product.stock_quantity || 0)}
                     className={`btn-update-stock ${editingStockId === product.id ? 'saving' : ''}`}
                   >
                     {editingStockId === product.id ? '✅ Lưu' : '✏️ Sửa'}
