@@ -13,6 +13,7 @@ function CategoriesPage() {
     name: '',
     description: '',
     image_url: '',
+    parent_id: '',
   });
 
   useEffect(() => {
@@ -61,6 +62,7 @@ function CategoriesPage() {
             name: formData.name,
             description: formData.description,
             image_url: formData.image_url || null,
+            parent_id: formData.parent_id || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', editingId);
@@ -74,6 +76,7 @@ function CategoriesPage() {
             name: formData.name,
             description: formData.description,
             image_url: formData.image_url || null,
+            parent_id: formData.parent_id || null,
             created_at: new Date().toISOString(),
           }]);
 
@@ -93,6 +96,7 @@ function CategoriesPage() {
       name: category.name,
       description: category.description || '',
       image_url: category.image_url || '',
+      parent_id: category.parent_id || '',
     });
     setEditingId(category.id);
     setShowForm(true);
@@ -132,6 +136,7 @@ function CategoriesPage() {
       name: '',
       description: '',
       image_url: '',
+      parent_id: '',
     });
     setEditingId(null);
     setShowForm(false);
@@ -158,6 +163,24 @@ function CategoriesPage() {
           <h2>{editingId ? 'Sửa Danh Mục' : 'Thêm Danh Mục'}</h2>
 
           <div className="form-grid">
+            <div className="form-group full-width">
+              <label>Danh Mục Cha (Nếu là danh mục con)</label>
+              <select
+                name="parent_id"
+                value={formData.parent_id}
+                onChange={handleInputChange}
+              >
+                <option value="">-- Không (Danh mục chính) --</option>
+                {categories
+                  .filter(c => c.id !== editingId) // Không cho chọn chính nó làm cha
+                  .map(cat => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.parent_id ? '  ↳ ' : ''}{cat.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
             <div className="form-group full-width">
               <label>Tên Danh Mục *</label>
               <input
