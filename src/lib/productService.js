@@ -162,7 +162,12 @@ console.log(basePayload);
         return { ...data, stock_quantity: initialStock };
       }
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('===== ERROR CREATING PRODUCT =====');
+console.error('Error object:', error);
+console.error('Message:', error?.message);
+console.error('Code:', error?.code);
+console.error('Details:', error?.details);
+console.error('Hint:', error?.hint);
       throw error;
     }
   },
