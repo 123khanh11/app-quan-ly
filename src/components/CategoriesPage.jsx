@@ -234,36 +234,88 @@ function CategoriesPage() {
       )}
 
       <div className="categories-grid">
-        {categories.map(category => (
-          <div key={category.id} className="category-card">
-            {category.image_url && (
-              <img src={category.image_url} alt={category.name} className="category-image" />
-            )}
-            <div className="category-info">
-              <h3>{category.name}</h3>
-              {category.description && (
-                <p className="description">{category.description}</p>
-              )}
-            </div>
-            <div className="category-actions">
-              <button
-                onClick={() => handleEdit(category)}
-                className="btn-edit"
-              >
-                ✏️ Sửa
-              </button>
-              <button
-                onClick={() => handleDelete(category.id)}
-                className="btn-delete"
-              >
-                🗑️ Xóa
-              </button>
-            </div>
-          </div>
-        ))}
+        {categories
+          .filter(cat => !cat.parent_id) // Chỉ hiển thị danh mục cha
+          .map(parentCategory => {
+            const childCategories = categories.filter(cat => cat.parent_id === parentCategory.id);
+            
+            return (
+              <div key={parentCategory.id} className="category-card parent-category">
+                <div className="category-header">
+                  {parentCategory.image_url && (
+                    <img src={parentCategory.image_url} alt={parentCategory.name} className="category-image" />
+                  )}
+                  <div className="category-info">
+                    <h3>📁 {parentCategory.name}</h3>
+                    {parentCategory.description && (
+                      <p className="description">{parentCategory.description}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Badge số danh mục con */}
+                <div className="child-count">
+                  {childCategories.length > 0 ? (
+                    <span className="badge">{childCategories.length} danh mục con</span>
+                  ) : (
+                    <span className="badge empty">Không có danh mục con</span>
+                  )}
+                </div>
+
+                {/* Danh sách danh mục con */}
+                {childCategories.length > 0 && (
+                  <div className="child-categories">
+                    <h4>Danh mục con:</h4>
+                    {childCategories.map(child => (
+                      <div key={child.id} className="child-category-item">
+                        <div className="child-info">
+                          <span className="child-name">↳ {child.name}</span>
+                          {child.description && (
+                            <p className="child-description">{child.description}</p>
+                          )}
+                        </div>
+                        <div className="child-actions">
+                          <button
+                            onClick={() => handleEdit(child)}
+                            className="btn-edit-small"
+                            title="Sửa danh mục con"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDelete(child.id)}
+                            className="btn-delete-small"
+                            title="Xóa danh mục con"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Nút sửa/xóa danh mục cha */}
+                <div className="category-actions">
+                  <button
+                    onClick={() => handleEdit(parentCategory)}
+                    className="btn-edit"
+                  >
+                    ✏️ Sửa
+                  </button>
+                  <button
+                    onClick={() => handleDelete(parentCategory.id)}
+                    className="btn-delete"
+                  >
+                    🗑️ Xóa
+                  </button>
+                </div>
+              </div>
+            );
+          })}
       </div>
 
-      {categories.length === 0 && (
+      {categories.filter(cat => !cat.parent_id).length === 0 && (
         <div className="empty-state">
           <p>📭 Không có danh mục</p>
         </div>
