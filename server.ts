@@ -209,7 +209,7 @@ app.get('/api/ghn/service', async (req: Request, res: Response) => {
 })
 
 // POST /api/ghn/fee - Tính phí vận chuyển
-app.post('/api/ghn/fee', async (_req: Request, res: Response) => {
+app.post('/api/ghn/fee', async (req: Request, res: Response) => {
   try {
     const {
       service_id,
@@ -223,7 +223,15 @@ app.post('/api/ghn/fee', async (_req: Request, res: Response) => {
       height = 0,
       insurance_value = 0,
       coupon = null,
-    } = _req.body
+    } = req.body
+
+    console.log('📥 GHN Fee Request:', {
+      service_id,
+      from: `${from_district_id}/${from_ward_code}`,
+      to: `${to_district_id}/${to_ward_code}`,
+      weight,
+      dimensions: `${length}x${width}x${height}`,
+    })
 
     if (!service_id || !from_district_id || !to_district_id || !to_ward_code || !weight) {
       return res.status(400).json({
@@ -232,25 +240,31 @@ app.post('/api/ghn/fee', async (_req: Request, res: Response) => {
       })
     }
 
+    const payloadForGHN = {
+      service_id, // Correct parameter name per GHN spec
+      from_district_id,
+      from_ward_code,
+      to_district_id,
+      to_ward_code,
+      weight,
+      length,
+      width,
+      height,
+      insurance_value,
+      coupon,
+    }
+
+    console.log('📤 Calling GHN API with:', payloadForGHN)
+
     const response = await fetch(`${GHN_API_URL}/shipping-order/fee`, {
       method: 'POST',
       headers: getGHNHeaders(),
-      body: JSON.stringify({
-        service_type_id: service_id, // Note: Frontend sends service_id, GHN API needs service_type_id
-        from_district_id,
-        from_ward_code,
-        to_district_id,
-        to_ward_code,
-        weight,
-        length,
-        width,
-        height,
-        insurance_value,
-        coupon,
-      }),
+      body: JSON.stringify(payloadForGHN),
     })
 
     const data = await response.json()
+
+    console.log('📥 GHN API Response:', data)
 
     if (data.code === 200) {
       res.json({
@@ -258,6 +272,7 @@ app.post('/api/ghn/fee', async (_req: Request, res: Response) => {
         data: data.data,
       })
     } else {
+      console.error('❌ GHN API Error:', data.message)
       res.status(400).json({
         success: false,
         error: data.message,

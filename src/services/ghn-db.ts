@@ -62,7 +62,7 @@ export async function getWards(districtId: number) {
 }
 
 /**
- * Tính phí vận chuyển - Gọi Express backend API
+ * Tính phí vận chuyển - Gọi GHN API trực tiếp
  */
 export async function calculateShippingFee(params: {
   service_id: number
@@ -78,13 +78,40 @@ export async function calculateShippingFee(params: {
   coupon?: string | null
 }) {
   try {
-    console.log('📡 Calling /api/shipping/fee with params:', params)
+    const ghnToken = import.meta.env.VITE_GHN_TOKEN
+    const ghnShopId = import.meta.env.VITE_GHN_SHOP_ID
+    const ghnApiUrl = import.meta.env.VITE_GHN_API_URL || 'https://dev-online-gateway.ghn.vn/shiip/public-api/v2'
 
-    // Gọi Next.js API route
-    const response = await fetch('/api/shipping/fee', {
+    if (!ghnToken || !ghnShopId) {
+      console.warn('⚠️ GHN credentials missing, using fallback estimation')
+      const estimatedFee = Math.max(30000, 30000 + (Math.ceil(params.weight / 1000) - 1) * 5000)
+      return {
+        success: true,
+        data: {
+          total: estimatedFee,
+          service_fee: estimatedFee,
+          insurance_fee: 0,
+          pick_station_fee: 0,
+          coupon_value: 0,
+          r2s_fee: 0,
+          document_return: 0,
+          double_check: 0,
+          cod_fee: 0,
+          pick_remote_areas_fee: 0,
+          deliver_remote_areas_fee: 0,
+          cod_failed_fee: 0,
+        },
+      }
+    }
+
+    console.log('📡 Calling GHN API directly with params:', params)
+
+    const response = await fetch(`${ghnApiUrl}/shipping-order/fee`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Token': ghnToken,
+        'ShopId': ghnShopId,
       },
       body: JSON.stringify(params),
     })
@@ -93,13 +120,13 @@ export async function calculateShippingFee(params: {
 
     console.log('📥 GHN API Response:', data)
 
-    if (data.success && data.data) {
+    if (data.code === 200 && data.data) {
       return {
         success: true,
         data: data.data,
       }
     } else {
-      console.warn('⚠️ GHN API error:', data.error)
+      console.warn('⚠️ GHN API error:', data.message)
       // Fallback to estimation
       const estimatedFee = Math.max(30000, 30000 + (Math.ceil(params.weight / 1000) - 1) * 5000)
       return {

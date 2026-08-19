@@ -320,7 +320,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       // Clear cart and redirect
       clearCart()
-      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\nTiền hàng: ${selectedTotal.toLocaleString()} VNĐ\nPhí vận chuyển: ${SHIPPING_FEE.toLocaleString()} VNĐ\nTổng cộng: ${totalWithShipping.toLocaleString()} VNĐ\n\nChúng tôi sẽ liên hệ bạn sớm.`)
+      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\nTiền hàng: ${selectedTotal.toLocaleString()} VNĐ\nPhí vận chuyển: ${shippingFee.toLocaleString()} VNĐ\nTổng cộng: ${totalWithShipping.toLocaleString()} VNĐ\n\nChúng tôi sẽ liên hệ bạn sớm.`)
       window.location.href = '/'
     } catch (error) {
       console.error('Checkout error:', error)
