@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useCart } from '@/app/context/CartContext'
-import { calculateShippingFee, getDistricts, getWards } from '@/services/ghn-db'
+import { getDistricts, getWards } from '@/services/ghn-db'
 
-// GHN Province IDs mapping - Updated from Supabase
+// GHN Province IDs mapping
 const PROVINCE_TO_GHN_ID: Record<string, number> = {
   'Hà Nội': 201,
   'TP. Hồ Chí Minh': 202,
@@ -81,14 +81,16 @@ interface CheckoutFormProps {
 }
 
 export function CheckoutForm({ onClose }: CheckoutFormProps) {
-  const { cartItems, cartTotal, clearCart } = useCart()
+  const { cartItems, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [shippingFee, setShippingFee] = useState<number>(50000)
   const [districts, setDistricts] = useState<District[]>([])
   const [wards, setWards] = useState<Ward[]>([])
   const [loadingDistricts, setLoadingDistricts] = useState(false)
   const [loadingWards, setLoadingWards] = useState(false)
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(
+    new Set(cartItems.map((item) => `${item.product_id}-${item.color}-${item.size}`))
+  )
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
@@ -115,7 +117,6 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
         if (result.success && result.districts) {
           setDistricts(result.districts)
         } else {
-          console.error('Failed to load districts:', result.error)
           setDistricts([])
         }
       } catch (err) {
@@ -143,7 +144,6 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
         if (result.success && result.wards) {
           setWards(result.wards)
         } else {
-          console.error('Failed to load wards:', result.error)
           setWards([])
         }
       } catch (err) {
@@ -157,76 +157,40 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
     loadWards()
   }, [formData.districtId])
 
-  // Calculate shipping fee when district/ward changes
-  useEffect(() => {
-    const calculateShipping = async () => {
-      if (!formData.districtId || !formData.wardCode) {
-        setShippingFee(50000) // Default fee
-        return
-      }
-
-      try {
-        // Calculate total weight and dimensions from cart items
-        // Default: 500g per item, 20x20x20cm per item
-        let totalWeight = 0
-        let totalLength = 0
-        let totalWidth = 0
-        let totalHeight = 0
-
-        cartItems.forEach((item) => {
-          // Weight: default 500g per item
-          totalWeight += (item.weight || 500) * item.quantity
-
-          // Dimensions: default 20x20x20cm per item
-          totalLength = Math.max(totalLength, item.length || 20)
-          totalWidth = Math.max(totalWidth, item.width || 20)
-          totalHeight += (item.height || 20) * item.quantity
-        })
-
-        // Ensure minimum values
-        totalWeight = Math.max(totalWeight, 1000) // min 1kg
-        totalLength = Math.max(totalLength, 20)
-        totalWidth = Math.max(totalWidth, 20)
-        totalHeight = Math.max(totalHeight, 20)
-
-        // Shop location: Hà Đông, Hà Nội (Phường Dương Nội)
-        // District ID for Hà Đông: 1455
-        // Ward code for Phường Dương Nội: 21617
-        
-        // Get service type first (service_id = 2 for light goods)
-        const result = await calculateShippingFee({
-          service_id: 2, // Light goods (Hàng nhẹ)
-          from_district_id: 1455, // Hà Đông, Hà Nội
-          from_ward_code: '21617', // Phường Dương Nội
-          to_district_id: formData.districtId,
-          to_ward_code: formData.wardCode,
-          weight: totalWeight,
-          length: totalLength,
-          width: totalWidth,
-          height: totalHeight,
-          insurance_value: 0,
-          coupon: null,
-        })
-
-        if (result.success && result.data) {
-          setShippingFee(result.data.total || 50000)
-        } else {
-          console.error('Failed to calculate shipping:', result.error)
-          setShippingFee(50000) // Fallback
-        }
-      } catch (err) {
-        console.error('Error calculating shipping fee:', err)
-        setShippingFee(50000) // Fallback
-      }
+  const handleToggleItem = (itemKey: string) => {
+    const updated = new Set(selectedItems)
+    if (updated.has(itemKey)) {
+      updated.delete(itemKey)
+    } else {
+      updated.add(itemKey)
     }
+    setSelectedItems(updated)
+  }
 
-    calculateShipping()
-  }, [formData.districtId, formData.wardCode, cartItems])
+  const handleSelectAll = () => {
+    if (selectedItems.size === cartItems.length) {
+      setSelectedItems(new Set())
+    } else {
+      setSelectedItems(
+        new Set(cartItems.map((item) => `${item.product_id}-${item.color}-${item.size}`))
+      )
+    }
+  }
+
+  const selectedTotal = cartItems
+    .filter((item) => selectedItems.has(`${item.product_id}-${item.color}-${item.size}`))
+    .reduce((total, item) => total + item.price * item.quantity, 0)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    if (selectedItems.size === 0) {
+      setError('❌ Vui lòng chọn ít nhất một sản phẩm để thanh toán.')
+      setLoading(false)
+      return
+    }
 
     if (!formData.province || !formData.district || !formData.ward || !formData.detailedAddress) {
       setError('❌ Vui lòng điền đầy đủ thông tin địa chỉ.')
@@ -238,35 +202,36 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
       const { createOrder, addOrderItem } = await import('@/services/supabase')
 
       const fullAddress = `${formData.detailedAddress}, ${formData.ward}, ${formData.district}, ${formData.province}`
-      const finalShippingFee = shippingFee || 50000
 
       // Tạo order
       const order = await createOrder({
-        total: cartTotal + finalShippingFee,
-        shipping_fee: finalShippingFee,
+        total: selectedTotal,
+        shipping_fee: 0,
         payment_method: 'cod',
         shipping_address: fullAddress,
         note: `Email: ${formData.email}\nSĐT: ${formData.phone}\nGhi chú: ${formData.note}`,
       })
 
-      // Add items to order
+      // Add items to order (chỉ những item được chọn)
       for (const item of cartItems) {
-        try {
-          await addOrderItem({
-            order_id: order.id,
-            product_id: item.product_id,
-            quantity: item.quantity,
-            price: item.price,
-          })
-        } catch (itemError) {
-          console.warn('Warning adding item:', itemError)
+        const itemKey = `${item.product_id}-${item.color}-${item.size}`
+        if (selectedItems.has(itemKey)) {
+          try {
+            await addOrderItem({
+              order_id: order.id,
+              product_id: item.product_id,
+              quantity: item.quantity,
+              price: item.price,
+            })
+          } catch (itemError) {
+            console.warn('Warning adding item:', itemError)
+          }
         }
       }
 
       // Clear cart and redirect
       clearCart()
-      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\nPhí vận chuyển: ${finalShippingFee.toLocaleString()} VNĐ\n\nChúng tôi sẽ liên hệ bạn sớm.`)
-      // Reload page to reset to home
+      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\nTổng tiền: ${selectedTotal.toLocaleString()} VNĐ\n\nChúng tôi sẽ liên hệ bạn sớm.`)
       window.location.href = '/'
     } catch (error) {
       console.error('Checkout error:', error)
@@ -278,27 +243,82 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 border-t border-border pt-3">
+    <form onSubmit={handleSubmit} className="space-y-4 border-t border-border pt-4">
+      {/* Selected Items */}
+      <div className="bg-muted p-3 rounded-md">
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-semibold text-foreground">📦 Sản Phẩm Thanh Toán ({selectedItems.size}/{cartItems.length})</p>
+          <button
+            type="button"
+            onClick={handleSelectAll}
+            className="text-sm text-primary hover:underline font-medium"
+          >
+            {selectedItems.size === cartItems.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+          </button>
+        </div>
+
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {cartItems.map((item) => {
+            const itemKey = `${item.product_id}-${item.color}-${item.size}`
+            const isSelected = selectedItems.has(itemKey)
+            return (
+              <label
+                key={itemKey}
+                className={`flex items-center gap-3 p-2 rounded-lg border-2 cursor-pointer transition-all ${
+                  isSelected
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => handleToggleItem(itemKey)}
+                  className="w-5 h-5 cursor-pointer flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground text-sm truncate">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.color && `${item.color}`}
+                    {item.size && ` • ${item.size}`}
+                    {item.sku && ` • ${item.sku}`}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-bold text-primary text-sm">
+                    {(item.price * item.quantity).toLocaleString()} VNĐ
+                  </p>
+                  <p className="text-xs text-muted-foreground">x{item.quantity}</p>
+                </div>
+              </label>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Contact Info */}
-      <input
-        type="email"
-        placeholder="Email"
-        value={formData.email}
-        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        required
-      />
-      <input
-        type="tel"
-        placeholder="Số điện thoại"
-        value={formData.phone}
-        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-        className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        required
-      />
+      <div>
+        <p className="text-sm font-semibold text-foreground mb-2">👤 Thông Tin Liên Hệ</p>
+        <input
+          type="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2"
+          required
+        />
+        <input
+          type="tel"
+          placeholder="Số điện thoại"
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          required
+        />
+      </div>
 
       {/* Address Details */}
-      <div className="pt-2 border-t border-border">
+      <div>
         <p className="text-sm font-semibold text-foreground mb-2">📍 Địa Chỉ Chi Tiết</p>
 
         <select
@@ -382,19 +402,11 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
         rows={2}
       />
 
-      {/* Shipping Fee Summary */}
+      {/* Total */}
       <div className="bg-muted p-3 rounded-md">
-        <div className="flex justify-between text-sm mb-2">
-          <span>Tiền hàng:</span>
-          <span className="font-semibold">{cartTotal.toLocaleString()} VNĐ</span>
-        </div>
-        <div className="flex justify-between text-sm border-t border-border pt-2">
-          <span>Phí vận chuyển:</span>
-          <span className="font-semibold">{shippingFee.toLocaleString()} VNĐ</span>
-        </div>
-        <div className="flex justify-between text-base font-bold border-t border-border pt-2 mt-2">
+        <div className="flex justify-between text-base font-bold">
           <span>Tổng cộng:</span>
-          <span className="text-primary">{(cartTotal + shippingFee).toLocaleString()} VNĐ</span>
+          <span className="text-primary">{selectedTotal.toLocaleString()} VNĐ</span>
         </div>
       </div>
 
@@ -402,10 +414,10 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
       <div className="flex gap-2">
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || selectedItems.size === 0}
           className="flex-1 bg-primary text-primary-foreground font-bold py-2 rounded-md hover:bg-orange-600 transition-colors disabled:opacity-50"
         >
-          {loading ? 'Đang xử lý...' : 'Đặt Hàng'}
+          {loading ? 'Đang xử lý...' : `✅ Thanh Toán (${selectedItems.size} sản phẩm)`}
         </button>
         <button
           type="button"
