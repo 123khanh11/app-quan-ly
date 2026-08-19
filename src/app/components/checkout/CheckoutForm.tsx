@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useCart } from '@/app/context/CartContext'
-import { getDistricts, getWards } from '@/services/ghn-db'
+import { getDistricts, getWards, calculateShippingFee } from '@/services/ghn-db'
 
 // GHN Province IDs mapping
 const PROVINCE_TO_GHN_ID: Record<string, number> = {
@@ -65,7 +65,7 @@ const PROVINCE_TO_GHN_ID: Record<string, number> = {
 }
 
 const VIETNAM_PROVINCES = Object.keys(PROVINCE_TO_GHN_ID)
-const SHIPPING_FEE = 50000
+const DEFAULT_SHIPPING_FEE = 50000
 
 interface District {
   district_id: number
@@ -89,6 +89,8 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
   const [wards, setWards] = useState<Ward[]>([])
   const [loadingDistricts, setLoadingDistricts] = useState(false)
   const [loadingWards, setLoadingWards] = useState(false)
+  const [shippingFee, setShippingFee] = useState<number>(DEFAULT_SHIPPING_FEE)
+  const [loadingShipping, setLoadingShipping] = useState(false)
   const [selectedItems, setSelectedItems] = useState<Set<string>>(
     new Set(cartItems.map((item) => `${item.product_id}-${item.color}-${item.size}`))
   )
@@ -158,6 +160,63 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
     loadWards()
   }, [formData.districtId])
 
+  // Calculate shipping fee when address changes
+  useEffect(() => {
+    const calculateShipping = async () => {
+      if (!formData.districtId || !formData.wardCode) {
+        setShippingFee(DEFAULT_SHIPPING_FEE)
+        return
+      }
+
+      setLoadingShipping(true)
+      try {
+        let totalWeight = 0
+        let totalLength = 0
+        let totalWidth = 0
+        let totalHeight = 0
+
+        cartItems.forEach((item) => {
+          totalWeight += (item.weight || 500) * item.quantity
+          totalLength = Math.max(totalLength, item.length || 20)
+          totalWidth = Math.max(totalWidth, item.width || 20)
+          totalHeight += (item.height || 20) * item.quantity
+        })
+
+        totalWeight = Math.max(totalWeight, 1000)
+        totalLength = Math.max(totalLength, 20)
+        totalWidth = Math.max(totalWidth, 20)
+        totalHeight = Math.max(totalHeight, 20)
+
+        const result = await calculateShippingFee({
+          service_id: 2,
+          from_district_id: 1455,
+          from_ward_code: '21617',
+          to_district_id: formData.districtId,
+          to_ward_code: formData.wardCode,
+          weight: totalWeight,
+          length: totalLength,
+          width: totalWidth,
+          height: totalHeight,
+          insurance_value: 0,
+          coupon: null,
+        })
+
+        if (result.success && result.data?.total) {
+          setShippingFee(result.data.total)
+        } else {
+          setShippingFee(DEFAULT_SHIPPING_FEE)
+        }
+      } catch (err) {
+        console.error('Error calculating shipping:', err)
+        setShippingFee(DEFAULT_SHIPPING_FEE)
+      } finally {
+        setLoadingShipping(false)
+      }
+    }
+
+    calculateShipping()
+  }, [formData.districtId, formData.wardCode, cartItems])
+
   const handleToggleItem = (itemKey: string) => {
     const updated = new Set(selectedItems)
     if (updated.has(itemKey)) {
@@ -182,7 +241,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
     .filter((item) => selectedItems.has(`${item.product_id}-${item.color}-${item.size}`))
     .reduce((total, item) => total + item.price * item.quantity, 0)
 
-  const totalWithShipping = selectedTotal + (selectedItems.size > 0 ? SHIPPING_FEE : 0)
+  const totalWithShipping = selectedTotal + (selectedItems.size > 0 ? shippingFee : 0)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -209,7 +268,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
       // Tạo order (với phí vận chuyển)
       const order = await createOrder({
         total: totalWithShipping,
-        shipping_fee: SHIPPING_FEE,
+        shipping_fee: shippingFee,
         payment_method: 'cod',
         shipping_address: fullAddress,
         note: `Email: ${formData.email}\nSĐT: ${formData.phone}\nGhi chú: ${formData.note}`,
@@ -413,7 +472,9 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
         </div>
         <div className="flex justify-between text-sm border-t border-border pt-2">
           <span className="text-muted-foreground">Phí vận chuyển:</span>
-          <span className="font-semibold text-orange-600">{(selectedItems.size > 0 ? SHIPPING_FEE : 0).toLocaleString('vi-VN')}đ</span>
+          <span className="font-semibold text-orange-600">
+            {loadingShipping ? '⏳ Đang tính...' : `${shippingFee.toLocaleString('vi-VN')}đ`}
+          </span>
         </div>
         <div className="flex justify-between text-base font-bold border-t border-border pt-2">
           <span>Tổng cộng:</span>
@@ -425,7 +486,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
       <div className="flex gap-2">
         <button
           type="submit"
-          disabled={loading || selectedItems.size === 0}
+          disabled={loading || selectedItems.size === 0 || loadingShipping}
           className="flex-1 bg-primary text-primary-foreground font-bold py-2 rounded-md hover:bg-orange-600 transition-colors disabled:opacity-50"
         >
           {loading ? 'Đang xử lý...' : `✅ Thanh Toán (${selectedItems.size} sản phẩm)`}
