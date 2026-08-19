@@ -7,6 +7,7 @@ export function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart()
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const [shippingFee, setShippingFee] = useState<number>(0)
+  const [loadingShipping, setLoadingShipping] = useState(false)
 
   const totalWithShipping = cartTotal + shippingFee
 
@@ -265,7 +266,11 @@ export function CartPage() {
 
               {isCheckingOut && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 max-h-96 overflow-y-auto">
-                  <CheckoutForm onClose={() => setIsCheckingOut(false)} onShippingFeeChange={setShippingFee} />
+                  <CheckoutForm 
+                    onClose={() => setIsCheckingOut(false)} 
+                    onShippingFeeChange={setShippingFee}
+                    onLoadingChange={setLoadingShipping}
+                  />
                 </div>
               )}
             </div>

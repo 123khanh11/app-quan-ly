@@ -80,9 +80,10 @@ interface Ward {
 interface CheckoutFormProps {
   onClose: () => void
   onShippingFeeChange?: (fee: number) => void
+  onLoadingChange?: (loading: boolean) => void
 }
 
-export function CheckoutForm({ onClose, onShippingFeeChange }: CheckoutFormProps) {
+export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: CheckoutFormProps) {
   const { cartItems, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -167,10 +168,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange }: CheckoutFormProps
       if (!formData.districtId || !formData.wardCode) {
         setShippingFee(DEFAULT_SHIPPING_FEE)
         onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
+        onLoadingChange?.(false)
         return
       }
 
       setLoadingShipping(true)
+      onLoadingChange?.(true)
       try {
         // Build items array for GHN API
         const items = cartItems.map((item) => ({
@@ -234,11 +237,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange }: CheckoutFormProps
         onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
       } finally {
         setLoadingShipping(false)
+        onLoadingChange?.(false)
       }
     }
 
     calculateShipping()
-  }, [formData.districtId, formData.wardCode, cartItems, onShippingFeeChange])
+  }, [formData.districtId, formData.wardCode, cartItems, onShippingFeeChange, onLoadingChange])
 
   const handleToggleItem = (itemKey: string) => {
     const updated = new Set(selectedItems)
