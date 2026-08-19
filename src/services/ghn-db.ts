@@ -62,7 +62,7 @@ export async function getWards(districtId: number) {
 }
 
 /**
- * Tính phí vận chuyển (hardcoded fallback vì GHN token hết)
+ * Tính phí vận chuyển - Gọi GHN API qua backend route
  */
 export async function calculateShippingFee(params: {
   service_id: number
@@ -78,40 +78,57 @@ export async function calculateShippingFee(params: {
   coupon?: string | null
 }) {
   try {
-    // Tính phí dựa trên trọng lượng
-    // Base: 30,000 VNĐ
-    // + 5,000 VNĐ per kg
+    console.log('📡 Calling /api/shipping/fee with params:', params)
 
-    let baseFee = 30000
-    const weightKg = Math.ceil(params.weight / 1000)
-    const additionalFee = (weightKg - 1) * 5000
+    // Gọi backend API route để GHN calculate fee
+    const response = await fetch('/api/shipping/fee', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    })
 
-    const totalFee = baseFee + additionalFee
+    const data = await response.json()
 
+    console.log('📥 GHN API Response:', data)
+
+    if (data.code === 200 && data.data) {
+      return {
+        success: true,
+        data: data.data,
+      }
+    } else {
+      console.warn('⚠️ GHN API returned error:', data.message)
+      // Fallback to estimation
+      const estimatedFee = Math.max(30000, 30000 + (Math.ceil(params.weight / 1000) - 1) * 5000)
+      return {
+        success: true,
+        data: {
+          total: estimatedFee,
+          service_fee: estimatedFee,
+          insurance_fee: 0,
+          pick_station_fee: 0,
+          coupon_value: 0,
+          r2s_fee: 0,
+          document_return: 0,
+          double_check: 0,
+          cod_fee: 0,
+          pick_remote_areas_fee: 0,
+          deliver_remote_areas_fee: 0,
+          cod_failed_fee: 0,
+        },
+      }
+    }
+  } catch (err) {
+    console.error('❌ Error calculating shipping:', err)
+    // Fallback to estimation
+    const estimatedFee = Math.max(30000, 30000 + (Math.ceil(params.weight / 1000) - 1) * 5000)
     return {
       success: true,
       data: {
-        total: totalFee,
-        service_fee: totalFee,
-        insurance_fee: 0,
-        pick_station_fee: 0,
-        coupon_value: 0,
-        r2s_fee: 0,
-        document_return: 0,
-        double_check: 0,
-        cod_fee: 0,
-        pick_remote_areas_fee: 0,
-        deliver_remote_areas_fee: 0,
-        cod_failed_fee: 0,
-      },
-    }
-  } catch (err) {
-    console.error('Error calculating shipping:', err)
-    return {
-      success: true, // Still return success with default
-      data: {
-        total: 50000,
-        service_fee: 50000,
+        total: estimatedFee,
+        service_fee: estimatedFee,
         insurance_fee: 0,
         pick_station_fee: 0,
         coupon_value: 0,
