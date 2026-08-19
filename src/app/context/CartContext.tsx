@@ -1,11 +1,26 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { CartItem } from '@/services/supabase'
+
+export interface CartItem {
+  id?: string
+  product_id: string
+  name: string
+  price: number
+  quantity: number
+  image_url?: string
+  weight?: number
+  length?: number
+  width?: number
+  height?: number
+  color?: string
+  size?: string
+  sku?: string
+}
 
 interface CartContextType {
   cartItems: CartItem[]
   addToCart: (item: CartItem) => void
-  removeFromCart: (productId: string) => void
-  updateQuantity: (productId: string, quantity: number) => void
+  removeFromCart: (productId: string, color?: string, size?: string) => void
+  updateQuantity: (productId: string, quantity: number, color?: string, size?: string) => void
   clearCart: () => void
   cartTotal: number
   cartCount: number
@@ -35,10 +50,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = (item: CartItem) => {
     setCartItems((prevItems) => {
-      const existingItem = prevItems.find((i) => i.product_id === item.product_id)
+      // Tìm item với cùng product_id, color, size
+      const existingItem = prevItems.find(
+        (i) =>
+          i.product_id === item.product_id &&
+          i.color === item.color &&
+          i.size === item.size
+      )
       if (existingItem) {
         return prevItems.map((i) =>
-          i.product_id === item.product_id
+          i.product_id === item.product_id && i.color === item.color && i.size === item.size
             ? { ...i, quantity: i.quantity + item.quantity }
             : i
         )
@@ -47,18 +68,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const removeFromCart = (productId: string) => {
-    setCartItems((prevItems) => prevItems.filter((i) => i.product_id !== productId))
+  const removeFromCart = (productId: string, color?: string, size?: string) => {
+    setCartItems((prevItems) =>
+      prevItems.filter(
+        (i) =>
+          !(
+            i.product_id === productId &&
+            i.color === color &&
+            i.size === size
+          )
+      )
+    )
   }
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number, color?: string, size?: string) => {
     if (quantity <= 0) {
-      removeFromCart(productId)
+      removeFromCart(productId, color, size)
       return
     }
     setCartItems((prevItems) =>
       prevItems.map((i) =>
-        i.product_id === productId ? { ...i, quantity } : i
+        i.product_id === productId && i.color === color && i.size === size
+          ? { ...i, quantity }
+          : i
       )
     )
   }

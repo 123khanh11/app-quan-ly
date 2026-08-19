@@ -45,9 +45,13 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
       price: selectedVariant.variant_price || product.product_price,
       quantity,
       image_url: selectedVariant.variant_image || product.product_image,
+      color: selectedVariant.color,
+      size: selectedVariant.size,
+      sku: selectedVariant.sku,
     })
 
     alert('✅ Đã thêm vào giỏ hàng!')
+    onClose()
   }
 
   if (loading) {

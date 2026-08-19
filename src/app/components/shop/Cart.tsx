@@ -40,6 +40,7 @@ export function CartPage() {
                   <thead className="bg-muted border-b border-border">
                     <tr>
                       <th className="px-4 py-3 text-left text-sm font-semibold">Sản Phẩm</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Thông Tin</th>
                       <th className="px-4 py-3 text-center text-sm font-semibold">Giá</th>
                       <th className="px-4 py-3 text-center text-sm font-semibold">Số Lượng</th>
                       <th className="px-4 py-3 text-right text-sm font-semibold">Tổng</th>
@@ -48,7 +49,7 @@ export function CartPage() {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {cartItems.map((item) => (
-                      <tr key={item.product_id} className="hover:bg-muted/30 transition-colors">
+                      <tr key={`${item.product_id}-${item.color}-${item.size}`} className="hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
                             {item.image_url && (
@@ -59,9 +60,25 @@ export function CartPage() {
                               />
                             )}
                             <div>
-                              <p className="font-semibold text-foreground">{item.name}</p>
-                              <p className="text-xs text-muted-foreground">ID: {item.product_id}</p>
+                              <p className="font-semibold text-foreground text-sm">{item.name}</p>
                             </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm">
+                          <div className="space-y-1">
+                            {item.color && (
+                              <p className="text-muted-foreground">
+                                <span className="font-semibold">Màu:</span> {item.color}
+                              </p>
+                            )}
+                            {item.size && (
+                              <p className="text-muted-foreground">
+                                <span className="font-semibold">Size:</span> {item.size}
+                              </p>
+                            )}
+                            {item.sku && (
+                              <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-4 text-center font-semibold text-foreground">
@@ -70,7 +87,7 @@ export function CartPage() {
                         <td className="px-4 py-4">
                           <div className="flex items-center justify-center gap-2">
                             <button
-                              onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.product_id, item.quantity - 1, item.color, item.size)}
                               className="p-1 hover:bg-muted rounded transition-colors"
                             >
                               <Minus size={16} />
@@ -79,13 +96,13 @@ export function CartPage() {
                               type="number"
                               value={item.quantity}
                               onChange={(e) =>
-                                updateQuantity(item.product_id, parseInt(e.target.value) || 1)
+                                updateQuantity(item.product_id, parseInt(e.target.value) || 1, item.color, item.size)
                               }
                               min="1"
                               className="w-12 text-center border border-border rounded px-2 py-1"
                             />
                             <button
-                              onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.product_id, item.quantity + 1, item.color, item.size)}
                               className="p-1 hover:bg-muted rounded transition-colors"
                             >
                               <Plus size={16} />
@@ -97,7 +114,7 @@ export function CartPage() {
                         </td>
                         <td className="px-4 py-4 text-center">
                           <button
-                            onClick={() => removeFromCart(item.product_id)}
+                            onClick={() => removeFromCart(item.product_id, item.color, item.size)}
                             className="p-2 hover:bg-red-500/10 text-red-600 rounded transition-colors"
                           >
                             <Trash2 size={16} />
