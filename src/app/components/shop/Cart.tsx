@@ -13,8 +13,8 @@ export function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-background py-12">
-        <div className="max-w-4xl mx-auto px-4 text-center">
+      <div className="min-h-screen bg-background">
+        <div className="max-w-6xl mx-auto px-3 md:px-4 py-12 text-center">
           <ShoppingCart size={64} className="mx-auto text-muted-foreground mb-4 opacity-50" />
           <h1 className="text-2xl font-bold mb-2">Giỏ hàng của bạn trống</h1>
           <p className="text-muted-foreground mb-6">Hãy thêm một số sản phẩm để tiếp tục!</p>
@@ -27,15 +27,17 @@ export function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 md:py-12">
-      <div className="max-w-6xl mx-auto px-3 md:px-4">
-        <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">🛒 Giỏ Hàng</h1>
+    <div className="min-h-screen bg-background">
+      <div className="px-0 md:px-0">
+        <div className="max-w-6xl mx-auto px-3 md:px-4 py-8 md:py-12">
+          <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">🛒 Giỏ Hàng</h1>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-0 border-t border-gray-200">
           {/* Cart Items */}
           <div className="lg:col-span-2 lg:border-r lg:border-gray-200">
             {/* Desktop: Table View */}
-            <div className="hidden md:block bg-card border border-border rounded-lg overflow-hidden">
+            <div className="hidden md:block bg-card border-0 border-b border-gray-200 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-muted border-b border-border">
@@ -127,7 +129,7 @@ export function CartPage() {
                 </table>
               </div>
 
-              <div className="border-t border-border px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 bg-muted/50">
+              <div className="border-t border-gray-200 px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 bg-muted/50">
                 <button
                   onClick={clearCart}
                   className="text-red-600 font-semibold hover:underline text-sm"
@@ -141,9 +143,9 @@ export function CartPage() {
             </div>
 
             {/* Mobile: Card View */}
-            <div className="md:hidden space-y-3">
+            <div className="md:hidden space-y-0 border-b border-gray-200">
               {cartItems.map((item) => (
-                <div key={`${item.product_id}-${item.color}-${item.size}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                <div key={`${item.product_id}-${item.color}-${item.size}`} className="bg-white border-0 border-b border-gray-200 rounded-0 overflow-hidden shadow-none hover:shadow-none transition-shadow">
                   {/* Product Card */}
                   <div className="p-3 space-y-3">
                     {/* Image & Info Row */}
@@ -233,8 +235,8 @@ export function CartPage() {
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-1 lg:pl-6">
-            <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6 md:sticky md:top-20 shadow-sm">
+          <div className="lg:col-span-1 lg:pl-0">
+            <div className="bg-white border-0 border-b border-gray-200 lg:border-b-0 lg:border-l lg:border-gray-200 rounded-0 p-4 md:p-6 md:sticky md:top-0 shadow-none">
               <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">📋 Tóm Tắt Đơn Hàng</h2>
 
               <div className="space-y-3 pb-4 border-b border-gray-200">
