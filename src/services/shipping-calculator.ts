@@ -7,7 +7,7 @@
  * - Loại dịch vụ GHN
  */
 
-import { calculateShippingFee } from './ghn-api'
+import { calculateShippingFee, getAvailableServices } from './ghn-db'
 
 /**
  * Product item with shipping info
@@ -154,14 +154,14 @@ export function estimateShippingFee(
  * @param items - Cart items
  * @param toDistrictId - Destination district ID
  * @param toWardCode - Destination ward code
- * @param serviceId - GHN service type (default: 2)
+ * @param serviceId - GHN service type (optional, will auto-detect if not provided)
  * @returns Shipping fee result
  */
 export async function calculateShipping(
   items: CartItem[],
   toDistrictId: number,
   toWardCode: string,
-  serviceId: number = 2
+  serviceId?: number
 ): Promise<ShippingResult> {
   try {
     // Validate inputs
@@ -194,9 +194,28 @@ export async function calculateShipping(
       toWard: toWardCode,
     })
 
+    // Get available services if not provided
+    let finalServiceId = serviceId
+    if (!finalServiceId) {
+      const servicesResult = await getAvailableServices({
+        from_district_id: SHOP_INFO.district_id,
+        to_district_id: toDistrictId,
+      })
+
+      if (servicesResult.success && servicesResult.services.length > 0) {
+        // Use first available service (usually standard delivery)
+        finalServiceId = servicesResult.services[0].service_id
+        console.log('✅ Using service:', finalServiceId, servicesResult.services[0].service_name)
+      } else {
+        // Fallback to service 2 if no services available
+        finalServiceId = 2
+        console.warn('⚠️ No services found, using default service 2')
+      }
+    }
+
     // Call GHN API
     const result = await calculateShippingFee({
-      service_id: serviceId,
+      service_id: finalServiceId,
       from_district_id: SHOP_INFO.district_id,
       from_ward_code: SHOP_INFO.ward_code,
       to_district_id: toDistrictId,

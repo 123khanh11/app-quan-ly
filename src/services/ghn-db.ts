@@ -62,6 +62,54 @@ export async function getWards(districtId: number) {
 }
 
 /**
+ * Lấy danh sách service có sẵn giữa 2 địa điểm
+ */
+export async function getAvailableServices(params: {
+  from_district_id: number
+  to_district_id: number
+}) {
+  try {
+    const ghnToken = import.meta.env.VITE_GHN_TOKEN
+    const ghnShopId = import.meta.env.VITE_GHN_SHOP_ID
+    const ghnApiUrl = import.meta.env.VITE_GHN_API_URL || 'https://dev-online-gateway.ghn.vn/shiip/public-api/v2'
+
+    if (!ghnToken || !ghnShopId) {
+      console.warn('⚠️ GHN credentials missing')
+      return { success: false, services: [] }
+    }
+
+    console.log('📡 Calling GHN Services API:', params)
+
+    const response = await fetch(`${ghnApiUrl}/shipping-order/available-services`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Token': ghnToken,
+        'ShopId': ghnShopId,
+      },
+      body: JSON.stringify(params),
+    })
+
+    const data = (await response.json()) as any
+
+    console.log('📥 GHN Services Response:', data)
+
+    if (data.code === 200 && data.data && Array.isArray(data.data)) {
+      return {
+        success: true,
+        services: data.data,
+      }
+    } else {
+      console.warn('⚠️ No services available:', data.message)
+      return { success: false, services: [] }
+    }
+  } catch (err) {
+    console.error('❌ Error fetching services:', err)
+    return { success: false, services: [] }
+  }
+}
+
+/**
  * Tính phí vận chuyển - Gọi GHN API trực tiếp
  */
 export async function calculateShippingFee(params: {
