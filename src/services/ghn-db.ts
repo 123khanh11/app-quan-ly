@@ -78,10 +78,10 @@ export async function calculateShippingFee(params: {
   coupon?: string | null
 }) {
   try {
-    console.log('📡 Calling /api/ghn/fee with params:', params)
+    console.log('📡 Calling /api/shipping/fee with params:', params)
 
-    // Gọi Express backend API route (không phải Next.js)
-    const response = await fetch('/api/ghn/fee', {
+    // Gọi Next.js API route
+    const response = await fetch('/api/shipping/fee', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export async function calculateShippingFee(params: {
       body: JSON.stringify(params),
     })
 
-    const data = await response.json()
+    const data = (await response.json()) as any
 
     console.log('📥 GHN API Response:', data)
 
