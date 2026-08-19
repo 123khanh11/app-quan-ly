@@ -62,7 +62,7 @@ export async function getWards(districtId: number) {
 }
 
 /**
- * Tính phí vận chuyển - Gọi GHN API qua backend route
+ * Tính phí vận chuyển - Gọi Express backend API
  */
 export async function calculateShippingFee(params: {
   service_id: number
@@ -78,10 +78,10 @@ export async function calculateShippingFee(params: {
   coupon?: string | null
 }) {
   try {
-    console.log('📡 Calling /api/shipping/fee with params:', params)
+    console.log('📡 Calling /api/ghn/fee with params:', params)
 
-    // Gọi backend API route để GHN calculate fee
-    const response = await fetch('/api/shipping/fee', {
+    // Gọi Express backend API route (không phải Next.js)
+    const response = await fetch('/api/ghn/fee', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,13 +93,13 @@ export async function calculateShippingFee(params: {
 
     console.log('📥 GHN API Response:', data)
 
-    if (data.code === 200 && data.data) {
+    if (data.success && data.data) {
       return {
         success: true,
         data: data.data,
       }
     } else {
-      console.warn('⚠️ GHN API returned error:', data.message)
+      console.warn('⚠️ GHN API error:', data.error)
       // Fallback to estimation
       const estimatedFee = Math.max(30000, 30000 + (Math.ceil(params.weight / 1000) - 1) * 5000)
       return {
