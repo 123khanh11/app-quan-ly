@@ -14,13 +14,7 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "VITE_SUPABASE_URL": "@vite_supabase_url",
-    "VITE_SUPABASE_ANON_KEY": "@vite_supabase_anon_key",
-    "VITE_GHN_API_URL": "@vite_ghn_api_url",
-    "VITE_GHN_SHOP_ID": "@vite_ghn_shop_id",
-    "VITE_GHN_TOKEN": "@vite_ghn_token"
-  }
+  ]
 }
+
 
