@@ -27,11 +27,11 @@ export default function DebugShippingPage() {
     from_ward_code: '21617',
     to_district_id: 1452,
     to_ward_code: '21012',
-    service_id: 2,
-    weight: 500, // Changed from 1000 to 500g for lighter items
-    length: 20,
-    width: 20,
-    height: 20,
+    service_id: 53320, // Changed to Standard service
+    weight: 300,
+    length: 15,
+    width: 15,
+    height: 15,
   })
   const [result, setResult] = useState<ShippingFeeResponse | null>(null)
   const [loading, setLoading] = useState(false)
@@ -130,10 +130,10 @@ export default function DebugShippingPage() {
                 onChange={handleChange}
                 className="w-full bg-gray-700 px-3 py-2 rounded text-white"
               >
-                <option value={2}>2 - Light goods (Hàng nhẹ)</option>
-                <option value={53319}>53319 - Fast</option>
-                <option value={53320}>53320 - Standard</option>
-                <option value={53321}>53321 - Eco</option>
+                <option value={53320}>53320 - Standard (Chuẩn)</option>
+                <option value={53319}>53319 - Fast (Nhanh)</option>
+                <option value={53321}>53321 - Eco (Tiết kiệm)</option>
+                <option value={2}>2 - Light goods (Hàng nhẹ - Legacy)</option>
               </select>
             </div>
             <div>

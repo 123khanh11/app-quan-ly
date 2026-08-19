@@ -172,61 +172,64 @@ export function CheckoutForm({ onClose, onShippingFeeChange }: CheckoutFormProps
 
       setLoadingShipping(true)
       try {
+        // Build items array for GHN API
+        const items = cartItems.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          weight: item.weight || 300, // 300g default per item
+          length: item.length || 15,
+          width: item.width || 15,
+          height: item.height || 15,
+        }))
+
+        // Calculate totals for payload
         let totalWeight = 0
-        let totalLength = 0
-        let totalWidth = 0
+        let maxLength = 0
+        let maxWidth = 0
         let totalHeight = 0
 
-        cartItems.forEach((item) => {
-          // Weight: 300g per item (lighter default)
-          const itemWeight = item.weight || 300
-          totalWeight += itemWeight * item.quantity
-          
-          totalLength = Math.max(totalLength, item.length || 15)
-          totalWidth = Math.max(totalWidth, item.width || 15)
-          totalHeight += (item.height || 15) * item.quantity
+        items.forEach((item) => {
+          totalWeight += item.weight * item.quantity
+          maxLength = Math.max(maxLength, item.length)
+          maxWidth = Math.max(maxWidth, item.width)
+          totalHeight += item.height * item.quantity
         })
-
-        // Don't enforce minimum - let GHN decide
-        totalWeight = Math.max(totalWeight, 200)
-        totalLength = Math.max(totalLength, 10)
-        totalWidth = Math.max(totalWidth, 10)
-        totalHeight = Math.max(totalHeight, 10)
 
         console.log('📦 Shipping calculation:', {
           items: cartItems.length,
-          weight: totalWeight,
-          length: totalLength,
-          width: totalWidth,
-          height: totalHeight,
+          totalWeight,
+          maxLength,
+          maxWidth,
+          totalHeight,
           to: `District ${formData.districtId}, Ward ${formData.wardCode}`,
         })
 
+        // Call GHN API with correct parameters per their spec
         const result = await calculateShippingFee({
-          service_id: 2,
+          service_id: 53320, // Standard service (not 2)
           from_district_id: 1455,
           from_ward_code: '21617',
           to_district_id: formData.districtId,
           to_ward_code: formData.wardCode,
-          weight: totalWeight,
-          length: totalLength,
-          width: totalWidth,
-          height: totalHeight,
+          weight: Math.max(totalWeight, 200), // Min 200g
+          length: Math.max(maxLength, 10),
+          width: Math.max(maxWidth, 10),
+          height: Math.max(totalHeight, 10),
           insurance_value: 0,
           coupon: null,
         })
 
         if (result.success && result.data?.total) {
-          console.log('✅ Shipping fee:', result.data.total)
+          console.log('✅ Shipping fee:', result.data.total, 'đ')
           setShippingFee(result.data.total)
           onShippingFeeChange?.(result.data.total)
         } else {
-          console.warn('⚠️ GHN API failed:', result.error)
+          console.warn('⚠️ GHN API failed, using default:', DEFAULT_SHIPPING_FEE)
           setShippingFee(DEFAULT_SHIPPING_FEE)
           onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
         }
       } catch (err) {
-        console.error('Error calculating shipping:', err)
+        console.error('❌ Error calculating shipping:', err)
         setShippingFee(DEFAULT_SHIPPING_FEE)
         onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
       } finally {
