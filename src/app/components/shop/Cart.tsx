@@ -3,13 +3,12 @@ import { Trash2, ShoppingCart, Plus, Minus } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
 import { CheckoutForm } from '@/app/components/checkout/CheckoutForm'
 
-const SHIPPING_FEE = 50000
-
 export function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart()
   const [isCheckingOut, setIsCheckingOut] = useState(false)
+  const [shippingFee, setShippingFee] = useState<number>(0)
 
-  const totalWithShipping = cartTotal + (cartItems.length > 0 ? SHIPPING_FEE : 0)
+  const totalWithShipping = cartTotal + shippingFee
 
     if (cartItems.length === 0) {
     return (
@@ -242,8 +241,17 @@ export function CartPage() {
 
               <div className="py-4 border-b border-gray-200">
                 <div className="flex justify-between items-center">
+                  <span className="text-sm md:text-base text-gray-600">Phí vận chuyển:</span>
+                  <span className="font-bold text-orange-600 text-base md:text-lg">
+                    {shippingFee === 0 ? 'Chưa tính' : `${shippingFee.toLocaleString('vi-VN')}đ`}
+                  </span>
+                </div>
+              </div>
+
+              <div className="py-4">
+                <div className="flex justify-between items-center">
                   <span className="text-lg md:text-2xl font-bold text-gray-900">Tổng:</span>
-                  <span className="text-lg md:text-2xl font-bold text-primary">{cartTotal.toLocaleString('vi-VN')}đ</span>
+                  <span className="text-lg md:text-2xl font-bold text-primary">{(cartTotal + shippingFee).toLocaleString('vi-VN')}đ</span>
                 </div>
               </div>
 
@@ -257,7 +265,7 @@ export function CartPage() {
 
               {isCheckingOut && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 max-h-96 overflow-y-auto">
-                  <CheckoutForm onClose={() => setIsCheckingOut(false)} />
+                  <CheckoutForm onClose={() => setIsCheckingOut(false)} onShippingFeeChange={setShippingFee} />
                 </div>
               )}
             </div>

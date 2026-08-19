@@ -79,9 +79,10 @@ interface Ward {
 
 interface CheckoutFormProps {
   onClose: () => void
+  onShippingFeeChange?: (fee: number) => void
 }
 
-export function CheckoutForm({ onClose }: CheckoutFormProps) {
+export function CheckoutForm({ onClose, onShippingFeeChange }: CheckoutFormProps) {
   const { cartItems, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -165,6 +166,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
     const calculateShipping = async () => {
       if (!formData.districtId || !formData.wardCode) {
         setShippingFee(DEFAULT_SHIPPING_FEE)
+        onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
         return
       }
 
@@ -203,19 +205,22 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
 
         if (result.success && result.data?.total) {
           setShippingFee(result.data.total)
+          onShippingFeeChange?.(result.data.total)
         } else {
           setShippingFee(DEFAULT_SHIPPING_FEE)
+          onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
         }
       } catch (err) {
         console.error('Error calculating shipping:', err)
         setShippingFee(DEFAULT_SHIPPING_FEE)
+        onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
       } finally {
         setLoadingShipping(false)
       }
     }
 
     calculateShipping()
-  }, [formData.districtId, formData.wardCode, cartItems])
+  }, [formData.districtId, formData.wardCode, cartItems, onShippingFeeChange])
 
   const handleToggleItem = (itemKey: string) => {
     const updated = new Set(selectedItems)
