@@ -27,14 +27,15 @@ export function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12">
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8">🛒 Giỏ Hàng Của Bạn</h1>
+    <div className="min-h-screen bg-background py-8 md:py-12">
+      <div className="max-w-6xl mx-auto px-3 md:px-4">
+        <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">🛒 Giỏ Hàng</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2">
-            <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <div className="lg:col-span-2 space-y-3 md:space-y-0">
+            {/* Desktop: Table View */}
+            <div className="hidden md:block bg-card border border-border rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-muted border-b border-border">
@@ -126,14 +127,98 @@ export function CartPage() {
                 </table>
               </div>
 
-              <div className="border-t border-border px-4 py-4 flex justify-between items-center bg-muted/50">
+              <div className="border-t border-border px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-3 bg-muted/50">
                 <button
                   onClick={clearCart}
-                  className="text-red-600 font-semibold hover:underline"
+                  className="text-red-600 font-semibold hover:underline text-sm"
                 >
                   Xóa Tất Cả
                 </button>
-                <a href="/" className="text-primary font-semibold hover:underline">
+                <a href="/" className="text-primary font-semibold hover:underline text-sm">
+                  ← Tiếp Tục Mua Sắm
+                </a>
+              </div>
+            </div>
+
+            {/* Mobile: Card View */}
+            <div className="md:hidden space-y-3">
+              {cartItems.map((item) => (
+                <div key={`${item.product_id}-${item.color}-${item.size}`} className="bg-card border border-border rounded-lg p-4 space-y-3">
+                  {/* Product Image & Name */}
+                  <div className="flex gap-3">
+                    {item.image_url && (
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        className="w-20 h-20 object-cover rounded-md bg-muted flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground text-sm line-clamp-2">{item.name}</p>
+                      {item.color && (
+                        <p className="text-xs text-muted-foreground mt-1">Màu: {item.color}</p>
+                      )}
+                      {item.size && (
+                        <p className="text-xs text-muted-foreground">Size: {item.size}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Price & Quantity */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Giá</p>
+                      <p className="font-bold text-primary">{item.price.toLocaleString('vi-VN')}đ</p>
+                    </div>
+                    <div className="flex items-center gap-2 border border-border rounded-md p-1">
+                      <button
+                        onClick={() => updateQuantity(item.product_id, item.quantity - 1, item.color, item.size)}
+                        className="p-1 hover:bg-muted rounded"
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateQuantity(item.product_id, parseInt(e.target.value) || 1, item.color, item.size)
+                        }
+                        min="1"
+                        className="w-10 text-center text-sm border-0 bg-transparent"
+                      />
+                      <button
+                        onClick={() => updateQuantity(item.product_id, item.quantity + 1, item.color, item.size)}
+                        className="p-1 hover:bg-muted rounded"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Total & Delete */}
+                  <div className="flex items-center justify-between pt-3 border-t border-border">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tổng</p>
+                      <p className="font-bold text-primary text-lg">{(item.price * item.quantity).toLocaleString('vi-VN')}đ</p>
+                    </div>
+                    <button
+                      onClick={() => removeFromCart(item.product_id, item.color, item.size)}
+                      className="p-2 hover:bg-red-500/10 text-red-600 rounded transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex flex-col gap-2 pt-2">
+                <button
+                  onClick={clearCart}
+                  className="text-red-600 font-semibold hover:underline text-sm py-2"
+                >
+                  Xóa Tất Cả
+                </button>
+                <a href="/" className="text-primary font-semibold hover:underline text-sm py-2 text-center">
                   ← Tiếp Tục Mua Sắm
                 </a>
               </div>
@@ -142,37 +227,31 @@ export function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-card border border-border rounded-lg p-6 sticky top-20">
-              <h2 className="text-lg font-bold mb-4">Tóm Tắt Đơn Hàng</h2>
+            <div className="bg-card border border-border rounded-lg p-4 md:p-6 sticky top-20">
+              <h2 className="text-lg md:text-xl font-bold mb-4">Tóm Tắt</h2>
 
               <div className="space-y-3 pb-4 border-b border-border">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tạm tính:</span>
                   <span className="font-semibold">{cartTotal.toLocaleString('vi-VN')}đ</span>
                 </div>
-                {/* Phí vận chuyển - HIDDEN */}
-                {/* <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Phí vận chuyển:</span>
-                  <span className="font-semibold text-orange-600">{SHIPPING_FEE.toLocaleString('vi-VN')}đ</span>
-                </div> */}
               </div>
 
-              <div className="flex justify-between text-lg font-bold my-4 text-primary">
-                <span>Tổng Cộng:</span>
+              <div className="flex justify-between text-lg md:text-xl font-bold my-4 text-primary">
+                <span>Tổng:</span>
                 <span>{cartTotal.toLocaleString('vi-VN')}đ</span>
               </div>
 
               <button
                 onClick={() => setIsCheckingOut(true)}
                 disabled={isCheckingOut}
-                className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-md hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+                className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-md hover:bg-orange-600 transition-colors disabled:opacity-50 mb-3 text-sm md:text-base"
               >
                 {isCheckingOut ? '⏳ Xử Lý...' : '✅ Thanh Toán'}
               </button>
 
               {isCheckingOut && (
-                <div className="space-y-3">
-                  {/* Checkout Form */}
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   <CheckoutForm onClose={() => setIsCheckingOut(false)} />
                 </div>
               )}
