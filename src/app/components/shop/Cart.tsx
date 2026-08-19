@@ -150,15 +150,16 @@ export function CartPage() {
                   <span className="text-muted-foreground">Tạm tính:</span>
                   <span className="font-semibold">{cartTotal.toLocaleString('vi-VN')}đ</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                {/* Phí vận chuyển - HIDDEN */}
+                {/* <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Phí vận chuyển:</span>
                   <span className="font-semibold text-orange-600">{SHIPPING_FEE.toLocaleString('vi-VN')}đ</span>
-                </div>
+                </div> */}
               </div>
 
               <div className="flex justify-between text-lg font-bold my-4 text-primary">
                 <span>Tổng Cộng:</span>
-                <span>{totalWithShipping.toLocaleString('vi-VN')}đ</span>
+                <span>{cartTotal.toLocaleString('vi-VN')}đ</span>
               </div>
 
               <button

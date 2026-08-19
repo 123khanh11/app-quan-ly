@@ -464,8 +464,8 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
         rows={2}
       />
 
-      {/* Total */}
-      <div className="bg-muted p-3 rounded-md space-y-2">
+      {/* Total - HIDDEN */}
+      {/* <div className="bg-muted p-3 rounded-md space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Tiền hàng:</span>
           <span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}đ</span>
@@ -480,7 +480,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
           <span>Tổng cộng:</span>
           <span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span>
         </div>
-      </div>
+      </div> */}
 
       {/* Buttons */}
       <div className="flex gap-2">
