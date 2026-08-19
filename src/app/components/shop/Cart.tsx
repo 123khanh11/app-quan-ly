@@ -11,10 +11,10 @@ export function CartPage() {
 
   const totalWithShipping = cartTotal + (cartItems.length > 0 ? SHIPPING_FEE : 0)
 
-  if (cartItems.length === 0) {
+    if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-6xl mx-auto px-3 md:px-4 py-12 text-center">
+        <div className="px-3 md:px-4 py-12 text-center md:max-w-6xl md:mx-auto">
           <ShoppingCart size={64} className="mx-auto text-muted-foreground mb-4 opacity-50" />
           <h1 className="text-2xl font-bold mb-2">Giỏ hàng của bạn trống</h1>
           <p className="text-muted-foreground mb-6">Hãy thêm một số sản phẩm để tiếp tục!</p>
@@ -28,8 +28,8 @@ export function CartPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-0 md:px-0">
-        <div className="max-w-6xl mx-auto px-3 md:px-4 py-8 md:py-12">
+      <div className="md:max-w-6xl md:mx-auto">
+        <div className="px-3 md:px-4 py-8 md:py-12">
           <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">🛒 Giỏ Hàng</h1>
         </div>
 
@@ -230,7 +230,7 @@ export function CartPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1 lg:pl-0">
-            <div className="bg-white border-0 border-b border-gray-200 lg:border-b-0 lg:border-l lg:border-gray-200 rounded-0 p-4 md:p-6 md:sticky md:top-0 shadow-none fixed bottom-0 left-0 right-0 lg:static lg:sticky lg:top-0 lg:rounded-0 lg:fixed-none">
+            <div className="bg-white border-0 border-b border-gray-200 lg:border-b-0 lg:border-l lg:border-gray-200 rounded-0 p-4 md:p-6 md:sticky md:top-0 shadow-none fixed bottom-0 left-0 right-0 lg:static">
               <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 hidden md:block">📋 Tóm Tắt Đơn Hàng</h2>
 
               <div className="space-y-3 pb-4 border-b border-gray-200">
