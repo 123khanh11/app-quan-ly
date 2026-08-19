@@ -44,10 +44,10 @@ export async function POST(request: Request) {
       from_ward_code: body.from_ward_code || '21617',
       to_district_id: body.to_district_id,
       to_ward_code: body.to_ward_code || '21012',
-      weight: Math.max(body.weight || 1000, 1000), // Min 1000g
-      length: Math.max(body.length || 20, 20),
-      width: Math.max(body.width || 20, 20),
-      height: Math.max(body.height || 20, 20),
+      weight: body.weight || 500, // Default 500g instead of 1000g
+      length: body.length || 20,
+      width: body.width || 20,
+      height: body.height || 20,
       insurance_value: body.insurance_value || 0,
       coupon: body.coupon || null,
     }

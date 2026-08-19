@@ -28,7 +28,7 @@ export default function DebugShippingPage() {
     to_district_id: 1452,
     to_ward_code: '21012',
     service_id: 2,
-    weight: 1000,
+    weight: 500, // Changed from 1000 to 500g for lighter items
     length: 20,
     width: 20,
     height: 20,

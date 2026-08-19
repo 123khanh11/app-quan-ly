@@ -178,16 +178,29 @@ export function CheckoutForm({ onClose, onShippingFeeChange }: CheckoutFormProps
         let totalHeight = 0
 
         cartItems.forEach((item) => {
-          totalWeight += (item.weight || 500) * item.quantity
-          totalLength = Math.max(totalLength, item.length || 20)
-          totalWidth = Math.max(totalWidth, item.width || 20)
-          totalHeight += (item.height || 20) * item.quantity
+          // Weight: 300g per item (lighter default)
+          const itemWeight = item.weight || 300
+          totalWeight += itemWeight * item.quantity
+          
+          totalLength = Math.max(totalLength, item.length || 15)
+          totalWidth = Math.max(totalWidth, item.width || 15)
+          totalHeight += (item.height || 15) * item.quantity
         })
 
-        totalWeight = Math.max(totalWeight, 1000)
-        totalLength = Math.max(totalLength, 20)
-        totalWidth = Math.max(totalWidth, 20)
-        totalHeight = Math.max(totalHeight, 20)
+        // Don't enforce minimum - let GHN decide
+        totalWeight = Math.max(totalWeight, 200)
+        totalLength = Math.max(totalLength, 10)
+        totalWidth = Math.max(totalWidth, 10)
+        totalHeight = Math.max(totalHeight, 10)
+
+        console.log('📦 Shipping calculation:', {
+          items: cartItems.length,
+          weight: totalWeight,
+          length: totalLength,
+          width: totalWidth,
+          height: totalHeight,
+          to: `District ${formData.districtId}, Ward ${formData.wardCode}`,
+        })
 
         const result = await calculateShippingFee({
           service_id: 2,
@@ -204,9 +217,11 @@ export function CheckoutForm({ onClose, onShippingFeeChange }: CheckoutFormProps
         })
 
         if (result.success && result.data?.total) {
+          console.log('✅ Shipping fee:', result.data.total)
           setShippingFee(result.data.total)
           onShippingFeeChange?.(result.data.total)
         } else {
+          console.warn('⚠️ GHN API failed:', result.error)
           setShippingFee(DEFAULT_SHIPPING_FEE)
           onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
         }
