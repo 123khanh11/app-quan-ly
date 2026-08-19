@@ -31,9 +31,9 @@ export function CartPage() {
       <div className="max-w-6xl mx-auto px-3 md:px-4">
         <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">🛒 Giỏ Hàng</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-6">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-3 md:space-y-0">
+          <div className="lg:col-span-2 lg:border-r lg:border-gray-200">
             {/* Desktop: Table View */}
             <div className="hidden md:block bg-card border border-border rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
@@ -233,7 +233,7 @@ export function CartPage() {
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 lg:pl-6">
             <div className="bg-white border border-gray-200 rounded-lg p-4 md:p-6 md:sticky md:top-20 shadow-sm">
               <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">📋 Tóm Tắt Đơn Hàng</h2>
 
