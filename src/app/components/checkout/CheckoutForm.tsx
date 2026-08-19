@@ -1,70 +1,8 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import { useCart } from '@/app/context/CartContext'
-import { getDistricts, getWards, calculateShippingFee } from '@/services/ghn-db'
 
-// GHN Province IDs mapping
-const PROVINCE_TO_GHN_ID: Record<string, number> = {
-  'Hà Nội': 201,
-  'TP. Hồ Chí Minh': 202,
-  'Đà Nẵng': 203,
-  'Đồng Nai': 204,
-  'Bình Dương': 205,
-  'Bà Rịa - Vũng Tàu': 206,
-  'Gia Lai': 207,
-  'Khánh Hòa': 208,
-  'Lâm Đồng': 209,
-  'Đắk Lắk': 210,
-  'Long An': 211,
-  'Tiền Giang': 212,
-  'Bến Tre': 213,
-  'Trà Vinh': 214,
-  'Vĩnh Long': 215,
-  'Đồng Tháp': 216,
-  'An Giang': 217,
-  'Sóc Trăng': 218,
-  'Kiên Giang': 219,
-  'Cần Thơ': 220,
-  'Vĩnh Phúc': 221,
-  'Thừa Thiên Huế': 223,
-  'Hải Phòng': 224,
-  'Hải Dương': 225,
-  'Thái Bình': 226,
-  'Hà Giang': 227,
-  'Tuyên Quang': 228,
-  'Phú Thọ': 229,
-  'Quảng Ninh': 230,
-  'Nam Định': 231,
-  'Hà Nam': 232,
-  'Ninh Bình': 233,
-  'Thanh Hóa': 234,
-  'Nghệ An': 235,
-  'Hà Tĩnh': 236,
-  'Quảng Bình': 237,
-  'Quảng Trị': 238,
-  'Bình Phước': 239,
-  'Tây Ninh': 240,
-  'Đắk Nông': 241,
-  'Quảng Ngãi': 242,
-  'Quảng Nam': 243,
-  'Thái Nguyên': 244,
-  'Bắc Kạn': 245,
-  'Cao Bằng': 246,
-  'Lạng Sơn': 247,
-  'Bắc Giang': 248,
-  'Bắc Ninh': 249,
-  'Hậu Giang': 250,
-  'Cà Mau': 252,
-  'Bạc Liêu': 253,
-  'Yên Bái': 263,
-  'Lai Châu': 264,
-  'Điện Biên': 265,
-  'Sơn La': 266,
-  'Hòa Bình': 267,
-  'Hưng Yên': 268,
-  'Lào Cai': 269,
-}
-
-const VIETNAM_PROVINCES = Object.keys(PROVINCE_TO_GHN_ID)
 const DEFAULT_SHIPPING_FEE = 50000
 
 interface District {
@@ -99,7 +37,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
-    province: '',
+    province: '1',
     district: '',
     districtId: 0,
     ward: '',
@@ -108,7 +46,6 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     note: '',
   })
 
-  // Load districts when province changes
   useEffect(() => {
     const loadDistricts = async () => {
       if (!formData.province) {
@@ -118,12 +55,14 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       setLoadingDistricts(true)
       try {
-        const result = await getDistricts(PROVINCE_TO_GHN_ID[formData.province])
-        if (result.success && result.districts) {
-          setDistricts(result.districts)
-        } else {
-          setDistricts([])
-        }
+        const response = await fetch('/api/ghn/districts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ province_id: parseInt(formData.province) }),
+        })
+
+        const result = await response.json() as any
+        setDistricts(result.success && result.districts ? result.districts : [])
       } catch (err) {
         console.error('Error loading districts:', err)
         setDistricts([])
@@ -135,7 +74,6 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     loadDistricts()
   }, [formData.province])
 
-  // Load wards when district changes
   useEffect(() => {
     const loadWards = async () => {
       if (!formData.districtId) {
@@ -145,12 +83,14 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       setLoadingWards(true)
       try {
-        const result = await getWards(formData.districtId)
-        if (result.success && result.wards) {
-          setWards(result.wards)
-        } else {
-          setWards([])
-        }
+        const response = await fetch('/api/ghn/wards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ district_id: formData.districtId }),
+        })
+
+        const result = await response.json() as any
+        setWards(result.success && result.wards ? result.wards : [])
       } catch (err) {
         console.error('Error loading wards:', err)
         setWards([])
@@ -162,7 +102,6 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     loadWards()
   }, [formData.districtId])
 
-  // Calculate shipping fee when address changes
   useEffect(() => {
     const calculateShipping = async () => {
       if (!formData.districtId || !formData.wardCode) {
@@ -174,60 +113,55 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       setLoadingShipping(true)
       onLoadingChange?.(true)
-      try {
-        // Build items array for GHN API
-        const items = cartItems.map((item) => ({
-          name: item.name,
-          quantity: item.quantity,
-          weight: item.weight || 300, // 300g default per item
-          length: item.length || 15,
-          width: item.width || 15,
-          height: item.height || 15,
-        }))
 
-        // Calculate totals for payload
+      try {
         let totalWeight = 0
         let maxLength = 0
         let maxWidth = 0
         let totalHeight = 0
 
-        items.forEach((item) => {
-          totalWeight += item.weight * item.quantity
-          maxLength = Math.max(maxLength, item.length)
-          maxWidth = Math.max(maxWidth, item.width)
-          totalHeight += item.height * item.quantity
+        cartItems.forEach((item) => {
+          const w = item.weight || 300
+          const l = item.length || 15
+          const wi = item.width || 15
+          const h = item.height || 15
+
+          totalWeight += w * item.quantity
+          maxLength = Math.max(maxLength, l)
+          maxWidth = Math.max(maxWidth, wi)
+          totalHeight += h * item.quantity
         })
 
-        console.log('📦 Shipping calculation:', {
-          items: cartItems.length,
-          totalWeight,
-          maxLength,
-          maxWidth,
-          totalHeight,
-          to: `District ${formData.districtId}, Ward ${formData.wardCode}`,
-        })
-
-        // Call GHN API with correct parameters per their spec
-        const result = await calculateShippingFee({
-          service_id: 53320, // Standard service (not 2)
-          from_district_id: 1455,
-          from_ward_code: '21617',
+        console.log('📦 Calling /api/shipping/fee:', {
           to_district_id: formData.districtId,
           to_ward_code: formData.wardCode,
-          weight: Math.max(totalWeight, 200), // Min 200g
-          length: Math.max(maxLength, 10),
-          width: Math.max(maxWidth, 10),
-          height: Math.max(totalHeight, 10),
-          insurance_value: 0,
-          coupon: null,
+          weight: Math.max(totalWeight, 200),
         })
 
+        const response = await fetch('/api/shipping/fee', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to_district_id: formData.districtId,
+            to_ward_code: formData.wardCode,
+            weight: Math.max(totalWeight, 200),
+            length: Math.max(maxLength, 10),
+            width: Math.max(maxWidth, 10),
+            height: Math.max(totalHeight, 10),
+          }),
+        })
+
+        const result = await response.json() as any
+
+        console.log('📊 /api/shipping/fee response:', result)
+
         if (result.success && result.data?.total) {
-          console.log('✅ Shipping fee:', result.data.total, 'đ')
+          console.log('✅ Shipping fee OK:', result.data.total)
           setShippingFee(result.data.total)
           onShippingFeeChange?.(result.data.total)
         } else {
-          console.warn('⚠️ GHN API failed, using default:', DEFAULT_SHIPPING_FEE)
+          console.warn('⚠️ API response not ok, using default fee')
+          console.warn('Response:', result)
           setShippingFee(DEFAULT_SHIPPING_FEE)
           onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
         }
@@ -266,23 +200,23 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
   const selectedTotal = cartItems
     .filter((item) => selectedItems.has(`${item.product_id}-${item.color}-${item.size}`))
-    .reduce((total, item) => total + item.price * item.quantity, 0)
+    .reduce((sum, item) => sum + item.price * item.quantity, 0)
 
   const totalWithShipping = selectedTotal + (selectedItems.size > 0 ? shippingFee : 0)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     if (selectedItems.size === 0) {
-      setError('❌ Vui lòng chọn ít nhất một sản phẩm để thanh toán.')
+      setError('Select at least one product')
       setLoading(false)
       return
     }
 
     if (!formData.province || !formData.district || !formData.ward || !formData.detailedAddress) {
-      setError('❌ Vui lòng điền đầy đủ thông tin địa chỉ.')
+      setError('Please fill all address fields')
       setLoading(false)
       return
     }
@@ -292,16 +226,14 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       const fullAddress = `${formData.detailedAddress}, ${formData.ward}, ${formData.district}, ${formData.province}`
 
-      // Tạo order (với phí vận chuyển)
       const order = await createOrder({
         total: totalWithShipping,
         shipping_fee: shippingFee,
         payment_method: 'cod',
         shipping_address: fullAddress,
-        note: `Email: ${formData.email}\nSĐT: ${formData.phone}\nGhi chú: ${formData.note}`,
+        note: `Email: ${formData.email}\nPhone: ${formData.phone}\nNote: ${formData.note}`,
       })
 
-      // Add items to order (chỉ những item được chọn)
       for (const item of cartItems) {
         const itemKey = `${item.product_id}-${item.color}-${item.size}`
         if (selectedItems.has(itemKey)) {
@@ -312,20 +244,22 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
               quantity: item.quantity,
               price: item.price,
             })
-          } catch (itemError) {
-            console.warn('Warning adding item:', itemError)
+          } catch (err) {
+            console.warn('Item error:', err)
           }
         }
       }
 
-      // Clear cart and redirect
       clearCart()
-      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\nTiền hàng: ${selectedTotal.toLocaleString()} VNĐ\nPhí vận chuyển: ${shippingFee.toLocaleString()} VNĐ\nTổng cộng: ${totalWithShipping.toLocaleString()} VNĐ\n\nChúng tôi sẽ liên hệ bạn sớm.`)
-      window.location.href = '/'
-    } catch (error) {
-      console.error('Checkout error:', error)
-      const errorMsg = error instanceof Error ? error.message : 'Không xác định'
-      setError(`❌ Lỗi: ${errorMsg}`)
+      const msg = `Order placed!\nID: ${order.id}\nTotal: ${totalWithShipping.toLocaleString()} VND`
+      alert(msg)
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
+      }
+    } catch (err) {
+      console.error('Checkout error:', err)
+      const msg = err instanceof Error ? err.message : 'Error occurred'
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -333,16 +267,15 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 border-t border-border pt-4">
-      {/* Selected Items */}
       <div className="bg-muted p-3 rounded-md">
         <div className="flex items-center justify-between mb-3">
-          <p className="font-semibold text-foreground">📦 Sản Phẩm Thanh Toán ({selectedItems.size}/{cartItems.length})</p>
+          <p className="font-semibold">Products ({selectedItems.size}/{cartItems.length})</p>
           <button
             type="button"
             onClick={handleSelectAll}
-            className="text-sm text-primary hover:underline font-medium"
+            className="text-sm text-primary hover:underline"
           >
-            {selectedItems.size === cartItems.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+            {selectedItems.size === cartItems.length ? 'Deselect' : 'Select All'}
           </button>
         </div>
 
@@ -353,31 +286,27 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
             return (
               <div
                 key={itemKey}
-                className={`flex items-center gap-3 p-2 rounded-lg border-2 transition-all ${
-                  isSelected
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50'
+                className={`flex items-center gap-3 p-2 rounded-lg border-2 ${
+                  isSelected ? 'border-primary bg-primary/5' : 'border-border'
                 }`}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-foreground text-sm truncate">{item.name}</p>
+                  <p className="font-semibold text-sm truncate">{item.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {item.color && `${item.color}`}
-                    {item.size && ` • ${item.size}`}
-                    {item.sku && ` • ${item.sku}`}
+                    {item.color}{item.size && ` x ${item.size}`}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0 mr-3">
                   <p className="font-bold text-primary text-sm">
-                    {(item.price * item.quantity).toLocaleString()} VNĐ
+                    {(item.price * item.quantity).toLocaleString()} VND
                   </p>
-                  <p className="text-xs text-muted-foreground">x{item.quantity}</p>
+                  <p className="text-xs">x{item.quantity}</p>
                 </div>
                 <input
                   type="checkbox"
                   checked={isSelected}
                   onChange={() => handleToggleItem(itemKey)}
-                  className="w-5 h-5 cursor-pointer flex-shrink-0"
+                  className="w-5 h-5 cursor-pointer"
                 />
               </div>
             )
@@ -385,43 +314,37 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         </div>
       </div>
 
-      {/* Contact Info */}
       <div>
-        <p className="text-sm font-semibold text-foreground mb-2">👤 Thông Tin Liên Hệ</p>
+        <p className="text-sm font-semibold mb-2">Contact</p>
         <input
           type="email"
           placeholder="Email"
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2"
+          className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2"
           required
         />
         <input
           type="tel"
-          placeholder="Số điện thoại"
+          placeholder="Phone"
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-3 py-2 border border-border rounded-md text-sm"
           required
         />
       </div>
 
-      {/* Address Details */}
       <div>
-        <p className="text-sm font-semibold text-foreground mb-2">📍 Địa Chỉ Chi Tiết</p>
+        <p className="text-sm font-semibold mb-2">Shipping Address</p>
 
         <select
           value={formData.province}
           onChange={(e) => setFormData({ ...formData, province: e.target.value, district: '', districtId: 0, ward: '', wardCode: '' })}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2"
-          required
+          className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2"
         >
-          <option value="">-- Chọn Tỉnh/Thành phố --</option>
-          {VIETNAM_PROVINCES.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
+          <option value="1">Ha Noi</option>
+          <option value="58">Ho Chi Minh</option>
+          <option value="48">Da Nang</option>
         </select>
 
         <select
@@ -437,16 +360,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
               wardCode: '',
             })
           }}
-          disabled={!formData.province || loadingDistricts}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2 disabled:opacity-50"
+          disabled={loadingDistricts}
+          className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2 disabled:opacity-50"
           required
         >
-          <option value="">-- {loadingDistricts ? 'Đang tải...' : 'Chọn Quận/Huyện'} --</option>
-          {districts.map((d) => (
-            <option key={d.district_id} value={d.district_id}>
-              {d.district_name}
-            </option>
-          ))}
+          <option value="">Select District</option>
+          {districts.map((d) => <option key={d.district_id} value={d.district_id}>{d.district_name}</option>)}
         </select>
 
         <select
@@ -454,81 +373,70 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           onChange={(e) => {
             const wardCode = e.target.value
             const ward = wards.find((w) => w.ward_code === wardCode)
-            setFormData({
-              ...formData,
-              wardCode,
-              ward: ward?.ward_name || '',
-            })
+            setFormData({ ...formData, wardCode, ward: ward?.ward_name || '' })
           }}
           disabled={!formData.districtId || loadingWards}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2 disabled:opacity-50"
+          className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2 disabled:opacity-50"
           required
         >
-          <option value="">-- {loadingWards ? 'Đang tải...' : 'Chọn Xã/Phường'} --</option>
-          {wards.map((w) => (
-            <option key={w.ward_code} value={w.ward_code}>
-              {w.ward_name}
-            </option>
-          ))}
+          <option value="">Select Ward</option>
+          {wards.map((w) => <option key={w.ward_code} value={w.ward_code}>{w.ward_name}</option>)}
         </select>
 
         <textarea
-          placeholder="Địa chỉ chi tiết (số nhà, tên đường...)"
+          placeholder="Detailed address"
           value={formData.detailedAddress}
           onChange={(e) => setFormData({ ...formData, detailedAddress: e.target.value })}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+          className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none"
           rows={2}
           required
         />
       </div>
 
-      {/* Notes */}
       <textarea
-        placeholder="Ghi chú (không bắt buộc)"
+        placeholder="Notes optional"
         value={formData.note}
         onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-        className="w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+        className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none"
         rows={2}
       />
 
-      {/* Total - HIDDEN */}
-      {/* <div className="bg-muted p-3 rounded-md space-y-2">
+      <div className="bg-muted p-3 rounded-md space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Tiền hàng:</span>
-          <span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}đ</span>
+          <span>Subtotal:</span>
+          <span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}d</span>
         </div>
         <div className="flex justify-between text-sm border-t border-border pt-2">
-          <span className="text-muted-foreground">Phí vận chuyển:</span>
+          <span>Shipping:</span>
           <span className="font-semibold text-orange-600">
-            {loadingShipping ? '⏳ Đang tính...' : `${shippingFee.toLocaleString('vi-VN')}đ`}
+            {loadingShipping ? 'Calculating...' : `${shippingFee.toLocaleString('vi-VN')}d`}
           </span>
         </div>
         <div className="flex justify-between text-base font-bold border-t border-border pt-2">
-          <span>Tổng cộng:</span>
-          <span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span>
+          <span>Total:</span>
+          <span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}d</span>
         </div>
-      </div> */}
+      </div>
 
-      {/* Buttons */}
       <div className="flex gap-2">
         <button
           type="submit"
           disabled={loading || selectedItems.size === 0 || loadingShipping}
-          className="flex-1 bg-primary text-primary-foreground font-bold py-2 rounded-md hover:bg-orange-600 transition-colors disabled:opacity-50"
+          className="flex-1 bg-primary text-white font-bold py-2 rounded-md hover:bg-orange-600 disabled:opacity-50"
         >
-          {loading ? 'Đang xử lý...' : `✅ Thanh Toán (${selectedItems.size} sản phẩm)`}
+          {loading ? 'Processing...' : `Checkout (${selectedItems.size})`}
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 border border-border text-foreground font-semibold py-2 rounded-md hover:bg-muted transition-colors"
+          className="flex-1 border border-border font-semibold py-2 rounded-md hover:bg-muted"
         >
-          Hủy
+          Cancel
         </button>
       </div>
 
       {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
           {error}
         </div>
       )}

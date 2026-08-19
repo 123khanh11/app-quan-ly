@@ -1,75 +1,53 @@
-/**
- * API Route: /api/ghn/services
- * Purpose: Get available GHN services between two districts
- */
-
 const GHN_CONFIG = {
   TOKEN: process.env.GHN_TOKEN || '',
   SHOP_ID: parseInt(process.env.GHN_SHOP_ID || '0'),
-  API_URL: process.env.GHN_API_URL || 'https://dev-online-gateway.ghn.vn/shiip/public-api/v2',
+  API_URL: process.env.GHN_API_URL || 'https://online-gateway.ghn.vn/shiip/public-api/v2',
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const body = await request.json() as any
 
-    if (!body.from_district_id || !body.to_district_id) {
-      return Response.json(
-        {
-          code: 400,
-          message: 'Missing required fields: from_district_id, to_district_id',
-          data: null,
-        },
-        { status: 400 }
-      )
-    }
+    console.log('📡 GHN Services API called')
+    console.log('Params:', { from_district_id: body.from_district_id, to_district_id: body.to_district_id })
 
-    if (!GHN_CONFIG.TOKEN || !GHN_CONFIG.SHOP_ID) {
-      return Response.json(
-        {
-          code: 500,
-          message: 'GHN credentials not configured',
-          data: null,
-        },
-        { status: 500 }
-      )
-    }
-
-    console.log('📡 Fetching GHN services:', {
-      from_district_id: body.from_district_id,
+    const payload = {
+      from_district_id: body.from_district_id || 1455,
       to_district_id: body.to_district_id,
-    })
+    }
 
-    // Call GHN API
-    const ghnResponse = await fetch(`${GHN_CONFIG.API_URL}/shipping-order/available-services`, {
+    console.log('Calling GHN with:', payload)
+
+    const response = await fetch(`${GHN_CONFIG.API_URL}/shipping-order/available-services`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Token: GHN_CONFIG.TOKEN,
-        ShopId: GHN_CONFIG.SHOP_ID.toString(),
+        'Token': GHN_CONFIG.TOKEN,
+        'ShopId': GHN_CONFIG.SHOP_ID.toString(),
       },
-      body: JSON.stringify({
-        from_district_id: body.from_district_id,
-        to_district_id: body.to_district_id,
-      }),
+      body: JSON.stringify(payload),
     })
 
-    const ghnData = await ghnResponse.json()
+    const data = await response.json() as any
 
-    console.log('📥 GHN Services Response:', ghnData)
+    console.log('GHN Services Response:', data)
 
-    return Response.json(ghnData, {
-      status: ghnResponse.ok ? 200 : ghnResponse.status,
-    })
+    if (data.code === 200 && data.data && Array.isArray(data.data)) {
+      return Response.json({
+        success: true,
+        services: data.data,
+      })
+    } else {
+      return Response.json({
+        success: false,
+        services: [],
+        error: data.message || 'No services available',
+      })
+    }
   } catch (error) {
-    console.error('❌ Get services error:', error)
-
+    console.error('API Error:', error)
     return Response.json(
-      {
-        code: 500,
-        message: error instanceof Error ? error.message : 'Internal server error',
-        data: null,
-      },
+      { success: false, services: [], error: String(error) },
       { status: 500 }
     )
   }

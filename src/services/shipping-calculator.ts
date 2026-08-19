@@ -197,19 +197,24 @@ export async function calculateShipping(
     // Get available services if not provided
     let finalServiceId = serviceId
     if (!finalServiceId) {
-      const servicesResult = await getAvailableServices({
-        from_district_id: SHOP_INFO.district_id,
-        to_district_id: toDistrictId,
-      })
+      try {
+        const servicesResult = await getAvailableServices({
+          from_district_id: SHOP_INFO.district_id,
+          to_district_id: toDistrictId,
+        })
 
-      if (servicesResult.success && servicesResult.services.length > 0) {
-        // Use first available service (usually standard delivery)
-        finalServiceId = servicesResult.services[0].service_id
-        console.log('✅ Using service:', finalServiceId, servicesResult.services[0].service_name)
-      } else {
-        // Fallback to service 2 if no services available
+        if (servicesResult.success && servicesResult.services && Array.isArray(servicesResult.services) && servicesResult.services.length > 0) {
+          // Use first available service (usually standard delivery)
+          finalServiceId = servicesResult.services[0].service_id
+          console.log('✅ Using service:', finalServiceId, servicesResult.services[0].service_name)
+        } else {
+          // Fallback to service 2 if no services available
+          finalServiceId = 2
+          console.warn('⚠️ No services found, using default service 2')
+        }
+      } catch (err) {
+        console.error('❌ Error fetching services:', err)
         finalServiceId = 2
-        console.warn('⚠️ No services found, using default service 2')
       }
     }
 
