@@ -152,7 +152,7 @@ export function CartPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Phí vận chuyển:</span>
-                  <span className="font-semibold">{SHIPPING_FEE.toLocaleString('vi-VN')}đ</span>
+                  <span className="font-semibold text-orange-600">{SHIPPING_FEE.toLocaleString('vi-VN')}đ</span>
                 </div>
               </div>
 

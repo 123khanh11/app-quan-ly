@@ -65,6 +65,7 @@ const PROVINCE_TO_GHN_ID: Record<string, number> = {
 }
 
 const VIETNAM_PROVINCES = Object.keys(PROVINCE_TO_GHN_ID)
+const SHIPPING_FEE = 50000
 
 interface District {
   district_id: number
@@ -181,6 +182,8 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
     .filter((item) => selectedItems.has(`${item.product_id}-${item.color}-${item.size}`))
     .reduce((total, item) => total + item.price * item.quantity, 0)
 
+  const totalWithShipping = selectedTotal + (selectedItems.size > 0 ? SHIPPING_FEE : 0)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -203,10 +206,10 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
 
       const fullAddress = `${formData.detailedAddress}, ${formData.ward}, ${formData.district}, ${formData.province}`
 
-      // Tạo order
+      // Tạo order (với phí vận chuyển)
       const order = await createOrder({
-        total: selectedTotal,
-        shipping_fee: 0,
+        total: totalWithShipping,
+        shipping_fee: SHIPPING_FEE,
         payment_method: 'cod',
         shipping_address: fullAddress,
         note: `Email: ${formData.email}\nSĐT: ${formData.phone}\nGhi chú: ${formData.note}`,
@@ -231,7 +234,7 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
 
       // Clear cart and redirect
       clearCart()
-      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\nTổng tiền: ${selectedTotal.toLocaleString()} VNĐ\n\nChúng tôi sẽ liên hệ bạn sớm.`)
+      alert(`✅ Đặt hàng thành công!\n\nMã đơn hàng: ${order.id}\nTiền hàng: ${selectedTotal.toLocaleString()} VNĐ\nPhí vận chuyển: ${SHIPPING_FEE.toLocaleString()} VNĐ\nTổng cộng: ${totalWithShipping.toLocaleString()} VNĐ\n\nChúng tôi sẽ liên hệ bạn sớm.`)
       window.location.href = '/'
     } catch (error) {
       console.error('Checkout error:', error)
@@ -262,20 +265,14 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
             const itemKey = `${item.product_id}-${item.color}-${item.size}`
             const isSelected = selectedItems.has(itemKey)
             return (
-              <label
+              <div
                 key={itemKey}
-                className={`flex items-center gap-3 p-2 rounded-lg border-2 cursor-pointer transition-all ${
+                className={`flex items-center gap-3 p-2 rounded-lg border-2 transition-all ${
                   isSelected
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50'
                 }`}
               >
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => handleToggleItem(itemKey)}
-                  className="w-5 h-5 cursor-pointer flex-shrink-0"
-                />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-foreground text-sm truncate">{item.name}</p>
                   <p className="text-xs text-muted-foreground">
@@ -284,13 +281,19 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
                     {item.sku && ` • ${item.sku}`}
                   </p>
                 </div>
-                <div className="text-right flex-shrink-0">
+                <div className="text-right flex-shrink-0 mr-3">
                   <p className="font-bold text-primary text-sm">
                     {(item.price * item.quantity).toLocaleString()} VNĐ
                   </p>
                   <p className="text-xs text-muted-foreground">x{item.quantity}</p>
                 </div>
-              </label>
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => handleToggleItem(itemKey)}
+                  className="w-5 h-5 cursor-pointer flex-shrink-0"
+                />
+              </div>
             )
           })}
         </div>
@@ -403,10 +406,18 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
       />
 
       {/* Total */}
-      <div className="bg-muted p-3 rounded-md">
-        <div className="flex justify-between text-base font-bold">
+      <div className="bg-muted p-3 rounded-md space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Tiền hàng:</span>
+          <span className="font-semibold">{selectedTotal.toLocaleString()} VNĐ</span>
+        </div>
+        <div className="flex justify-between text-sm border-t border-border pt-2">
+          <span className="text-muted-foreground">Phí vận chuyển:</span>
+          <span className="font-semibold text-orange-600">{(selectedItems.size > 0 ? SHIPPING_FEE : 0).toLocaleString()} VNĐ</span>
+        </div>
+        <div className="flex justify-between text-base font-bold border-t border-border pt-2">
           <span>Tổng cộng:</span>
-          <span className="text-primary">{selectedTotal.toLocaleString()} VNĐ</span>
+          <span className="text-primary">{totalWithShipping.toLocaleString()} VNĐ</span>
         </div>
       </div>
 
