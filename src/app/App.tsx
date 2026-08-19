@@ -5,11 +5,14 @@ import { ShopHome } from "@/app/components/shop/ShopHome";
 import { CartPage } from "@/app/components/shop/Cart";
 import { OrderTrackingPage } from "@/app/components/shop/OrderTracking";
 import { LoginModal } from "@/app/components/auth/LoginModal";
+import MegaMenu from "@/app/components/ui/mega-menu";
 import { supabase } from "@/services/supabase";
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<"shop" | "cart" | "order">("shop");
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string>("");
   const [user, setUser] = useState<any>(null);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -56,6 +59,17 @@ function AppContent() {
   const handleViewOrder = (orderId: string) => {
     setSelectedOrderId(orderId);
     setCurrentPage("order");
+  };
+
+  const handleSelectCategory = (categoryId: string, categoryName: string) => {
+    setSelectedCategoryId(categoryId);
+    setSelectedCategoryName(categoryName);
+    setCurrentPage("shop");
+  };
+
+  const handleClearCategory = () => {
+    setSelectedCategoryId("");
+    setSelectedCategoryName("");
   };
 
   return (
@@ -219,11 +233,24 @@ function AppContent() {
               </div>
             </div>
           </div>
+          {currentPage === "shop" && (
+            <MegaMenu
+              selectedCategoryId={selectedCategoryId}
+              selectedCategoryName={selectedCategoryName}
+              onSelectCategory={handleSelectCategory}
+            />
+          )}
         </header>
 
         {/* ── PAGE CONTENT ── */}
         <main>
-          {currentPage === "shop" && <ShopHome />}
+          {currentPage === "shop" && (
+            <ShopHome
+              selectedCategoryId={selectedCategoryId}
+              selectedCategoryName={selectedCategoryName}
+              onClearCategory={handleClearCategory}
+            />
+          )}
           {currentPage === "cart" && <CartPage />}
           {currentPage === "order" && <OrderTrackingPage orderId={selectedOrderId} />}
         </main>

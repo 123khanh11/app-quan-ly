@@ -2,13 +2,21 @@ import { useEffect, useState } from 'react'
 import { Heart, ShoppingCart, Search } from 'lucide-react'
 import { getProducts, Product } from '@/services/supabase'
 import { useCart } from '@/app/context/CartContext'
+import { ProductDetailModal } from './ProductDetailModal'
 
-export function ShopHome() {
+interface ShopHomeProps {
+  selectedCategoryId: string
+  selectedCategoryName: string
+  onClearCategory: () => void
+}
+
+export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCategory }: ShopHomeProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [wishlist, setWishlist] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const { addToCart } = useCart()
 
   // Load wishlist from localStorage
@@ -36,18 +44,23 @@ export function ShopHome() {
 
   // Filter products
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredProducts(products)
-    } else {
-      setFilteredProducts(
-        products.filter(
-          (p) =>
-            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.description?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+    const normalizedQuery = searchQuery.trim().toLowerCase()
+    let updatedProducts = products
+
+    if (selectedCategoryId) {
+      updatedProducts = updatedProducts.filter((product) => product.category_id === selectedCategoryId)
+    }
+
+    if (normalizedQuery !== '') {
+      updatedProducts = updatedProducts.filter(
+        (p) =>
+          p.name.toLowerCase().includes(normalizedQuery) ||
+          p.description?.toLowerCase().includes(normalizedQuery)
       )
     }
-  }, [searchQuery, products])
+
+    setFilteredProducts(updatedProducts)
+  }, [searchQuery, products, selectedCategoryId])
 
   const toggleWishlist = (productId: string) => {
     const updated = wishlist.includes(productId)
@@ -81,7 +94,22 @@ export function ShopHome() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Search Bar */}
-        <div className="mb-8">
+        <div className="mb-8 space-y-4">
+          {selectedCategoryId && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Bộ lọc danh mục</p>
+                <p className="text-lg font-semibold">{selectedCategoryName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={onClearCategory}
+                className="text-sm text-primary hover:text-orange-600"
+              >
+                Xóa bộ lọc
+              </button>
+            </div>
+          )}
           <div className="flex items-center border border-border rounded-lg overflow-hidden bg-card">
             <Search size={20} className="ml-4 text-muted-foreground" />
             <input
@@ -119,7 +147,7 @@ export function ShopHome() {
                   className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group"
                 >
                   {/* Product Image */}
-                  <div className="relative overflow-hidden aspect-[3/4] bg-muted">
+                  <div className="relative overflow-hidden aspect-[3/4] bg-muted cursor-pointer" onClick={() => setSelectedProductId(product.id)}>
                     <img
                       src={product.image_url}
                       alt={product.name}
@@ -127,7 +155,10 @@ export function ShopHome() {
                     />
                     {/* Wishlist Button */}
                     <button
-                      onClick={() => toggleWishlist(product.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleWishlist(product.id)
+                      }}
                       className={`absolute top-2 right-2 p-2 rounded-full shadow transition-colors ${
                         wishlist.includes(product.id)
                           ? 'bg-primary text-white'
@@ -172,6 +203,14 @@ export function ShopHome() {
           </>
         )}
       </div>
+
+      {/* Product Detail Modal */}
+      {selectedProductId && (
+        <ProductDetailModal
+          productId={selectedProductId}
+          onClose={() => setSelectedProductId(null)}
+        />
+      )}
     </div>
   )
 }

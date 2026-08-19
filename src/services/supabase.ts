@@ -18,6 +18,14 @@ export interface Product {
   sku?: string
 }
 
+export interface Category {
+  id: string
+  name: string
+  parent_id?: string | null
+  slug?: string
+  active?: boolean
+}
+
 export interface CartItem {
   id: string
   product_id: string
@@ -150,6 +158,16 @@ export async function getProducts(): Promise<Product[]> {
   return data || []
 }
 
+export async function getCategories(): Promise<Category[]> {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .order('name', { ascending: true })
+
+  if (error) throw new Error(error.message)
+  return data || []
+}
+
 export async function getProductById(id: string): Promise<Product> {
   const { data, error } = await supabase
     .from('products')
@@ -171,4 +189,79 @@ export async function getProductImages(productId: string): Promise<any[]> {
 
   if (error) throw new Error(error.message)
   return data || []
+}
+
+// Get product details with variants
+export interface ProductDetail {
+  product_id: string
+  product_name: string
+  description: string
+  product_price: number
+  original_price: number
+  category_id: string
+  category_name: string
+  product_image: string
+  variants: Array<{
+    variant_id: string
+    color: string
+    size: string
+    stock: number
+    variant_price: number
+    sku: string
+    barcode: string
+    variant_image: string
+  }>
+}
+
+export async function getProductDetails(productId: string): Promise<ProductDetail | null> {
+  const { data, error } = await supabase
+    .from('products')
+    .select(`
+      id,
+      name,
+      description,
+      sale_price,
+      original_price,
+      category_id,
+      image_url,
+      categories(name),
+      product_variants(
+        id,
+        color,
+        size,
+        stock,
+        price,
+        sku,
+        barcode,
+        image_url
+      )
+    `)
+    .eq('id', productId)
+    .single()
+
+  if (error) throw new Error(error.message)
+  
+  if (!data) return null
+
+  // Transform data
+  return {
+    product_id: data.id,
+    product_name: data.name,
+    description: data.description,
+    product_price: data.sale_price,
+    original_price: data.original_price,
+    category_id: data.category_id,
+    category_name: data.categories?.name || '',
+    product_image: data.image_url,
+    variants: (data.product_variants || []).map((v: any) => ({
+      variant_id: v.id,
+      color: v.color,
+      size: v.size,
+      stock: v.stock,
+      variant_price: v.price,
+      sku: v.sku,
+      barcode: v.barcode,
+      variant_image: v.image_url,
+    })),
+  }
 }
