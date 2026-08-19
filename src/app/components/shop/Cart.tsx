@@ -243,7 +243,7 @@ export function CartPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm md:text-base text-gray-600">Phí vận chuyển:</span>
                   <span className="font-bold text-orange-600 text-base md:text-lg">
-                    {shippingFee === 0 ? 'Chưa tính' : `${shippingFee.toLocaleString('vi-VN')}đ`}
+                    {loadingShipping ? '⏳ Đang tính...' : shippingFee === 0 ? 'Chưa tính' : `${shippingFee.toLocaleString('vi-VN')}đ`}
                   </span>
                 </div>
               </div>
