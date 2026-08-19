@@ -409,15 +409,15 @@ export function CheckoutForm({ onClose }: CheckoutFormProps) {
       <div className="bg-muted p-3 rounded-md space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Tiền hàng:</span>
-          <span className="font-semibold">{selectedTotal.toLocaleString()} VNĐ</span>
+          <span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}đ</span>
         </div>
         <div className="flex justify-between text-sm border-t border-border pt-2">
           <span className="text-muted-foreground">Phí vận chuyển:</span>
-          <span className="font-semibold text-orange-600">{(selectedItems.size > 0 ? SHIPPING_FEE : 0).toLocaleString()} VNĐ</span>
+          <span className="font-semibold text-orange-600">{(selectedItems.size > 0 ? SHIPPING_FEE : 0).toLocaleString('vi-VN')}đ</span>
         </div>
         <div className="flex justify-between text-base font-bold border-t border-border pt-2">
           <span>Tổng cộng:</span>
-          <span className="text-primary">{totalWithShipping.toLocaleString()} VNĐ</span>
+          <span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span>
         </div>
       </div>
 
