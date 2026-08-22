@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/services/supabase'
 
+export async function GET() {
+  return NextResponse.json({ status: 'OK', message: 'Districts endpoint is working' })
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { province_id } = await request.json()
+    const body = await request.json() as any
+    const province_id = body?.province_id
 
     if (!province_id) {
       return NextResponse.json(
@@ -11,6 +16,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    console.log(`📍 Fetching districts for province: ${province_id}`)
 
     // Query from Supabase
     const { data, error } = await supabase
@@ -26,6 +33,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    console.log(`✅ Found ${data?.length || 0} districts`)
 
     return NextResponse.json({
       success: true,
