@@ -15,6 +15,11 @@ interface Ward {
   ward_name: string
 }
 
+interface Province {
+  province_id: number
+  province_name: string
+}
+
 interface CheckoutFormProps {
   onClose: () => void
   onShippingFeeChange?: (fee: number) => void
@@ -25,8 +30,10 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   const { cartItems, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [provinces, setProvinces] = useState<Province[]>([])
   const [districts, setDistricts] = useState<District[]>([])
   const [wards, setWards] = useState<Ward[]>([])
+  const [loadingProvinces, setLoadingProvinces] = useState(true)
   const [loadingDistricts, setLoadingDistricts] = useState(false)
   const [loadingWards, setLoadingWards] = useState(false)
   const [shippingFee, setShippingFee] = useState<number>(DEFAULT_SHIPPING_FEE)
@@ -37,7 +44,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
-    province: '201',
+    province: '',
     district: '',
     districtId: 0,
     ward: '',
@@ -45,6 +52,41 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     detailedAddress: '',
     note: '',
   })
+
+  // Load provinces on mount
+  useEffect(() => {
+    const loadProvinces = async () => {
+      setLoadingProvinces(true)
+      try {
+        const response = await fetch('/api/ghn-provinces', {
+          method: 'GET',
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const result = await response.json() as any
+        console.log('Provinces response:', result)
+
+        if (result.success && Array.isArray(result.data)) {
+          setProvinces(result.data)
+          // Set first province as default
+          if (result.data.length > 0) {
+            setFormData(prev => ({ ...prev, province: String(result.data[0].province_id) }))
+          }
+        } else {
+          throw new Error('Invalid response format')
+        }
+      } catch (err) {
+        console.warn('⚠️ Failed to load provinces:', err)
+      } finally {
+        setLoadingProvinces(false)
+      }
+    }
+
+    loadProvinces()
+  }, [])
 
   useEffect(() => {
     const loadDistricts = async () => {
@@ -398,11 +440,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         <select
           value={formData.province}
           onChange={(e) => setFormData({ ...formData, province: e.target.value, district: '', districtId: 0, ward: '', wardCode: '' })}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2"
+          disabled={loadingProvinces}
+          className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2 disabled:opacity-50"
+          required
         >
-          <option value="201">Ha Noi</option>
-          <option value="202">Ho Chi Minh</option>
-          <option value="203">Da Nang</option>
+          <option value="">Select Province</option>
+          {provinces.map((p) => <option key={p.province_id} value={p.province_id}>{p.province_name}</option>)}
         </select>
 
         <select
