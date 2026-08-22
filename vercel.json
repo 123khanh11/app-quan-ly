@@ -1,9 +1,7 @@
 {
-  "buildCommand": "npm ci && npm run build",
-  "installCommand": "npm ci --legacy-peer-deps",
-  "outputDirectory": "dist",
-  "devCommand": "npm run dev",
-  "framework": "vite"
+  "buildCommand": "echo 'Flutter web files already built'",
+  "outputDirectory": "build/web",
+  "framework": "other"
 }
 
 
