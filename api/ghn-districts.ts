@@ -1,16 +1,20 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_URL = 'https://edtxexnhpbipcecceoop.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_iWrqwcmaNjqUYjC5ndYd2A_xOkv0Tz7'
 
 // Mock data fallback
 const MOCK_DISTRICTS = {
   1: [
-    { DistrictID: 1, DistrictName: 'Hoàn Kiếm' },
-    { DistrictID: 2, DistrictName: 'Ba Đình' },
-    { DistrictID: 1455, DistrictName: 'Hà Đông' },
+    { district_id: 1, district_name: 'Hoàn Kiếm' },
+    { district_id: 2, district_name: 'Ba Đình' },
+    { district_id: 1455, district_name: 'Hà Đông' },
   ],
   58: [
-    { DistrictID: 1, DistrictName: 'Quận 1' },
-    { DistrictID: 3, DistrictName: 'Quận 3' },
-    { DistrictID: 3440, DistrictName: 'Bình Chánh' },
+    { district_id: 1, district_name: 'Quận 1' },
+    { district_id: 3, district_name: 'Quận 3' },
+    { district_id: 3440, district_name: 'Bình Chánh' },
   ],
 }
 
@@ -40,61 +44,34 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       })
     }
 
-    const GHN_TOKEN = process.env.GHN_TOKEN
-    const GHN_SHOP_ID = process.env.GHN_SHOP_ID
+    // Try to fetch from Supabase first
+    try {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      const { data, error } = await supabase
+        .from('ghn_districts')
+        .select('district_id, district_name')
+        .eq('province_id', parseInt(province_id as string))
+        .order('district_name', { ascending: true })
 
-    // If no credentials, return mock data
-    if (!GHN_TOKEN || !GHN_SHOP_ID) {
-      console.warn('⚠️ GHN credentials not configured, using mock data')
-      const mockData = MOCK_DISTRICTS[province_id as keyof typeof MOCK_DISTRICTS] || []
-      return res.status(200).json({
-        success: true,
-        data: mockData,
-        mock: true,
-      })
+      if (!error && data && data.length > 0) {
+        console.log(`✅ Got ${data.length} districts from Supabase`)
+        return res.status(200).json({
+          success: true,
+          data: data,
+          source: 'supabase',
+        })
+      }
+    } catch (supError) {
+      console.warn('⚠️ Supabase query failed:', supError)
     }
 
-    const url = `https://online-gateway.ghn.vn/shiip/public-api/v2/master-data/district?province_id=${province_id}`
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Token': GHN_TOKEN,
-        'ShopId': GHN_SHOP_ID,
-      },
+    // Fallback to mock data
+    const mockData = MOCK_DISTRICTS[province_id as keyof typeof MOCK_DISTRICTS] || []
+    return res.status(200).json({
+      success: true,
+      data: mockData,
+      source: 'mock',
     })
-
-    let data: any
-    const contentType = response.headers.get('content-type')
-
-    if (contentType?.includes('application/json')) {
-      data = await response.json()
-    } else {
-      console.warn('⚠️ GHN API non-JSON response, using mock data')
-      const mockData = MOCK_DISTRICTS[province_id as keyof typeof MOCK_DISTRICTS] || []
-      return res.status(200).json({
-        success: true,
-        data: mockData,
-        mock: true,
-      })
-    }
-
-    if (data.code === 200) {
-      return res.status(200).json({
-        success: true,
-        data: data.data || [],
-      })
-    } else {
-      // Fallback to mock if GHN API error
-      const mockData = MOCK_DISTRICTS[province_id as keyof typeof MOCK_DISTRICTS] || []
-      return res.status(200).json({
-        success: true,
-        data: mockData,
-        mock: true,
-        error: data.message,
-      })
-    }
   } catch (error) {
     console.error('❌ Error:', error)
     // Return mock data on error
@@ -103,7 +80,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     return res.status(200).json({
       success: true,
       data: mockData,
-      mock: true,
+      source: 'mock-fallback',
       error: error instanceof Error ? error.message : 'Server error',
     })
   }

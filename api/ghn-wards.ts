@@ -1,21 +1,25 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_URL = 'https://edtxexnhpbipcecceoop.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_iWrqwcmaNjqUYjC5ndYd2A_xOkv0Tz7'
 
 // Mock data fallback
 const MOCK_WARDS = {
   1455: [
-    { WardCode: '21617', WardName: 'Phúc Diễn' },
-    { WardCode: '21618', WardName: 'Dương Nội' },
-    { WardCode: '21619', WardName: 'Hà Cầu' },
+    { ward_code: '21617', ward_name: 'Phúc Diễn' },
+    { ward_code: '21618', ward_name: 'Dương Nội' },
+    { ward_code: '21619', ward_name: 'Hà Cầu' },
   ],
   1: [
-    { WardCode: '13000', WardName: 'Bến Nghé' },
-    { WardCode: '13001', WardName: 'Bến Thành' },
-    { WardCode: '13002', WardName: 'Cầu Ông Lãnh' },
+    { ward_code: '13000', ward_name: 'Bến Nghé' },
+    { ward_code: '13001', ward_name: 'Bến Thành' },
+    { ward_code: '13002', ward_name: 'Cầu Ông Lãnh' },
   ],
   3440: [
-    { WardCode: '13010', WardName: 'An Lạc' },
-    { WardCode: '13011', WardName: 'An Nhơn' },
-    { WardCode: '13012', WardName: 'Bình Hưng' },
+    { ward_code: '13010', ward_name: 'An Lạc' },
+    { ward_code: '13011', ward_name: 'An Nhơn' },
+    { ward_code: '13012', ward_name: 'Bình Hưng' },
   ],
 }
 
@@ -45,61 +49,34 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       })
     }
 
-    const GHN_TOKEN = process.env.GHN_TOKEN
-    const GHN_SHOP_ID = process.env.GHN_SHOP_ID
+    // Try to fetch from Supabase first
+    try {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      const { data, error } = await supabase
+        .from('ghn_wards')
+        .select('ward_code, ward_name')
+        .eq('district_id', parseInt(district_id as string))
+        .order('ward_name', { ascending: true })
 
-    // If no credentials, return mock data
-    if (!GHN_TOKEN || !GHN_SHOP_ID) {
-      console.warn('⚠️ GHN credentials not configured, using mock data')
-      const mockData = MOCK_WARDS[district_id as keyof typeof MOCK_WARDS] || []
-      return res.status(200).json({
-        success: true,
-        data: mockData,
-        mock: true,
-      })
+      if (!error && data && data.length > 0) {
+        console.log(`✅ Got ${data.length} wards from Supabase`)
+        return res.status(200).json({
+          success: true,
+          data: data,
+          source: 'supabase',
+        })
+      }
+    } catch (supError) {
+      console.warn('⚠️ Supabase query failed:', supError)
     }
 
-    const url = `https://online-gateway.ghn.vn/shiip/public-api/v2/master-data/ward?district_id=${district_id}`
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Token': GHN_TOKEN,
-        'ShopId': GHN_SHOP_ID,
-      },
+    // Fallback to mock data
+    const mockData = MOCK_WARDS[district_id as keyof typeof MOCK_WARDS] || []
+    return res.status(200).json({
+      success: true,
+      data: mockData,
+      source: 'mock',
     })
-
-    let data: any
-    const contentType = response.headers.get('content-type')
-
-    if (contentType?.includes('application/json')) {
-      data = await response.json()
-    } else {
-      console.warn('⚠️ GHN API non-JSON response, using mock data')
-      const mockData = MOCK_WARDS[district_id as keyof typeof MOCK_WARDS] || []
-      return res.status(200).json({
-        success: true,
-        data: mockData,
-        mock: true,
-      })
-    }
-
-    if (data.code === 200) {
-      return res.status(200).json({
-        success: true,
-        data: data.data || [],
-      })
-    } else {
-      // Fallback to mock if GHN API error
-      const mockData = MOCK_WARDS[district_id as keyof typeof MOCK_WARDS] || []
-      return res.status(200).json({
-        success: true,
-        data: mockData,
-        mock: true,
-        error: data.message,
-      })
-    }
   } catch (error) {
     console.error('❌ Error:', error)
     // Return mock data on error
@@ -108,7 +85,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     return res.status(200).json({
       success: true,
       data: mockData,
-      mock: true,
+      source: 'mock-fallback',
       error: error instanceof Error ? error.message : 'Server error',
     })
   }
