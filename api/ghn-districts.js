@@ -1,4 +1,4 @@
-export default async (req: any, res: any) => {
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   
   if (req.method === 'OPTIONS') {
@@ -26,7 +26,7 @@ export default async (req: any, res: any) => {
       ],
     }
 
-    const data = MOCK[province_id as keyof typeof MOCK] || []
+    const data = MOCK[province_id] || []
     res.status(200).json({ success: true, data })
   } catch (error) {
     res.status(500).json({ success: false, error: String(error) })
