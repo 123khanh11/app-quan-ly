@@ -5,19 +5,9 @@
   "framework": "vite",
   "functions": {
     "server.ts": {
-      "runtime": "nodejs20.x"
+      "runtime": "@vercel/node@5.8.26"
     }
-  },
-  "routes": [
-    {
-      "src": "/api/ghn/(.*)",
-      "dest": "/server.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/$1"
-    }
-  ]
+  }
 }
 
 
