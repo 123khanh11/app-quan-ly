@@ -211,7 +211,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           weight: Math.max(totalWeight, 200),
         })
 
-        const response = await fetch('/api/shipping/fee', {
+        const response = await fetch('/api/shipping-fee', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -226,22 +226,23 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
         const result = await response.json() as any
 
-        console.log('📊 /api/shipping/fee response:', result)
+        console.log('📊 /api/shipping-fee response:', result)
 
         if (result.success && result.data?.total) {
           console.log('✅ Shipping fee OK:', result.data.total)
           setShippingFee(result.data.total)
           onShippingFeeChange?.(result.data.total)
         } else {
-          console.warn('⚠️ API response not ok, using default fee')
-          console.warn('Response:', result)
-          setShippingFee(DEFAULT_SHIPPING_FEE)
-          onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
+          console.warn('⚠️ API response not ok, using estimation')
+          const estimation = Math.max(30000, 30000 + (Math.ceil(totalWeight / 1000) - 1) * 5000)
+          setShippingFee(estimation)
+          onShippingFeeChange?.(estimation)
         }
       } catch (err) {
         console.error('❌ Error calculating shipping:', err)
-        setShippingFee(DEFAULT_SHIPPING_FEE)
-        onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
+        const estimation = Math.max(30000, 30000 + (Math.ceil(totalWeight / 1000) - 1) * 5000)
+        setShippingFee(estimation)
+        onShippingFeeChange?.(estimation)
       } finally {
         setLoadingShipping(false)
         onLoadingChange?.(false)
