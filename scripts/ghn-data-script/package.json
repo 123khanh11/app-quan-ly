@@ -1,0 +1,14 @@
+{
+  "name": "ghn-data-downloader",
+  "version": "1.0.0",
+  "description": "Download GHN master data (provinces, districts, wards)",
+  "main": "get-ghn-data.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node get-ghn-data.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "axios": "^1.6.2"
+  }
+}
