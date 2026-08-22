@@ -1,8 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
-import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://edtxexnhpbipcecceoop.supabase.co'
-// Use anon key with RLS disabled tables for this operation
 const SUPABASE_KEY = 'sb_publishable_iWrqwcmaNjqUYjC5ndYd2A_xOkv0Tz7'
 
 const DATA = {
@@ -57,11 +55,45 @@ const DATA = {
   ]
 }
 
+async function seedTable(table: string, data: any[]) {
+  console.log(`📥 Seeding ${table}...`)
+  
+  // Delete existing
+  await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'DELETE',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({})
+  }).catch(e => console.log(`Delete ${table} skipped`))
+
+  // Insert in batches
+  const batchSize = 50
+  for (let i = 0; i < data.length; i += batchSize) {
+    const batch = data.slice(i, i + batchSize)
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(batch)
+    })
+    
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Failed to insert into ${table}: ${error}`)
+    }
+    console.log(`  ✓ Batch ${Math.floor(i / batchSize) + 1}`)
+  }
+  console.log(`✅ ${table} seeded\n`)
+}
+
 export default async (req: VercelRequest, res: VercelResponse) => {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Content-Type', 'application/json')
 
   if (req.method === 'OPTIONS') {
     res.status(200).end()
@@ -69,42 +101,15 @@ export default async (req: VercelRequest, res: VercelResponse) => {
   }
 
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-
-    console.log('🚀 Seeding GHN location data...')
-
-    // Delete all existing data first
-    console.log('🗑️  Clearing old data...')
-    await supabase.from('ghn_wards').delete().gte('id', 0)
-    await supabase.from('ghn_districts').delete().gte('id', 0)
-    await supabase.from('ghn_provinces').delete().gte('id', 0)
-
-    // Insert provinces
-    console.log('🌍 Seeding provinces...')
-    const { error: provErr } = await supabase
-      .from('ghn_provinces')
-      .insert(DATA.provinces.map(p => ({ ...p, is_active: true })))
-    if (provErr) throw new Error(`Province: ${provErr.message}`)
-
-    // Insert districts
-    console.log('🏙️  Seeding districts...')
-    const { error: distErr } = await supabase
-      .from('ghn_districts')
-      .insert(DATA.districts.map(d => ({ ...d, is_active: true })))
-    if (distErr) throw new Error(`District: ${distErr.message}`)
-
-    // Insert wards
-    console.log('🏘️  Seeding wards...')
-    const { error: wardErr } = await supabase
-      .from('ghn_wards')
-      .insert(DATA.wards.map(w => ({ ...w, is_active: true })))
-    if (wardErr) throw new Error(`Ward: ${wardErr.message}`)
-
-    console.log('✨ Seed completed!')
+    console.log('🚀 Starting seed...')
+    
+    await seedTable('ghn_wards', DATA.wards)
+    await seedTable('ghn_districts', DATA.districts)
+    await seedTable('ghn_provinces', DATA.provinces)
 
     return res.status(200).json({
       success: true,
-      message: 'Data seeded successfully',
+      message: 'Seed completed',
       counts: {
         provinces: DATA.provinces.length,
         districts: DATA.districts.length,
@@ -112,10 +117,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       }
     })
   } catch (error) {
-    console.error('❌ Error:', error)
+    console.error('Error:', error)
     return res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 }
