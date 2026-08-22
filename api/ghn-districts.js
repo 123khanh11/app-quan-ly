@@ -8,6 +8,9 @@ function getSupabaseClient() {
   const url = process.env.VITE_SUPABASE_URL
   const key = process.env.VITE_SUPABASE_ANON_KEY
 
+  console.log("🔍 DEBUG: VITE_SUPABASE_URL exists:", !!url)
+  console.log("🔍 DEBUG: VITE_SUPABASE_ANON_KEY exists:", !!key)
+
   if (!url || !key) {
     throw new Error(`Supabase credentials missing: URL=${url ? 'SET' : 'MISSING'}, KEY=${key ? 'SET' : 'MISSING'}`)
   }
@@ -28,6 +31,10 @@ module.exports = async function handler(req, res) {
   try {
     const { province_id } = req.query
 
+    console.log("📥 Request received")
+    console.log("Province ID:", province_id)
+    console.log("Query params:", req.query)
+
     if (!province_id) {
       return res.status(400).json({ 
         success: false, 
@@ -39,6 +46,8 @@ module.exports = async function handler(req, res) {
     console.log(`📍 Fetching districts for province: ${province_id}`)
 
     const client = getSupabaseClient()
+    console.log("✅ Supabase client initialized")
+
     const { data, error } = await client
       .from('ghn_districts')
       .select('district_id, district_name')
@@ -47,6 +56,7 @@ module.exports = async function handler(req, res) {
 
     if (error) {
       console.error('❌ Supabase error:', error.message)
+      console.error('❌ Supabase error details:', error)
       throw error
     }
 
@@ -58,6 +68,7 @@ module.exports = async function handler(req, res) {
     })
   } catch (error) {
     console.error('❌ API Error:', error.message)
+    console.error('❌ Stack trace:', error.stack)
     return res.status(500).json({
       success: false,
       error: error.message || 'Database error',
