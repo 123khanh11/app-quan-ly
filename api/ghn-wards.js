@@ -1,5 +1,13 @@
 const { createClient } = require('@supabase/supabase-js')
 
+console.log('Supabase URL:', process.env.VITE_SUPABASE_URL ? 'SET' : 'MISSING')
+console.log('Supabase Key:', process.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING')
+
+if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) {
+  console.error('❌ Supabase credentials missing!')
+  console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('SUPABASE')))
+}
+
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.VITE_SUPABASE_ANON_KEY
@@ -25,7 +33,7 @@ module.exports = async function handler(req, res) {
       })
     }
 
-    console.log(`Fetching wards for district: ${district_id}`)
+    console.log(`📍 Fetching wards for district: ${district_id}`)
 
     const { data, error } = await supabase
       .from('ghn_wards')
@@ -34,18 +42,18 @@ module.exports = async function handler(req, res) {
       .order('ward_name', { ascending: true })
 
     if (error) {
-      console.error('Supabase error:', error)
+      console.error('❌ Supabase error:', error.message)
       throw error
     }
 
-    console.log(`Found ${data?.length || 0} wards`)
+    console.log(`✅ Found ${data?.length || 0} wards`)
 
     return res.status(200).json({
       success: true,
       wards: data || [],
     })
   } catch (error) {
-    console.error('API Error:', error)
+    console.error('❌ API Error:', error.message)
     return res.status(500).json({
       success: false,
       error: error.message || 'Database error',
