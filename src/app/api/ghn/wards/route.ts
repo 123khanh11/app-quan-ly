@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/services/supabase'
 
-export async function GET() {
-  return NextResponse.json({ status: 'OK', message: 'Wards endpoint is working' })
-}
-
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const body = await request.json() as any
-    const district_id = body?.district_id
+    const searchParams = request.nextUrl.searchParams
+    const district_id = searchParams.get('district_id')
 
     if (!district_id) {
       return NextResponse.json(
@@ -23,7 +19,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('ghn_wards')
       .select('ward_code, ward_name')
-      .eq('district_id', district_id)
+      .eq('district_id', parseInt(district_id))
       .order('ward_name', { ascending: true })
 
     if (error) {
