@@ -5,11 +5,12 @@ let supabaseClient = null
 function getSupabaseClient() {
   if (supabaseClient) return supabaseClient
 
-  const url = process.env.VITE_SUPABASE_URL
-  const key = process.env.VITE_SUPABASE_ANON_KEY
+  // Thử cả hai tên biến (với và không có prefix VITE_)
+  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  const key = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
-  console.log("🔍 DEBUG: VITE_SUPABASE_URL exists:", !!url)
-  console.log("🔍 DEBUG: VITE_SUPABASE_ANON_KEY exists:", !!key)
+  console.log("🔍 DEBUG: SUPABASE_URL exists:", !!url)
+  console.log("🔍 DEBUG: SUPABASE_ANON_KEY exists:", !!key)
 
   if (!url || !key) {
     const err = new Error(`Supabase credentials missing: URL=${url ? 'SET' : 'MISSING'}, KEY=${key ? 'SET' : 'MISSING'}`)
@@ -23,8 +24,6 @@ function getSupabaseClient() {
 
 async function handler(req, res) {
   console.log("📥 Request received")
-  console.log("Method:", req.method)
-  console.log("URL:", req.url)
   
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS')
@@ -71,7 +70,6 @@ async function handler(req, res) {
     })
   } catch (error) {
     console.error('❌ API Error:', error.message)
-    console.error('❌ Stack:', error.stack)
     return res.status(500).json({
       success: false,
       error: error.message || 'Database error',

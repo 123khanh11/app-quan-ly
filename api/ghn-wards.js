@@ -1,22 +1,30 @@
 const { createClient } = require('@supabase/supabase-js')
 
-let supabase = null
+let supabaseClient = null
 
 function getSupabaseClient() {
-  if (supabase) return supabase
+  if (supabaseClient) return supabaseClient
 
-  const url = process.env.VITE_SUPABASE_URL
-  const key = process.env.VITE_SUPABASE_ANON_KEY
+  // Thử cả hai tên biến (với và không có prefix VITE_)
+  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  const key = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+
+  console.log("🔍 DEBUG: SUPABASE_URL exists:", !!url)
+  console.log("🔍 DEBUG: SUPABASE_ANON_KEY exists:", !!key)
 
   if (!url || !key) {
-    throw new Error(`Supabase credentials missing: URL=${url ? 'SET' : 'MISSING'}, KEY=${key ? 'SET' : 'MISSING'}`)
+    const err = new Error(`Supabase credentials missing: URL=${url ? 'SET' : 'MISSING'}, KEY=${key ? 'SET' : 'MISSING'}`)
+    console.error("❌", err.message)
+    throw err
   }
 
-  supabase = createClient(url, key)
-  return supabase
+  supabaseClient = createClient(url, key)
+  return supabaseClient
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
+  console.log("📥 Request received")
+  
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -27,6 +35,8 @@ module.exports = async function handler(req, res) {
 
   try {
     const { district_id } = req.query
+
+    console.log("District ID:", district_id)
 
     if (!district_id) {
       return res.status(400).json({ 
@@ -39,6 +49,8 @@ module.exports = async function handler(req, res) {
     console.log(`📍 Fetching wards for district: ${district_id}`)
 
     const client = getSupabaseClient()
+    console.log("✅ Supabase client initialized")
+
     const { data, error } = await client
       .from('ghn_wards')
       .select('ward_code, ward_name')
@@ -65,3 +77,5 @@ module.exports = async function handler(req, res) {
     })
   }
 }
+
+module.exports = handler
