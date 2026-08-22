@@ -54,7 +54,7 @@ async function handler(req, res) {
       return res.status(400).json({ 
         success: false, 
         error: 'province_id required',
-        districts: [] 
+        data: [] 
       })
     }
 
@@ -78,7 +78,7 @@ async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      districts: data || [],
+      data: data || [],
     })
   } catch (error) {
     console.error('❌ API Error:', error.message)
@@ -86,7 +86,7 @@ async function handler(req, res) {
     return res.status(500).json({
       success: false,
       error: error.message || 'Database error',
-      districts: [],
+      data: [],
     })
   }
 }
