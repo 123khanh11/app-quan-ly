@@ -7,10 +7,6 @@
     "api/**/*.ts": {
       "runtime": "nodejs20.x"
     }
-  },
-  "env": {
-    "GHN_TOKEN": "@ghn_token",
-    "GHN_SHOP_ID": "@ghn_shop_id"
   }
 }
 
