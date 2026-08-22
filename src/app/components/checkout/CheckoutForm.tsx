@@ -55,14 +55,25 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       setLoadingDistricts(true)
       try {
-        const response = await fetch('/api/ghn/districts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ province_id: parseInt(formData.province) }),
+        const provinceId = parseInt(formData.province)
+        console.log('📍 Fetching districts for province:', provinceId)
+
+        const response = await fetch(`/api/ghn/district?province_id=${provinceId}`, {
+          method: 'GET',
         })
 
         const result = await response.json() as any
-        setDistricts(result.success && result.districts ? result.districts : [])
+        console.log('Districts response:', result)
+
+        if (result.success && Array.isArray(result.data)) {
+          const formatted = result.data.map((d: any) => ({
+            district_id: d.DistrictID || d.district_id,
+            district_name: d.DistrictName || d.district_name,
+          }))
+          setDistricts(formatted)
+        } else {
+          setDistricts([])
+        }
       } catch (err) {
         console.error('Error loading districts:', err)
         setDistricts([])
@@ -83,14 +94,24 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       setLoadingWards(true)
       try {
-        const response = await fetch('/api/ghn/wards', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ district_id: formData.districtId }),
+        console.log('📍 Fetching wards for district:', formData.districtId)
+
+        const response = await fetch(`/api/ghn/ward?district_id=${formData.districtId}`, {
+          method: 'GET',
         })
 
         const result = await response.json() as any
-        setWards(result.success && result.wards ? result.wards : [])
+        console.log('Wards response:', result)
+
+        if (result.success && Array.isArray(result.data)) {
+          const formatted = result.data.map((w: any) => ({
+            ward_code: w.WardCode || w.ward_code,
+            ward_name: w.WardName || w.ward_name,
+          }))
+          setWards(formatted)
+        } else {
+          setWards([])
+        }
       } catch (err) {
         console.error('Error loading wards:', err)
         setWards([])
