@@ -1,9 +1,9 @@
 const { createClient } = require('@supabase/supabase-js')
 
-let supabase = null
+let supabaseClient = null
 
 function getSupabaseClient() {
-  if (supabase) return supabase
+  if (supabaseClient) return supabaseClient
 
   const url = process.env.VITE_SUPABASE_URL
   const key = process.env.VITE_SUPABASE_ANON_KEY
@@ -12,14 +12,20 @@ function getSupabaseClient() {
   console.log("🔍 DEBUG: VITE_SUPABASE_ANON_KEY exists:", !!key)
 
   if (!url || !key) {
-    throw new Error(`Supabase credentials missing: URL=${url ? 'SET' : 'MISSING'}, KEY=${key ? 'SET' : 'MISSING'}`)
+    const err = new Error(`Supabase credentials missing: URL=${url ? 'SET' : 'MISSING'}, KEY=${key ? 'SET' : 'MISSING'}`)
+    console.error("❌", err.message)
+    throw err
   }
 
-  supabase = createClient(url, key)
-  return supabase
+  supabaseClient = createClient(url, key)
+  return supabaseClient
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
+  console.log("📥 Request received")
+  console.log("Method:", req.method)
+  console.log("URL:", req.url)
+  
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -31,9 +37,7 @@ module.exports = async function handler(req, res) {
   try {
     const { province_id } = req.query
 
-    console.log("📥 Request received")
     console.log("Province ID:", province_id)
-    console.log("Query params:", req.query)
 
     if (!province_id) {
       return res.status(400).json({ 
@@ -56,7 +60,6 @@ module.exports = async function handler(req, res) {
 
     if (error) {
       console.error('❌ Supabase error:', error.message)
-      console.error('❌ Supabase error details:', error)
       throw error
     }
 
@@ -68,7 +71,7 @@ module.exports = async function handler(req, res) {
     })
   } catch (error) {
     console.error('❌ API Error:', error.message)
-    console.error('❌ Stack trace:', error.stack)
+    console.error('❌ Stack:', error.stack)
     return res.status(500).json({
       success: false,
       error: error.message || 'Database error',
@@ -76,3 +79,5 @@ module.exports = async function handler(req, res) {
     })
   }
 }
+
+module.exports = handler
