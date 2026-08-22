@@ -1,5 +1,4 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
-import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://edtxexnhpbipcecceoop.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_iWrqwcmaNjqUYjC5ndYd2A_xOkv0Tz7'
@@ -49,22 +48,27 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       })
     }
 
-    // Try to fetch from Supabase first
+    // Try to fetch from Supabase using REST API
     try {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      const { data, error } = await supabase
-        .from('ghn_wards')
-        .select('ward_code, ward_name')
-        .eq('district_id', parseInt(district_id as string))
-        .order('ward_name', { ascending: true })
+      const url = `${SUPABASE_URL}/rest/v1/ghn_wards?district_id=eq.${district_id}&select=ward_code,ward_name&order=ward_name.asc`
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+        },
+      })
 
-      if (!error && data && data.length > 0) {
-        console.log(`✅ Got ${data.length} wards from Supabase`)
-        return res.status(200).json({
-          success: true,
-          data: data,
-          source: 'supabase',
-        })
+      if (response.ok) {
+        const data = await response.json()
+        if (data && Array.isArray(data) && data.length > 0) {
+          console.log(`✅ Got ${data.length} wards from Supabase`)
+          return res.status(200).json({
+            success: true,
+            data: data,
+            source: 'supabase',
+          })
+        }
       }
     } catch (supError) {
       console.warn('⚠️ Supabase query failed:', supError)
