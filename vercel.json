@@ -2,7 +2,22 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "functions": {
+    "server.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/ghn/(.*)",
+      "dest": "/server.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/$1"
+    }
+  ]
 }
 
 
