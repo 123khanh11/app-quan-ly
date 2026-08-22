@@ -1,11 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
+const { createClient } = require('@supabase/supabase-js')
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.VITE_SUPABASE_ANON_KEY
 )
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -14,20 +14,31 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
 
-  const { district_id } = req.query
-
-  if (!district_id) {
-    return res.status(400).json({ error: 'district_id required' })
-  }
-
   try {
+    const { district_id } = req.query
+
+    if (!district_id) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'district_id required',
+        wards: [] 
+      })
+    }
+
+    console.log(`Fetching wards for district: ${district_id}`)
+
     const { data, error } = await supabase
       .from('ghn_wards')
       .select('ward_code, ward_name')
       .eq('district_id', parseInt(district_id))
       .order('ward_name', { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error:', error)
+      throw error
+    }
+
+    console.log(`Found ${data?.length || 0} wards`)
 
     return res.status(200).json({
       success: true,
@@ -37,7 +48,8 @@ export default async function handler(req, res) {
     console.error('API Error:', error)
     return res.status(500).json({
       success: false,
-      error: error.message,
+      error: error.message || 'Database error',
+      wards: [],
     })
   }
 }
