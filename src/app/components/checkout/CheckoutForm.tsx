@@ -231,9 +231,9 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       try {
         let totalWeight = 0
-        let maxLength = 0
-        let maxWidth = 0
-        let totalHeight = 0
+        let maxLength = 15
+        let maxWidth = 15
+        let totalHeight = 15
 
         cartItems.forEach((item) => {
           const w = item.weight || 300
@@ -244,29 +244,51 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           totalWeight += w * item.quantity
           maxLength = Math.max(maxLength, l)
           maxWidth = Math.max(maxWidth, wi)
-          totalHeight += h * item.quantity
+          totalHeight = Math.max(totalHeight, h)
         })
 
-        // Calculate shipping fee locally (no API call)
-        // Base fee: 30,000 VND
-        // Per kg: 5,000 VND
-        const weight = Math.max(totalWeight, 200)
-        const baseFee = 30000
-        const perKgFee = 5000
-        const weightKg = Math.ceil(weight / 1000)
-        const additionalKg = Math.max(0, weightKg - 1)
-        const shippingFee = baseFee + (additionalKg * perKgFee)
+        const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
-        console.log(`📦 Shipping calculation:
-          Weight: ${weight}g (${weightKg}kg)
-          Base fee: 30,000đ
-          Additional kg: ${additionalKg} x 5,000đ = ${additionalKg * perKgFee}đ
-          Total: ${shippingFee}đ`)
+        console.log(`📦 Calculating shipping with params:
+          Weight: ${totalWeight}g
+          Dimensions: ${maxLength}x${maxWidth}x${totalHeight}cm
+          Insurance value: ${totalPrice}`)
 
-        setShippingFee(shippingFee)
-        onShippingFeeChange?.(shippingFee)
+        const response = await fetch('/api/shipping-fee', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            service_type_id: 2, // Standard shipping
+            to_district_id: formData.districtId,
+            to_ward_code: formData.wardCode,
+            weight: Math.max(totalWeight, 200),
+            length: maxLength,
+            width: maxWidth,
+            height: totalHeight,
+            insurance_value: totalPrice,
+            coupon: null,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
+
+        const result = await response.json() as any
+        console.log('Shipping fee response:', result)
+
+        if (result.success && result.data) {
+          const fee = result.data.total || DEFAULT_SHIPPING_FEE
+          console.log(`✅ Shipping fee from GHN: ${fee}đ`)
+          setShippingFee(fee)
+          onShippingFeeChange?.(fee)
+        } else {
+          throw new Error('Invalid response format')
+        }
       } catch (err) {
-        console.error('❌ Error calculating shipping:', err)
+        console.warn('⚠️ GHN API failed, using default fee:', err)
         setShippingFee(DEFAULT_SHIPPING_FEE)
         onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
       } finally {
