@@ -1,7 +1,6 @@
 {
   "buildCommand": "echo 'Flutter web files already built'",
-  "outputDirectory": "build/web",
-  "framework": "other"
+  "outputDirectory": "build/web"
 }
 
 
