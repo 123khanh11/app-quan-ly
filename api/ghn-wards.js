@@ -1,17 +1,20 @@
 const { createClient } = require('@supabase/supabase-js')
 
-console.log('Supabase URL:', process.env.VITE_SUPABASE_URL ? 'SET' : 'MISSING')
-console.log('Supabase Key:', process.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING')
+let supabase = null
 
-if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) {
-  console.error('❌ Supabase credentials missing!')
-  console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('SUPABASE')))
+function getSupabaseClient() {
+  if (supabase) return supabase
+
+  const url = process.env.VITE_SUPABASE_URL
+  const key = process.env.VITE_SUPABASE_ANON_KEY
+
+  if (!url || !key) {
+    throw new Error(`Supabase credentials missing: URL=${url ? 'SET' : 'MISSING'}, KEY=${key ? 'SET' : 'MISSING'}`)
+  }
+
+  supabase = createClient(url, key)
+  return supabase
 }
-
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY
-)
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -35,7 +38,8 @@ module.exports = async function handler(req, res) {
 
     console.log(`📍 Fetching wards for district: ${district_id}`)
 
-    const { data, error } = await supabase
+    const client = getSupabaseClient()
+    const { data, error } = await client
       .from('ghn_wards')
       .select('ward_code, ward_name')
       .eq('district_id', parseInt(district_id))
