@@ -1,8 +1,20 @@
-const { createClient } = require('@supabase/supabase-js')
+import { createClient } from '@supabase/supabase-js'
 
 let supabaseClient = null
+let initError = null
+
+try {
+  console.log("✅ @supabase/supabase-js loaded successfully")
+} catch (e) {
+  initError = e
+  console.error("❌ Failed to load @supabase/supabase-js:", e.message)
+}
 
 function getSupabaseClient() {
+  if (initError) {
+    throw new Error("Supabase module not loaded: " + initError.message)
+  }
+
   if (supabaseClient) return supabaseClient
 
   // Thử cả hai tên biến (với và không có prefix VITE_)
@@ -23,7 +35,7 @@ function getSupabaseClient() {
 }
 
 async function handler(req, res) {
-  console.log("📥 Request received")
+  console.log("📥 Request received at:", new Date().toISOString())
   
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS')
@@ -70,6 +82,7 @@ async function handler(req, res) {
     })
   } catch (error) {
     console.error('❌ API Error:', error.message)
+    console.error('❌ Error type:', error.constructor.name)
     return res.status(500).json({
       success: false,
       error: error.message || 'Database error',
@@ -78,4 +91,4 @@ async function handler(req, res) {
   }
 }
 
-module.exports = handler
+export default handler

@@ -1,8 +1,9 @@
+import { createClient } from '@supabase/supabase-js'
+
 let supabaseClient = null
 let initError = null
 
 try {
-  const { createClient } = require('@supabase/supabase-js')
   console.log("✅ @supabase/supabase-js loaded successfully")
 } catch (e) {
   initError = e
@@ -16,15 +17,12 @@ function getSupabaseClient() {
 
   if (supabaseClient) return supabaseClient
 
-  const { createClient } = require('@supabase/supabase-js')
-
   // Thử cả hai tên biến (với và không có prefix VITE_)
   const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
   const key = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
   console.log("🔍 DEBUG: SUPABASE_URL exists:", !!url)
   console.log("🔍 DEBUG: SUPABASE_ANON_KEY exists:", !!key)
-  console.log("🔍 All env vars keys:", Object.keys(process.env).slice(0, 10))
 
   if (!url || !key) {
     const err = new Error(`Supabase credentials missing: URL=${url ? 'SET' : 'MISSING'}, KEY=${key ? 'SET' : 'MISSING'}`)
@@ -93,4 +91,4 @@ async function handler(req, res) {
   }
 }
 
-module.exports = handler
+export default handler
