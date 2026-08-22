@@ -37,7 +37,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
-    province: '1',
+    province: '201',
     district: '',
     districtId: 0,
     ward: '',
@@ -82,17 +82,17 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         console.warn('⚠️ API failed, using mock data:', err)
         // Fallback to mock data
         const mockMap: Record<string, any[]> = {
-          '1': [
+          '201': [
             { district_id: 1, district_name: 'Hoàn Kiếm' },
             { district_id: 2, district_name: 'Ba Đình' },
-            { district_id: 1455, district_name: 'Hà Đông' },
+            { district_id: 3, district_name: 'Tây Hồ' },
           ],
-          '58': [
+          '202': [
             { district_id: 1, district_name: 'Quận 1' },
             { district_id: 3, district_name: 'Quận 3' },
-            { district_id: 3440, district_name: 'Bình Chánh' },
+            { district_id: 8, district_name: 'Bình Chánh' },
           ],
-          '48': [
+          '203': [
             { district_id: 1, district_name: 'Hải Châu' },
             { district_id: 2, district_name: 'Thanh Khê' },
             { district_id: 3, district_name: 'Sơn Trà' },
@@ -400,9 +400,9 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           onChange={(e) => setFormData({ ...formData, province: e.target.value, district: '', districtId: 0, ward: '', wardCode: '' })}
           className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2"
         >
-          <option value="1">Ha Noi</option>
-          <option value="58">Ho Chi Minh</option>
-          <option value="48">Da Nang</option>
+          <option value="201">Ha Noi</option>
+          <option value="202">Ho Chi Minh</option>
+          <option value="203">Da Nang</option>
         </select>
 
         <select
