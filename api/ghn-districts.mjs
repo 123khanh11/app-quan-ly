@@ -18,11 +18,12 @@ function getSupabaseClient() {
   if (supabaseClient) return supabaseClient
 
   // Thử cả hai tên biến (với và không có prefix VITE_)
-  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-  const key = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://edtxexnhpbipcecceoop.supabase.co'
+  const key = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'sb_publishable_iWrqwcmaNjqUYjC5ndYd2A_xOkv0Tz7'
 
   console.log("🔍 DEBUG: SUPABASE_URL exists:", !!url)
   console.log("🔍 DEBUG: SUPABASE_ANON_KEY exists:", !!key)
+  console.log("🔍 DEBUG: Using URL:", url.substring(0, 30) + '...')
 
   if (!url || !key) {
     const err = new Error(`Supabase credentials missing: URL=${url ? 'SET' : 'MISSING'}, KEY=${key ? 'SET' : 'MISSING'}`)
