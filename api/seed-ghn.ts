@@ -73,19 +73,31 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     console.log('🚀 Seeding GHN location data...')
 
-    // Insert provinces (no duplicates expected)
+    // Delete all existing data first
+    console.log('🗑️  Clearing old data...')
+    await supabase.from('ghn_wards').delete().gte('id', 0)
+    await supabase.from('ghn_districts').delete().gte('id', 0)
+    await supabase.from('ghn_provinces').delete().gte('id', 0)
+
+    // Insert provinces
     console.log('🌍 Seeding provinces...')
-    const { error: provErr } = await supabase.from('ghn_provinces').upsert(DATA.provinces)
+    const { error: provErr } = await supabase
+      .from('ghn_provinces')
+      .insert(DATA.provinces.map(p => ({ ...p, is_active: true })))
     if (provErr) throw new Error(`Province: ${provErr.message}`)
 
-    // Insert districts (no duplicates expected)
+    // Insert districts
     console.log('🏙️  Seeding districts...')
-    const { error: distErr } = await supabase.from('ghn_districts').upsert(DATA.districts)
+    const { error: distErr } = await supabase
+      .from('ghn_districts')
+      .insert(DATA.districts.map(d => ({ ...d, is_active: true })))
     if (distErr) throw new Error(`District: ${distErr.message}`)
 
-    // Insert wards (no duplicates expected)
+    // Insert wards
     console.log('🏘️  Seeding wards...')
-    const { error: wardErr } = await supabase.from('ghn_wards').upsert(DATA.wards)
+    const { error: wardErr } = await supabase
+      .from('ghn_wards')
+      .insert(DATA.wards.map(w => ({ ...w, is_active: true })))
     if (wardErr) throw new Error(`Ward: ${wardErr.message}`)
 
     console.log('✨ Seed completed!')
