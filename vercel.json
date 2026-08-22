@@ -1,6 +1,6 @@
 {
-  "buildCommand": "echo 'Flutter web files already built'",
-  "outputDirectory": "build/web"
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
 }
 
 
