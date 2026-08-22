@@ -205,44 +205,28 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           totalHeight += h * item.quantity
         })
 
-        console.log('📦 Calling /api/shipping/fee:', {
-          to_district_id: formData.districtId,
-          to_ward_code: formData.wardCode,
-          weight: Math.max(totalWeight, 200),
-        })
+        // Calculate shipping fee locally (no API call)
+        // Base fee: 30,000 VND
+        // Per kg: 5,000 VND
+        const weight = Math.max(totalWeight, 200)
+        const baseFee = 30000
+        const perKgFee = 5000
+        const weightKg = Math.ceil(weight / 1000)
+        const additionalKg = Math.max(0, weightKg - 1)
+        const shippingFee = baseFee + (additionalKg * perKgFee)
 
-        const response = await fetch('/api/shipping-fee', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to_district_id: formData.districtId,
-            to_ward_code: formData.wardCode,
-            weight: Math.max(totalWeight, 200),
-            length: Math.max(maxLength, 10),
-            width: Math.max(maxWidth, 10),
-            height: Math.max(totalHeight, 10),
-          }),
-        })
+        console.log(`📦 Shipping calculation:
+          Weight: ${weight}g (${weightKg}kg)
+          Base fee: 30,000đ
+          Additional kg: ${additionalKg} x 5,000đ = ${additionalKg * perKgFee}đ
+          Total: ${shippingFee}đ`)
 
-        const result = await response.json() as any
-
-        console.log('📊 /api/shipping-fee response:', result)
-
-        if (result.success && result.data?.total) {
-          console.log('✅ Shipping fee OK:', result.data.total)
-          setShippingFee(result.data.total)
-          onShippingFeeChange?.(result.data.total)
-        } else {
-          console.warn('⚠️ API response not ok, using estimation')
-          const estimation = Math.max(30000, 30000 + (Math.ceil(totalWeight / 1000) - 1) * 5000)
-          setShippingFee(estimation)
-          onShippingFeeChange?.(estimation)
-        }
+        setShippingFee(shippingFee)
+        onShippingFeeChange?.(shippingFee)
       } catch (err) {
         console.error('❌ Error calculating shipping:', err)
-        const estimation = Math.max(30000, 30000 + (Math.ceil(totalWeight / 1000) - 1) * 5000)
-        setShippingFee(estimation)
-        onShippingFeeChange?.(estimation)
+        setShippingFee(DEFAULT_SHIPPING_FEE)
+        onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
       } finally {
         setLoadingShipping(false)
         onLoadingChange?.(false)
