@@ -58,7 +58,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         const provinceId = parseInt(formData.province)
         console.log('📍 Fetching districts for province:', provinceId)
 
-        const response = await fetch(`/api/ghn/district?province_id=${provinceId}`, {
+        const response = await fetch(`/api/ghn-districts?province_id=${provinceId}`, {
           method: 'GET',
         })
 
@@ -96,7 +96,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       try {
         console.log('📍 Fetching wards for district:', formData.districtId)
 
-        const response = await fetch(`/api/ghn/ward?district_id=${formData.districtId}`, {
+        const response = await fetch(`/api/ghn-wards?district_id=${formData.districtId}`, {
           method: 'GET',
         })
 

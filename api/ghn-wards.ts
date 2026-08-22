@@ -1,0 +1,71 @@
+import { VercelRequest, VercelResponse } from '@vercel/node'
+
+export default async (req: VercelRequest, res: VercelResponse) => {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version')
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end()
+    return
+  }
+
+  try {
+    const { district_id } = req.query
+
+    if (!district_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'district_id is required',
+        data: [],
+      })
+    }
+
+    const GHN_TOKEN = process.env.GHN_TOKEN
+    const GHN_SHOP_ID = process.env.GHN_SHOP_ID
+
+    if (!GHN_TOKEN || !GHN_SHOP_ID) {
+      return res.status(500).json({
+        success: false,
+        error: 'GHN credentials not configured',
+        data: [],
+      })
+    }
+
+    const response = await fetch(
+      `https://online-gateway.ghn.vn/shiip/public-api/v2/master-data/ward?district_id=${district_id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Token': GHN_TOKEN,
+          'ShopId': GHN_SHOP_ID,
+        },
+      }
+    )
+
+    const data = await response.json() as any
+
+    if (data.code === 200) {
+      return res.status(200).json({
+        success: true,
+        data: data.data || [],
+      })
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: data.message,
+        data: [],
+      })
+    }
+  } catch (error) {
+    console.error('GHN Wards Error:', error)
+    return res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      data: [],
+    })
+  }
+}

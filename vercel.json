@@ -2,12 +2,7 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite",
-  "functions": {
-    "server.ts": {
-      "runtime": "@vercel/node@5.8.26"
-    }
-  }
+  "framework": "vite"
 }
 
 
