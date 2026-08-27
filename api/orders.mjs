@@ -81,7 +81,6 @@ async function handler(req, res) {
     const itemsWithOrderId = items.map((item) => ({
       ...item,
       order_id: orderData.id,
-      user_id: order.user_id,
     }))
 
     console.log('📦 Inserting items:', JSON.stringify(itemsWithOrderId[0], null, 2))
