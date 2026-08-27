@@ -354,11 +354,24 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           const itemKey = `${item.product_id}-${item.color}-${item.size}`
           return selectedItems.has(itemKey)
         })
+        .filter((item) => {
+          // ✅ Validate that product_id exists and is not empty
+          if (!item.product_id || item.product_id.trim() === '') {
+            console.warn('⚠️ Skipping item with missing product_id:', item)
+            return false
+          }
+          // ✅ Validate that variant_id exists and is not empty
+          if (!item.variant_id || item.variant_id.trim() === '') {
+            console.warn('⚠️ Skipping item with missing variant_id:', item)
+            return false
+          }
+          return true
+        })
         .map((item) => {
           // ✅ Ensure all required fields exist
           return {
-            product_id: item.product_id || '',
-            variant_id: item.variant_id || '',
+            product_id: item.product_id,
+            variant_id: item.variant_id,
             product_name: item.name || 'Unknown Product',
             quantity: item.quantity || 1,
             price: item.price || 0,
@@ -373,6 +386,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         })
 
       console.log('📦 Order items prepared:', orderItems.length)
+      
+      if (orderItems.length === 0) {
+        setError('No valid products to order. Please ensure all items have product ID and variant ID.')
+        setLoading(false)
+        return
+      }
       
       // DEBUG: Log each item detail to verify all fields
       orderItems.forEach((item, idx) => {
