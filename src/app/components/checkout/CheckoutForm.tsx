@@ -55,273 +55,142 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     wardCode: '',
     detailedAddress: '',
     note: '',
-    paymentMethod: 'cod', // 'cod' or 'bank_transfer'
+    paymentMethod: 'cod' as 'cod' | 'bank_transfer',
   })
 
-  // Load provinces on mount
+  // Get user ID on mount
   useEffect(() => {
     const getUserId = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.user?.id) {
           setUserId(session.user.id)
-          console.log('✅ User ID found:', session.user.id)
-        } else {
-          console.warn('⚠️ No user session found')
         }
       } catch (err) {
-        console.error('❌ Error getting user ID:', err)
+        console.error('Error getting user ID:', err)
       }
     }
     getUserId()
   }, [])
 
-  // Load provinces on mount
+  // Load provinces
   useEffect(() => {
     const loadProvinces = async () => {
       setLoadingProvinces(true)
       try {
-        const response = await fetch('/api/ghn-provinces', {
-          method: 'GET',
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
-        }
-
+        const response = await fetch('/api/ghn-provinces')
+        if (!response.ok) throw new Error('Failed to load provinces')
         const result = await response.json() as any
-        console.log('Provinces response:', result)
-
         if (result.success && Array.isArray(result.data)) {
           setProvinces(result.data)
-          // Set first province as default
           if (result.data.length > 0) {
             setFormData(prev => ({ ...prev, province: String(result.data[0].province_id) }))
           }
-        } else {
-          throw new Error('Invalid response format')
         }
       } catch (err) {
-        console.warn('⚠️ Failed to load provinces:', err)
+        console.warn('Failed to load provinces:', err)
       } finally {
         setLoadingProvinces(false)
       }
     }
-
     loadProvinces()
   }, [])
 
+  // Load districts
   useEffect(() => {
     const loadDistricts = async () => {
       if (!formData.province) {
         setDistricts([])
         return
       }
-
       setLoadingDistricts(true)
       try {
-        const provinceId = parseInt(formData.province)
-        console.log('📍 Fetching districts for province:', provinceId)
-
-        const response = await fetch(`/api/ghn-districts?province_id=${provinceId}`, {
-          method: 'GET',
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
-        }
-
+        const response = await fetch(`/api/ghn-districts?province_id=${formData.province}`)
+        if (!response.ok) throw new Error('Failed to load districts')
         const result = await response.json() as any
-        console.log('Districts response:', result)
-
         if (result.success && Array.isArray(result.data)) {
-          const formatted = result.data.map((d: any) => ({
+          setDistricts(result.data.map((d: any) => ({
             district_id: d.DistrictID || d.district_id,
             district_name: d.DistrictName || d.district_name,
-          }))
-          setDistricts(formatted)
-        } else {
-          throw new Error('Invalid response format')
+          })))
         }
       } catch (err) {
-        console.warn('⚠️ API failed, using mock data:', err)
-        // Fallback to mock data
-        const mockMap: Record<string, any[]> = {
-          '201': [
-            { district_id: 1, district_name: 'Hoàn Kiếm' },
-            { district_id: 2, district_name: 'Ba Đình' },
-            { district_id: 3, district_name: 'Tây Hồ' },
-          ],
-          '202': [
-            { district_id: 1, district_name: 'Quận 1' },
-            { district_id: 3, district_name: 'Quận 3' },
-            { district_id: 8, district_name: 'Bình Chánh' },
-          ],
-          '203': [
-            { district_id: 1, district_name: 'Hải Châu' },
-            { district_id: 2, district_name: 'Thanh Khê' },
-            { district_id: 3, district_name: 'Sơn Trà' },
-          ],
-        }
-        setDistricts(mockMap[formData.province] || [])
+        console.warn('Failed to load districts:', err)
       } finally {
         setLoadingDistricts(false)
       }
     }
-
     loadDistricts()
   }, [formData.province])
 
+  // Load wards
   useEffect(() => {
     const loadWards = async () => {
       if (!formData.districtId) {
         setWards([])
         return
       }
-
       setLoadingWards(true)
       try {
-        console.log('📍 Fetching wards for district:', formData.districtId)
-
-        const response = await fetch(`/api/ghn-wards?district_id=${formData.districtId}`, {
-          method: 'GET',
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
-        }
-
+        const response = await fetch(`/api/ghn-wards?district_id=${formData.districtId}`)
+        if (!response.ok) throw new Error('Failed to load wards')
         const result = await response.json() as any
-        console.log('Wards response:', result)
-
         if (result.success && Array.isArray(result.data)) {
-          const formatted = result.data.map((w: any) => ({
+          setWards(result.data.map((w: any) => ({
             ward_code: w.WardCode || w.ward_code,
             ward_name: w.WardName || w.ward_name,
-          }))
-          setWards(formatted)
-        } else {
-          throw new Error('Invalid response format')
+          })))
         }
       } catch (err) {
-        console.warn('⚠️ API failed, using mock data:', err)
-        // Fallback to mock data
-        const mockMap: Record<number, any[]> = {
-          1: [
-            { ward_code: '13000', ward_name: 'Bến Nghé' },
-            { ward_code: '13001', ward_name: 'Bến Thành' },
-            { ward_code: '13002', ward_name: 'Cầu Ông Lãnh' },
-          ],
-          1455: [
-            { ward_code: '21617', ward_name: 'Phúc Diễn' },
-            { ward_code: '21618', ward_name: 'Dương Nội' },
-            { ward_code: '21619', ward_name: 'Hà Cầu' },
-          ],
-          3440: [
-            { ward_code: '13010', ward_name: 'An Lạc' },
-            { ward_code: '13011', ward_name: 'An Nhơn' },
-            { ward_code: '13012', ward_name: 'Bình Hưng' },
-          ],
-          2: [
-            { ward_code: '20000', ward_name: 'Cầu Giấy' },
-            { ward_code: '20001', ward_name: 'Liễu Giai' },
-          ],
-          3: [
-            { ward_code: '20100', ward_name: 'Phúc Tân' },
-            { ward_code: '20101', ward_name: 'Láng Hạc' },
-          ],
-        }
-        setWards(mockMap[formData.districtId] || [])
+        console.warn('Failed to load wards:', err)
       } finally {
         setLoadingWards(false)
       }
     }
-
     loadWards()
   }, [formData.districtId])
 
+  // Calculate shipping fee
   useEffect(() => {
     const calculateShipping = async () => {
       if (!formData.districtId || !formData.wardCode) {
         setShippingFee(DEFAULT_SHIPPING_FEE)
-        onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
-        onLoadingChange?.(false)
         return
       }
-
       setLoadingShipping(true)
-      onLoadingChange?.(true)
-
       try {
         let totalWeight = 0
-        let maxLength = 15
-        let maxWidth = 15
-        let totalHeight = 15
-
         cartItems.forEach((item) => {
-          const w = item.weight || 300
-          const l = item.length || 15
-          const wi = item.width || 15
-          const h = item.height || 15
-
-          totalWeight += w * item.quantity
-          maxLength = Math.max(maxLength, l)
-          maxWidth = Math.max(maxWidth, wi)
-          totalHeight = Math.max(totalHeight, h)
+          totalWeight += (item.weight || 300) * item.quantity
         })
-
-        const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-
-        console.log(`📦 Calculating shipping with params:
-          Weight: ${totalWeight}g
-          Dimensions: ${maxLength}x${maxWidth}x${totalHeight}cm
-          Insurance value: ${totalPrice}`)
-
         const response = await fetch('/api/shipping-fee', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            service_type_id: 2, // Standard shipping
+            service_type_id: 2,
             to_district_id: formData.districtId,
             to_ward_code: formData.wardCode,
             weight: Math.max(totalWeight, 200),
-            length: maxLength,
-            width: maxWidth,
-            height: totalHeight,
-            insurance_value: totalPrice,
-            coupon: null,
+            length: 15,
+            width: 15,
+            height: 15,
+            insurance_value: selectedTotal,
           }),
         })
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
-        }
-
+        if (!response.ok) throw new Error('Failed to calculate shipping')
         const result = await response.json() as any
-        console.log('Shipping fee response:', result)
-
         if (result.success && result.data) {
-          const fee = result.data.total || DEFAULT_SHIPPING_FEE
-          console.log(`✅ Shipping fee from GHN: ${fee}đ`)
-          setShippingFee(fee)
-          onShippingFeeChange?.(fee)
-        } else {
-          throw new Error('Invalid response format')
+          setShippingFee(result.data.total || DEFAULT_SHIPPING_FEE)
         }
       } catch (err) {
-        console.warn('⚠️ GHN API failed, using default fee:', err)
+        console.warn('Failed to calculate shipping:', err)
         setShippingFee(DEFAULT_SHIPPING_FEE)
-        onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
       } finally {
         setLoadingShipping(false)
-        onLoadingChange?.(false)
       }
     }
-
     calculateShipping()
-  }, [formData.districtId, formData.wardCode, cartItems, onShippingFeeChange, onLoadingChange])
+  }, [formData.districtId, formData.wardCode, cartItems])
 
   const handleToggleItem = (itemKey: string) => {
     const updated = new Set(selectedItems)
@@ -337,9 +206,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     if (selectedItems.size === cartItems.length) {
       setSelectedItems(new Set())
     } else {
-      setSelectedItems(
-        new Set(cartItems.map((item) => `${item.product_id}-${item.color}-${item.size}`))
-      )
+      setSelectedItems(new Set(cartItems.map((item) => `${item.product_id}-${item.color}-${item.size}`)))
     }
   }
 
@@ -349,20 +216,16 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
   const totalWithShipping = selectedTotal + (selectedItems.size > 0 ? shippingFee : 0)
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    
     if (selectedItems.size === 0) {
       setError('Select at least one product')
       return
     }
-
     if (!formData.province || !formData.district || !formData.ward || !formData.detailedAddress) {
       setError('Please fill all address fields')
       return
     }
-
-    // Show payment modal to let user choose payment method
     setShowPaymentModal(true)
   }
 
@@ -373,28 +236,13 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
     try {
       const fullAddress = `${formData.detailedAddress}, ${formData.ward}, ${formData.district}, ${formData.province}`
-
-      // Prepare order items
       const orderItems = cartItems
-        .filter((item) => {
-          const itemKey = `${item.product_id}-${item.color}-${item.size}`
-          return selectedItems.has(itemKey)
-        })
-        .filter((item) => {
-          if (!item.product_id || item.product_id.trim() === '') {
-            console.warn('⚠️ Skipping item with missing product_id:', item)
-            return false
-          }
-          if (!item.variant_id || item.variant_id.trim() === '') {
-            console.warn('⚠️ Skipping item with missing variant_id:', item)
-            return false
-          }
-          return true
-        })
+        .filter((item) => selectedItems.has(`${item.product_id}-${item.color}-${item.size}`))
+        .filter((item) => item.product_id && item.variant_id)
         .map((item) => ({
           product_id: item.product_id,
           variant_id: item.variant_id,
-          product_name: item.name || 'Unknown Product',
+          product_name: item.name || 'Unknown',
           quantity: item.quantity || 1,
           price: item.price || 0,
           color: item.color || '',
@@ -407,12 +255,9 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         }))
 
       if (orderItems.length === 0) {
-        setError('No valid products to order. Please ensure all items have product ID and variant ID.')
-        setLoading(false)
-        return
+        throw new Error('No valid products selected')
       }
 
-      // Call API endpoint
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -434,18 +279,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       })
 
       const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Failed to create order')
 
-      if (!response.ok) {
-        console.error('❌ API Error Response:', result)
-        throw new Error(result.error || 'Failed to create order')
-      }
-
-      console.log('✅ Order created successfully:', result.order.id)
       clearCart()
-      alert(`✅ Order placed!\nID: ${result.order.id}\nTotal: ${totalWithShipping.toLocaleString()} VND`)
+      alert(`Order placed!\nID: ${result.order.id}\nTotal: ${totalWithShipping.toLocaleString()} VND`)
       window.location.href = '/'
     } catch (err) {
-      console.error('❌ Checkout error:', err)
       setError(err instanceof Error ? err.message : 'Error occurred')
     } finally {
       setLoading(false)
@@ -453,189 +292,82 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 border-t border-border pt-4">
-      <div className="bg-muted p-3 rounded-md">
-        <div className="flex items-center justify-between mb-3">
-          <p className="font-semibold">Products ({selectedItems.size}/{cartItems.length})</p>
-          <button
-            type="button"
-            onClick={handleSelectAll}
-            className="text-sm text-primary hover:underline"
-          >
-            {selectedItems.size === cartItems.length ? 'Deselect' : 'Select All'}
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4 border-t border-border pt-4">
+        <div className="bg-muted p-3 rounded-md">
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-semibold">Products ({selectedItems.size}/{cartItems.length})</p>
+            <button type="button" onClick={handleSelectAll} className="text-sm text-primary hover:underline">
+              {selectedItems.size === cartItems.length ? 'Deselect' : 'Select All'}
+            </button>
+          </div>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {cartItems.map((item) => {
+              const itemKey = `${item.product_id}-${item.color}-${item.size}`
+              return (
+                <div key={itemKey} className={`flex items-center gap-3 p-2 rounded-lg border-2 ${selectedItems.has(itemKey) ? 'border-primary bg-primary/5' : 'border-border'}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">{item.color}{item.size && ` x ${item.size}`}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-bold text-primary text-sm">{(item.price * item.quantity).toLocaleString()} VND</p>
+                    <p className="text-xs">x{item.quantity}</p>
+                  </div>
+                  <input type="checkbox" checked={selectedItems.has(itemKey)} onChange={() => handleToggleItem(itemKey)} className="w-5 h-5 cursor-pointer" />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold mb-2">Contact</p>
+          <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required />
+          <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm" required />
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold mb-2">Shipping Address</p>
+          <select value={formData.province} onChange={(e) => setFormData({ ...formData, province: e.target.value, district: '', districtId: 0, ward: '', wardCode: '' })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required>
+            <option value="">Select Province</option>
+            {provinces.map((p) => <option key={p.province_id} value={p.province_id}>{p.province_name}</option>)}
+          </select>
+
+          <select value={formData.districtId} onChange={(e) => { const id = parseInt(e.target.value); const d = districts.find((x) => x.district_id === id); setFormData({ ...formData, districtId: id, district: d?.district_name || '', ward: '', wardCode: '' }); }} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required>
+            <option value="">Select District</option>
+            {districts.map((d) => <option key={d.district_id} value={d.district_id}>{d.district_name}</option>)}
+          </select>
+
+          <select value={formData.wardCode} onChange={(e) => { const w = wards.find((x) => x.ward_code === e.target.value); setFormData({ ...formData, wardCode: e.target.value, ward: w?.ward_name || '' }); }} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required>
+            <option value="">Select Ward</option>
+            {wards.map((w) => <option key={w.ward_code} value={w.ward_code}>{w.ward_name}</option>)}
+          </select>
+
+          <textarea placeholder="Detailed address" value={formData.detailedAddress} onChange={(e) => setFormData({ ...formData, detailedAddress: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none" rows={2} required />
+        </div>
+
+        <textarea placeholder="Notes (optional)" value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none" rows={2} />
+
+        <div className="bg-muted p-3 rounded-md space-y-2">
+          <div className="flex justify-between text-sm"><span>Subtotal:</span><span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}đ</span></div>
+          <div className="flex justify-between text-sm border-t border-border pt-2"><span>Shipping:</span><span className="font-semibold">{loadingShipping ? 'Calculating...' : `${shippingFee.toLocaleString('vi-VN')}đ`}</span></div>
+          <div className="flex justify-between text-base font-bold border-t border-border pt-2"><span>Total:</span><span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span></div>
+        </div>
+
+        <div className="flex gap-2">
+          <button type="submit" disabled={loading || selectedItems.size === 0} className="flex-1 bg-primary text-white font-bold py-2 rounded-md hover:bg-orange-600 disabled:opacity-50">
+            {loading ? 'Processing...' : `Checkout (${selectedItems.size})`}
+          </button>
+          <button type="button" onClick={onClose} className="flex-1 border border-border font-semibold py-2 rounded-md hover:bg-muted">
+            Cancel
           </button>
         </div>
 
-        <div className="space-y-2 max-h-48 overflow-y-auto">
-          {cartItems.map((item) => {
-            const itemKey = `${item.product_id}-${item.color}-${item.size}`
-            const isSelected = selectedItems.has(itemKey)
-            return (
-              <div
-                key={itemKey}
-                className={`flex items-center gap-3 p-2 rounded-lg border-2 ${
-                  isSelected ? 'border-primary bg-primary/5' : 'border-border'
-                }`}
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{item.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.color}{item.size && ` x ${item.size}`}
-                  </p>
-                </div>
-                <div className="text-right flex-shrink-0 mr-3">
-                  <p className="font-bold text-primary text-sm">
-                    {(item.price * item.quantity).toLocaleString()} VND
-                  </p>
-                  <p className="text-xs">x{item.quantity}</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={() => handleToggleItem(itemKey)}
-                  className="w-5 h-5 cursor-pointer"
-                />
-              </div>
-            )
-          })}
-        </div>
-      </div>
+        {error && <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">{error}</div>}
+      </form>
 
-      <div>
-        <p className="text-sm font-semibold mb-2">Contact</p>
-        <input
-          type="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2"
-          required
-        />
-        <input
-          type="tel"
-          placeholder="Phone"
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm"
-          required
-        />
-      </div>
-
-      <div>
-        <p className="text-sm font-semibold mb-2">Shipping Address</p>
-
-        <select
-          value={formData.province}
-          onChange={(e) => setFormData({ ...formData, province: e.target.value, district: '', districtId: 0, ward: '', wardCode: '' })}
-          disabled={loadingProvinces}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2 disabled:opacity-50"
-          required
-        >
-          <option value="">Select Province</option>
-          {provinces.map((p) => <option key={p.province_id} value={p.province_id}>{p.province_name}</option>)}
-        </select>
-
-        <select
-          value={formData.districtId}
-          onChange={(e) => {
-            const districtId = parseInt(e.target.value)
-            const district = districts.find((d) => d.district_id === districtId)
-            setFormData({
-              ...formData,
-              districtId,
-              district: district?.district_name || '',
-              ward: '',
-              wardCode: '',
-            })
-          }}
-          disabled={loadingDistricts}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2 disabled:opacity-50"
-          required
-        >
-          <option value="">Select District</option>
-          {districts.map((d) => <option key={d.district_id} value={d.district_id}>{d.district_name}</option>)}
-        </select>
-
-        <select
-          value={formData.wardCode}
-          onChange={(e) => {
-            const wardCode = e.target.value
-            const ward = wards.find((w) => w.ward_code === wardCode)
-            setFormData({ ...formData, wardCode, ward: ward?.ward_name || '' })
-          }}
-          disabled={!formData.districtId || loadingWards}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2 disabled:opacity-50"
-          required
-        >
-          <option value="">Select Ward</option>
-          {wards.map((w) => <option key={w.ward_code} value={w.ward_code}>{w.ward_name}</option>)}
-        </select>
-
-        <textarea
-          placeholder="Detailed address"
-          value={formData.detailedAddress}
-          onChange={(e) => setFormData({ ...formData, detailedAddress: e.target.value })}
-          className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none"
-          rows={2}
-          required
-        />
-      </div>
-
-      <textarea
-        placeholder="Notes optional"
-        value={formData.note}
-        onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-        className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none"
-        rows={2}
-      />
-
-      <div className="bg-muted p-3 rounded-md space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>Subtotal:</span>
-          <span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}d</span>
-        </div>
-        <div className="flex justify-between text-sm border-t border-border pt-2">
-          <span>Shipping:</span>
-          <span className="font-semibold text-orange-600">
-            {loadingShipping ? 'Calculating...' : `${shippingFee.toLocaleString('vi-VN')}d`}
-          </span>
-        </div>
-        <div className="flex justify-between text-base font-bold border-t border-border pt-2">
-          <span>Total:</span>
-          <span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}d</span>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={loading || selectedItems.size === 0 || loadingShipping}
-          className="flex-1 bg-primary text-white font-bold py-2 rounded-md hover:bg-orange-600 disabled:opacity-50"
-        >
-          {loading ? 'Processing...' : `Checkout (${selectedItems.size})`}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex-1 border border-border font-semibold py-2 rounded-md hover:bg-muted"
-        >
-          Cancel
-        </button>
-      </div>
-
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-          {error}
-        </div>
-      )}
-    </form>
-
-    {showPaymentModal && (
-      <PaymentModal
-        orderId="new"
-        orderTotal={totalWithShipping}
-        onClose={() => setShowPaymentModal(false)}
-        onConfirmPayment={handlePaymentConfirm}
-      />
-    )}
-  </>
+      {showPaymentModal && <PaymentModal orderId="new" orderTotal={totalWithShipping} onClose={() => setShowPaymentModal(false)} onConfirmPayment={handlePaymentConfirm} />}
+    </>
+  )
+}
