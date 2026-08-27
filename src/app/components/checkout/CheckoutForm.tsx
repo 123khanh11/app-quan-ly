@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useCart } from '@/app/context/CartContext'
 import { supabase } from '@/services/supabase'
+import { PaymentModal } from './PaymentModal'
 
 const DEFAULT_SHIPPING_FEE = 50000
 
@@ -40,6 +41,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   const [shippingFee, setShippingFee] = useState<number>(DEFAULT_SHIPPING_FEE)
   const [loadingShipping, setLoadingShipping] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedItems, setSelectedItems] = useState<Set<string>>(
     new Set(cartItems.map((item) => `${item.product_id}-${item.color}-${item.size}`))
   )
@@ -53,6 +55,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     wardCode: '',
     detailedAddress: '',
     note: '',
+    paymentMethod: 'cod', // 'cod' or 'bank_transfer'
   })
 
   // Load provinces on mount
@@ -348,25 +351,28 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
-
+    
     if (selectedItems.size === 0) {
       setError('Select at least one product')
-      setLoading(false)
       return
     }
 
     if (!formData.province || !formData.district || !formData.ward || !formData.detailedAddress) {
       setError('Please fill all address fields')
-      setLoading(false)
       return
     }
 
+    // Show payment modal to let user choose payment method
+    setShowPaymentModal(true)
+  }
+
+  const handlePaymentConfirm = async (paymentMethod: 'bank_transfer' | 'cod') => {
+    setShowPaymentModal(false)
+    setLoading(true)
+    setError(null)
+
     try {
       const fullAddress = `${formData.detailedAddress}, ${formData.ward}, ${formData.district}, ${formData.province}`
-
-      console.log('📝 Preparing order data...')
 
       // Prepare order items
       const orderItems = cartItems
@@ -375,57 +381,36 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           return selectedItems.has(itemKey)
         })
         .filter((item) => {
-          // ✅ Validate that product_id exists and is not empty
           if (!item.product_id || item.product_id.trim() === '') {
             console.warn('⚠️ Skipping item with missing product_id:', item)
             return false
           }
-          // ✅ Validate that variant_id exists and is not empty
           if (!item.variant_id || item.variant_id.trim() === '') {
             console.warn('⚠️ Skipping item with missing variant_id:', item)
             return false
           }
           return true
         })
-        .map((item) => {
-          // ✅ Ensure all required fields exist
-          return {
-            product_id: item.product_id,
-            variant_id: item.variant_id,
-            product_name: item.name || 'Unknown Product',
-            quantity: item.quantity || 1,
-            price: item.price || 0,
-            color: item.color || '',
-            size: item.size || '',
-            sku: item.sku || '',
-            weight_kg: item.weight ? item.weight / 1000 : null,
-            length_cm: item.length || null,
-            width_cm: item.width || null,
-            height_cm: item.height || null,
-          }
-        })
+        .map((item) => ({
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          product_name: item.name || 'Unknown Product',
+          quantity: item.quantity || 1,
+          price: item.price || 0,
+          color: item.color || '',
+          size: item.size || '',
+          sku: item.sku || '',
+          weight_kg: item.weight ? item.weight / 1000 : null,
+          length_cm: item.length || null,
+          width_cm: item.width || null,
+          height_cm: item.height || null,
+        }))
 
-      console.log('📦 Order items prepared:', orderItems.length)
-      
       if (orderItems.length === 0) {
         setError('No valid products to order. Please ensure all items have product ID and variant ID.')
         setLoading(false)
         return
       }
-      
-      // DEBUG: Log each item detail to verify all fields
-      orderItems.forEach((item, idx) => {
-        console.log(`Item ${idx + 1} - Full Data:`, {
-          product_id: item.product_id,
-          variant_id: item.variant_id,
-          product_name: item.product_name,
-          quantity: item.quantity,
-          price: item.price,
-          color: item.color,
-          size: item.size,
-          sku: item.sku,
-        })
-      })
 
       // Call API endpoint
       const response = await fetch('/api/orders', {
@@ -436,8 +421,8 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
             user_id: userId,
             total: totalWithShipping,
             shipping_fee: shippingFee,
-            payment_method: 'cod',
-            payment_status: 'pending',
+            payment_method: paymentMethod,
+            payment_status: paymentMethod === 'bank_transfer' ? 'pending' : 'cod',
             order_status: 'pending',
             shipping_address: fullAddress,
             customer_email: formData.email,
@@ -456,18 +441,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       }
 
       console.log('✅ Order created successfully:', result.order.id)
-      console.log('✅ Items saved:', result.items?.length || 0)
-
       clearCart()
-      const msg = `✅ Order placed!\nID: ${result.order.id}\nTotal: ${totalWithShipping.toLocaleString()} VND\nItems: ${orderItems.length}`
-      alert(msg)
-      if (typeof window !== 'undefined') {
-        window.location.href = '/'
-      }
+      alert(`✅ Order placed!\nID: ${result.order.id}\nTotal: ${totalWithShipping.toLocaleString()} VND`)
+      window.location.href = '/'
     } catch (err) {
       console.error('❌ Checkout error:', err)
-      const msg = err instanceof Error ? err.message : 'Error occurred'
-      setError(msg)
+      setError(err instanceof Error ? err.message : 'Error occurred')
     } finally {
       setLoading(false)
     }
@@ -650,5 +629,13 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         </div>
       )}
     </form>
-  )
-}
+
+    {showPaymentModal && (
+      <PaymentModal
+        orderId="new"
+        orderTotal={totalWithShipping}
+        onClose={() => setShowPaymentModal(false)}
+        onConfirmPayment={handlePaymentConfirm}
+      />
+    )}
+  </>
