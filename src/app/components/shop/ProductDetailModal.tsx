@@ -41,6 +41,7 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
 
     addToCart({
       product_id: product.product_id,
+      variant_id: selectedVariant.variant_id,
       name: product.product_name,
       price: selectedVariant.variant_price || product.product_price,
       quantity,

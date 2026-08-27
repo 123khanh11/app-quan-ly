@@ -74,6 +74,7 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
     addToCart({
       id: product.id,
       product_id: product.id,
+      variant_id: undefined,
       name: product.name,
       price: product.price,
       quantity: 1,

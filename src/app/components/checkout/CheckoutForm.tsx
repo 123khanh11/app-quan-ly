@@ -344,42 +344,88 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     }
 
     try {
-      const { createOrder, addOrderItem } = await import('@/services/supabase')
-
       const fullAddress = `${formData.detailedAddress}, ${formData.ward}, ${formData.district}, ${formData.province}`
 
-      const order = await createOrder({
-        total: totalWithShipping,
-        shipping_fee: shippingFee,
-        payment_method: 'cod',
-        shipping_address: fullAddress,
-        note: `Email: ${formData.email}\nPhone: ${formData.phone}\nNote: ${formData.note}`,
+      console.log('📝 Preparing order data...')
+
+      // Prepare order items
+      const orderItems = cartItems
+        .filter((item) => {
+          const itemKey = `${item.product_id}-${item.color}-${item.size}`
+          return selectedItems.has(itemKey)
+        })
+        .map((item) => {
+          // ✅ Ensure all required fields exist
+          return {
+            product_id: item.product_id || '',
+            variant_id: item.variant_id || '',
+            product_name: item.name || 'Unknown Product',
+            quantity: item.quantity || 1,
+            price: item.price || 0,
+            color: item.color || '',
+            size: item.size || '',
+            sku: item.sku || '',
+            weight_kg: item.weight ? item.weight / 1000 : null,
+            length_cm: item.length || null,
+            width_cm: item.width || null,
+            height_cm: item.height || null,
+          }
+        })
+
+      console.log('📦 Order items prepared:', orderItems.length)
+      
+      // DEBUG: Log each item detail to verify all fields
+      orderItems.forEach((item, idx) => {
+        console.log(`Item ${idx + 1} - Full Data:`, {
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          product_name: item.product_name,
+          quantity: item.quantity,
+          price: item.price,
+          color: item.color,
+          size: item.size,
+          sku: item.sku,
+        })
       })
 
-      for (const item of cartItems) {
-        const itemKey = `${item.product_id}-${item.color}-${item.size}`
-        if (selectedItems.has(itemKey)) {
-          try {
-            await addOrderItem({
-              order_id: order.id,
-              product_id: item.product_id,
-              quantity: item.quantity,
-              price: item.price,
-            })
-          } catch (err) {
-            console.warn('Item error:', err)
-          }
-        }
+      // Call API endpoint
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order: {
+            total: totalWithShipping,
+            shipping_fee: shippingFee,
+            payment_method: 'cod',
+            payment_status: 'pending',
+            order_status: 'pending',
+            shipping_address: fullAddress,
+            customer_email: formData.email,
+            customer_phone: formData.phone,
+            note: formData.note,
+          },
+          items: orderItems,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('❌ API Error Response:', result)
+        throw new Error(result.error || 'Failed to create order')
       }
 
+      console.log('✅ Order created successfully:', result.order.id)
+      console.log('✅ Items saved:', result.items?.length || 0)
+
       clearCart()
-      const msg = `Order placed!\nID: ${order.id}\nTotal: ${totalWithShipping.toLocaleString()} VND`
+      const msg = `✅ Order placed!\nID: ${result.order.id}\nTotal: ${totalWithShipping.toLocaleString()} VND\nItems: ${orderItems.length}`
       alert(msg)
       if (typeof window !== 'undefined') {
         window.location.href = '/'
       }
     } catch (err) {
-      console.error('Checkout error:', err)
+      console.error('❌ Checkout error:', err)
       const msg = err instanceof Error ? err.message : 'Error occurred'
       setError(msg)
     } finally {

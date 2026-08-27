@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 export interface CartItem {
   id?: string
   product_id: string
+  variant_id?: string
   name: string
   price: number
   quantity: number

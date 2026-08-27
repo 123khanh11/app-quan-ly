@@ -57,8 +57,17 @@ export interface OrderItem {
   id: string
   order_id: string
   product_id: string
+  variant_id: string
+  product_name: string
   quantity: number
   price: number
+  color?: string
+  size?: string
+  sku?: string
+  weight_kg?: number
+  length_cm?: number
+  width_cm?: number
+  height_cm?: number
   created_at: string
 }
 
@@ -69,6 +78,9 @@ export async function createOrder(orderData: {
   shipping_fee: number
   payment_method: string
   shipping_address: string
+  customer_name?: string
+  customer_email?: string
+  customer_phone?: string
   note?: string
 }): Promise<Order> {
   const { data, error } = await supabase
@@ -81,6 +93,9 @@ export async function createOrder(orderData: {
         payment_status: 'pending',
         order_status: 'pending',
         shipping_address: orderData.shipping_address,
+        customer_name: orderData.customer_name,
+        customer_email: orderData.customer_email,
+        customer_phone: orderData.customer_phone,
         note: orderData.note,
       },
     ])
@@ -94,8 +109,17 @@ export async function createOrder(orderData: {
 export async function addOrderItem(itemData: {
   order_id: string
   product_id: string
+  variant_id: string
+  product_name: string
   quantity: number
   price: number
+  color?: string
+  size?: string
+  sku?: string
+  weight_kg?: number
+  length_cm?: number
+  width_cm?: number
+  height_cm?: number
 }): Promise<OrderItem> {
   const { data, error } = await supabase
     .from('order_items')
@@ -144,6 +168,34 @@ export async function getOrderDetails(orderId: string): Promise<{
     order: orderData,
     items: itemsData || [],
   }
+}
+
+export async function getAllOrders(): Promise<Array<Order & { items: OrderItem[] }>> {
+  const { data: ordersData, error: ordersError } = await supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (ordersError) throw new Error(ordersError.message)
+
+  // Fetch items for each order
+  const ordersWithItems = await Promise.all(
+    (ordersData || []).map(async (order) => {
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id)
+
+      if (itemsError) {
+        console.warn(`Failed to fetch items for order ${order.id}:`, itemsError)
+        return { ...order, items: [] }
+      }
+
+      return { ...order, items: itemsData || [] }
+    })
+  )
+
+  return ordersWithItems
 }
 
 // Product Functions
