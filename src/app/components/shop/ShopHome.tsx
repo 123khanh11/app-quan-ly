@@ -71,16 +71,9 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
   }
 
   const handleAddToCart = (product: Product) => {
-    addToCart({
-      id: product.id,
-      product_id: product.id,
-      variant_id: undefined,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image_url: product.image_url,
-    })
-    alert('✅ Đã thêm vào giỏ hàng!')
+    // Open product detail modal instead of adding directly
+    // This forces user to select a variant before adding to cart
+    setSelectedProductId(product.id)
   }
 
   return (
