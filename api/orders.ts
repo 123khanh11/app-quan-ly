@@ -1,11 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || '',
-  process.env.VITE_SUPABASE_ANON_KEY || ''
-)
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', 'true')
@@ -26,6 +21,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Get env vars
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    console.log('🔑 Env check:')
+    console.log('  SUPABASE_URL:', supabaseUrl ? '✅' : '❌')
+    console.log('  SUPABASE_KEY:', supabaseKey ? '✅' : '❌')
+
+    if (!supabaseUrl || !supabaseKey) {
+      return res.status(500).json({
+        error: 'Missing Supabase environment variables',
+        details: {
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseKey,
+        },
+      })
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
     const { order, items } = req.body
 
     if (!order || !items) {
