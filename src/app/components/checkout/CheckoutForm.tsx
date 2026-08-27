@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useCart } from '@/app/context/CartContext'
+import { supabase } from '@/services/supabase'
 
 const DEFAULT_SHIPPING_FEE = 50000
 
@@ -38,6 +39,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   const [loadingWards, setLoadingWards] = useState(false)
   const [shippingFee, setShippingFee] = useState<number>(DEFAULT_SHIPPING_FEE)
   const [loadingShipping, setLoadingShipping] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const [selectedItems, setSelectedItems] = useState<Set<string>>(
     new Set(cartItems.map((item) => `${item.product_id}-${item.color}-${item.size}`))
   )
@@ -52,6 +54,24 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     detailedAddress: '',
     note: '',
   })
+
+  // Load provinces on mount
+  useEffect(() => {
+    const getUserId = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user?.id) {
+          setUserId(session.user.id)
+          console.log('✅ User ID found:', session.user.id)
+        } else {
+          console.warn('⚠️ No user session found')
+        }
+      } catch (err) {
+        console.error('❌ Error getting user ID:', err)
+      }
+    }
+    getUserId()
+  }, [])
 
   // Load provinces on mount
   useEffect(() => {
@@ -413,6 +433,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           order: {
+            user_id: userId,
             total: totalWithShipping,
             shipping_fee: shippingFee,
             payment_method: 'cod',
