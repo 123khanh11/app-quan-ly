@@ -118,8 +118,12 @@ async function handler(req, res) {
     })
   } catch (err) {
     console.error('❌ API error:', err)
+    console.error('Error stack:', err instanceof Error ? err.stack : 'No stack')
     const message = err instanceof Error ? err.message : 'Unknown error'
-    return res.status(500).json({ error: message })
+    return res.status(500).json({ 
+      error: message,
+      details: err instanceof Error ? err.toString() : err
+    })
   }
 }
 
