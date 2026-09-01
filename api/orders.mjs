@@ -49,6 +49,7 @@ async function handler(req, res) {
     console.log('📝 API: Creating order with items')
     console.log('Order data:', JSON.stringify(order, null, 2))
     console.log('Items count:', items.length)
+    console.log('User ID:', order.user_id || '(anonymous)')
 
     // Log each item to verify all fields
     items.forEach((item, idx) => {
