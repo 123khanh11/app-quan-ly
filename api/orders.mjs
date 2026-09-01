@@ -67,21 +67,29 @@ async function handler(req, res) {
       .from('orders')
       .insert([order])
       .select()
-      .single()
 
     if (orderError) {
       console.error('❌ Order creation error:', orderError)
+      console.error('Order data sent:', JSON.stringify(order, null, 2))
       return res.status(500).json({
         error: `Order creation failed: ${orderError.message}`,
       })
     }
 
-    console.log('✅ Order created:', orderData.id)
+    if (!orderData || orderData.length === 0) {
+      console.error('❌ Order created but no data returned')
+      return res.status(500).json({
+        error: 'Order created but no data returned',
+      })
+    }
+
+    const orderId = orderData[0].id
+    console.log('✅ Order created:', orderId)
 
     // Create order items
     const itemsWithOrderId = items.map((item) => ({
       ...item,
-      order_id: orderData.id,
+      order_id: orderId,
     }))
 
     console.log('📦 Inserting items:', JSON.stringify(itemsWithOrderId[0], null, 2))
@@ -105,7 +113,7 @@ async function handler(req, res) {
 
     return res.status(201).json({
       success: true,
-      order: orderData,
+      order: orderData[0],
       items: itemsData || [],
     })
   } catch (err) {
