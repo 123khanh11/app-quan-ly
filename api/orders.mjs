@@ -46,6 +46,11 @@ async function handler(req, res) {
       return res.status(400).json({ error: 'Missing order or items' })
     }
 
+    // Remove user_id if it's null or undefined to avoid FK constraint
+    if (!order.user_id) {
+      delete order.user_id
+    }
+
     console.log('📝 API: Creating order with items')
     console.log('Order data:', JSON.stringify(order, null, 2))
     console.log('Items count:', items.length)
