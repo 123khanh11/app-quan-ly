@@ -219,22 +219,8 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log('✅ Submit clicked!')
-    console.log('Selected items:', selectedItems.size)
-    console.log('Form data:', formData)
-    
-    if (selectedItems.size === 0) {
-      setError('Select at least one product')
-      console.warn('❌ No items selected')
-      return
-    }
-    if (!formData.province || !formData.district || !formData.ward || !formData.detailedAddress) {
-      setError('Please fill all address fields')
-      console.warn('❌ Missing address fields:', { province: formData.province, district: formData.district, ward: formData.ward, address: formData.detailedAddress })
-      return
-    }
-    
-    console.log('✅ All validation passed, showing payment modal')
+    console.log('✅ Form submitted!')
+    // Hiển thị payment modal ngay, validation bên trong modal
     setShowPaymentModal(true)
   }
 
