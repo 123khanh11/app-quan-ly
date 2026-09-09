@@ -42,6 +42,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   const [loadingShipping, setLoadingShipping] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null)
   const [selectedItems, setSelectedItems] = useState<Set<string>>(
     new Set(cartItems.map((item) => `${item.product_id}-${item.color}-${item.size}`))
   )
@@ -281,6 +282,10 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || 'Failed to create order')
 
+      // Save order ID để dùng trong payment modal
+      setCreatedOrderId(result.order.id)
+      console.log('✅ Order created:', result.order.id)
+
       clearCart()
       alert(`Order placed!\nID: ${result.order.id}\nTotal: ${totalWithShipping.toLocaleString()} VND`)
       window.location.href = '/'
@@ -367,7 +372,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         {error && <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">{error}</div>}
       </form>
 
-      {showPaymentModal && <PaymentModal orderId="new" orderTotal={totalWithShipping} onClose={() => setShowPaymentModal(false)} onConfirmPayment={handlePaymentConfirm} />}
+      {showPaymentModal && createdOrderId && <PaymentModal orderId={createdOrderId} orderTotal={totalWithShipping} onClose={() => setShowPaymentModal(false)} onConfirmPayment={handlePaymentConfirm} />}
     </>
   )
 }
