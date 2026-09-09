@@ -366,7 +366,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         {error && <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">{error}</div>}
       </form>
 
-      {showPaymentModal && createdOrderId && <PaymentModal orderId={createdOrderId} orderTotal={totalWithShipping} onClose={() => setShowPaymentModal(false)} onConfirmPayment={handlePaymentConfirm} />}
+      {showPaymentModal && <PaymentModal orderId="temp" orderTotal={totalWithShipping} onClose={() => setShowPaymentModal(false)} onConfirmPayment={handlePaymentConfirm} />}
     </>
   )
 }
