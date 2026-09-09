@@ -253,7 +253,8 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         throw new Error('No valid products selected')
       }
 
-      const response = await fetch('/api/orders', {
+      // 1️⃣ Create order
+      const orderResponse = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -273,15 +274,52 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         }),
       })
 
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error || 'Failed to create order')
+      const orderResult = await orderResponse.json()
+      if (!orderResponse.ok) throw new Error(orderResult.error || 'Failed to create order')
 
-      // Save order ID để dùng trong payment modal
-      setCreatedOrderId(result.order.id)
-      console.log('✅ Order created:', result.order.id)
+      const orderId = orderResult.order.id
+      console.log('✅ Order created:', orderId)
 
+      // 2️⃣ Create payment transfer if bank_transfer
+      let paymentTransferId = null
+      if (paymentMethod === 'bank_transfer') {
+        // Generate transfer content and QR code
+        const transferContent = `DH${orderId.substring(0, 8).toUpperCase()}`
+        const bankAccount = '0865816910'
+        const bankName = 'MB Bank'
+        const qrUrl = `https://api.vietqr.io/build-qr?accountNo=${bankAccount}&accountName=KHANH&amount=${totalWithShipping}&addInfo=${encodeURIComponent(transferContent)}&templateId=compact`
+
+        const transferResponse = await fetch('/api/payment-transfers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            order_id: orderId,
+            user_id: userId,
+            transfer_content: transferContent,
+            qr_code_url: qrUrl,
+            bank_account: bankAccount,
+            bank_name: bankName,
+            amount: totalWithShipping,
+            payment_method: paymentMethod,
+          }),
+        })
+
+        const transferResult = await transferResponse.json()
+        if (!transferResponse.ok) throw new Error(transferResult.error || 'Failed to create payment transfer')
+
+        paymentTransferId = transferResult.payment_transfer_id
+        console.log('✅ Payment transfer created:', paymentTransferId)
+      }
+
+      setCreatedOrderId(orderId)
       clearCart()
-      alert(`Order placed!\nID: ${result.order.id}\nTotal: ${totalWithShipping.toLocaleString()} VND`)
+      
+      let message = `✅ Order placed!\nID: ${orderId}\nTotal: ${totalWithShipping.toLocaleString()} VND`
+      if (paymentTransferId) {
+        message += `\n\n💳 Payment Transfer ID:\n${paymentTransferId}`
+      }
+      
+      alert(message)
       window.location.href = '/'
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error occurred')
