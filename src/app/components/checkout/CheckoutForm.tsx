@@ -361,7 +361,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         </div>
 
         <div className="flex gap-2">
-          <button type="submit" disabled={loading || selectedItems.size === 0} className="flex-1 bg-primary text-white font-bold py-2 rounded-md hover:bg-orange-600 disabled:opacity-50" title={`loading: ${loading}, items: ${selectedItems.size}`}>
+          <button type="submit" disabled={loading} className="flex-1 bg-primary text-white font-bold py-2 rounded-md hover:bg-orange-600 disabled:opacity-50">
             {loading ? 'Processing...' : `Checkout (${selectedItems.size})`}
           </button>
           <button type="button" onClick={onClose} className="flex-1 border border-border font-semibold py-2 rounded-md hover:bg-muted">
