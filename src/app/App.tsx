@@ -85,12 +85,7 @@ function AppContent() {
           else if (page === 'account') setIsLoginOpen(true)
         }} />
 
-        {/* ── HEADER ── */}
-        <header className="bg-white border-b border-border sticky top-0 z-40 shadow-sm">
-          <div className="max-w-6xl mx-auto px-4">
-            </div>
-          </div>
-        </header>
+
 
         {/* ── PAGE CONTENT ── */}
         <main>
