@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/services/supabase'
-import Link from 'next/link'
 
 interface ShopInfo {
   id: string
@@ -84,13 +83,13 @@ export function ShopHeader() {
       <div className="bg-white border-b border-gray-200 py-4 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo/Shop Name */}
-          <Link href="/" className="flex items-center gap-3">
+          <a href="/" className="flex items-center gap-3 hover:opacity-80">
             {shopInfo?.logo_url ? (
               <img src={shopInfo.logo_url} alt={shopInfo.shop_name} className="h-12 w-auto" />
             ) : (
               <div className="text-2xl font-bold text-orange-500">{shopInfo?.shop_name}</div>
             )}
-          </Link>
+          </a>
 
           {/* Address Info */}
           <div className="text-sm text-gray-600 flex items-center gap-2">
@@ -116,11 +115,11 @@ export function ShopHeader() {
       {/* Navigation Bar */}
       <nav className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4">
         <div className="max-w-7xl mx-auto flex gap-6 text-sm font-semibold overflow-x-auto">
-          <Link href="/" className="hover:opacity-80 whitespace-nowrap">Trang chủ</Link>
-          <Link href="/products" className="hover:opacity-80 whitespace-nowrap">Sản phẩm nổi bật</Link>
-          <Link href="/categories" className="hover:opacity-80 whitespace-nowrap">Danh mục</Link>
-          <Link href="/promotions" className="hover:opacity-80 whitespace-nowrap">Khuyến mãi</Link>
-          <Link href="/contact" className="hover:opacity-80 whitespace-nowrap">Liên hệ</Link>
+          <a href="/" className="hover:opacity-80 whitespace-nowrap">Trang chủ</a>
+          <a href="/products" className="hover:opacity-80 whitespace-nowrap">Sản phẩm nổi bật</a>
+          <a href="/categories" className="hover:opacity-80 whitespace-nowrap">Danh mục</a>
+          <a href="/promotions" className="hover:opacity-80 whitespace-nowrap">Khuyến mãi</a>
+          <a href="/contact" className="hover:opacity-80 whitespace-nowrap">Liên hệ</a>
         </div>
       </nav>
     </div>
