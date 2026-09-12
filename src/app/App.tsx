@@ -80,7 +80,11 @@ function AppContent() {
         style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
       >
         {/* SHOP HEADER WITH INFO */}
-        <ShopHeader />
+        <ShopHeader onNavigate={(page) => {
+          if (page === 'shop') setCurrentPage('shop')
+          else if (page === 'cart') setCurrentPage('cart')
+          else if (page === 'account') setIsLoginOpen(true)
+        }} />
 
         {/* ── HEADER ── */}
         <header className="bg-white border-b border-border sticky top-0 z-40 shadow-sm">

@@ -18,7 +18,7 @@ interface ShopInfo {
   description?: string
 }
 
-export function ShopHeader() {
+export function ShopHeader({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -48,7 +48,7 @@ export function ShopHeader() {
   return (
     <div className="w-full">
       {/* Top Blue Bar - with icons */}
-      <div className="bg-blue-900 text-white py-3 px-4">
+      <div className="bg-blue-950 text-white py-3 px-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center gap-6">
           <div className="flex items-center gap-8 text-sm">
             {shopInfo?.phone && (
@@ -59,35 +59,35 @@ export function ShopHeader() {
             )}
           </div>
           <div className="flex items-center gap-8">
-            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80 text-xs">
+            <button onClick={() => onNavigate?.('shop')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
               <span className="text-xl">🏠</span>
               <span>Cửa Hàng</span>
-            </a>
-            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80 text-xs">
+            </button>
+            <button onClick={() => onNavigate?.('favorites')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
               <span className="text-xl">❤️</span>
               <span>Yêu thích</span>
-            </a>
-            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80 text-xs">
+            </button>
+            <button onClick={() => onNavigate?.('cart')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
               <span className="text-xl">🛒</span>
               <span>Giỏ hàng</span>
-            </a>
-            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80 text-xs">
+            </button>
+            <button onClick={() => onNavigate?.('account')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
               <span className="text-xl">👤</span>
               <span>Tài khoản</span>
-            </a>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Main Header - Logo + Search */}
-      <div className="bg-blue-900 text-white py-3 px-4">
+      {/* Main Header - Logo FULL SIZE */}
+      <div className="bg-blue-950 text-white py-4 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
-          {/* Logo */}
+          {/* Logo - TALL */}
           <a href="/" className="flex items-center gap-2 flex-shrink-0">
             {shopInfo?.logo_url ? (
-              <img src={shopInfo.logo_url} alt={shopInfo?.shop_name} className="h-14 w-auto object-contain" />
+              <img src={shopInfo.logo_url} alt={shopInfo?.shop_name} className="h-32 w-auto object-contain" />
             ) : (
-              <div className="text-white font-bold text-sm">
+              <div className="text-white font-bold text-lg">
                 {shopInfo?.shop_name || 'Shop'}
               </div>
             )}
