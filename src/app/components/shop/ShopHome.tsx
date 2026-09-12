@@ -78,14 +78,6 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Banner */}
-      <section className="bg-gradient-to-r from-primary to-orange-500 text-white py-16">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-2">Chào Mừng Đến Cửa Hàng Thời Trang Đẹp</h1>
-          <p className="text-lg opacity-90">Khám phá bộ sưu tập thời trang tuyệt vời của chúng tôi</p>
-        </div>
-      </section>
-
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Search Bar */}
         <div className="mb-8 space-y-4">
