@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShoppingCart, Heart, Home, LogIn, LogOut } from "lucide-react";
+import { Search, ShoppingCart, Heart, Home, LogIn, LogOut } from "lucide-react";
 import { CartProvider, useCart } from "@/app/context/CartContext";
 import { ShopHome } from "@/app/components/shop/ShopHome";
 import { CartPage } from "@/app/components/shop/Cart";
@@ -87,12 +87,26 @@ function AppContent() {
           <div className="max-w-6xl mx-auto px-4">
             {/* Top row */}
             <div className="flex items-center gap-4 py-3">
-              {/* Logo - Only show if ShopHeader is not being used */}
+              {/* Search - Left side */}
+              <div className="flex-1 max-w-md">
+                <div className="flex items-center border border-border rounded-md overflow-hidden bg-input-background">
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm sản phẩm..."
+                    className="flex-1 px-3 py-2 text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
+                  />
+                  <button className="px-4 py-2 bg-primary text-primary-foreground hover:bg-orange-600 transition-colors">
+                    <Search size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Logo - Center */}
               <button
                 onClick={() => setCurrentPage("shop")}
-                className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                className="flex-shrink-0 hover:opacity-80 transition-opacity mx-4"
               >
-                <span className="text-sm font-semibold text-gray-700">Shop</span>
+                <span className="text-sm font-semibold text-gray-700">Cửa hàng</span>
               </button>
 
               {/* Icons */}
