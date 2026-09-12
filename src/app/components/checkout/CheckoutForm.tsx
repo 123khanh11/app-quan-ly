@@ -294,7 +294,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             order_id: orderId,
-            user_id: userId,
+            user_id: userId || null,
             transfer_content: transferContent,
             qr_code_url: qrUrl,
             bank_account: bankAccount,
