@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/services/supabase'
+import { CategoryMenu } from '../shop/CategoryMenu'
 
 interface ShopInfo {
   id: string
@@ -18,7 +19,7 @@ interface ShopInfo {
   description?: string
 }
 
-export function ShopHeader({ onNavigate }: { onNavigate?: (page: string) => void }) {
+export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (page: string) => void; onSelectCategory?: (categoryId: string, categoryName: string) => void }) {
   const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -47,7 +48,6 @@ export function ShopHeader({ onNavigate }: { onNavigate?: (page: string) => void
 
   return (
     <div className="w-full">
-
       {/* Main Header - Logo LEFT + Search + Nav CENTER + Icons RIGHT */}
       <div className="bg-blue-950 text-white py-3 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
@@ -78,13 +78,11 @@ export function ShopHeader({ onNavigate }: { onNavigate?: (page: string) => void
               </div>
             </div>
 
-            {/* Navigation Bar */}
+            {/* Navigation Bar - Dynamic Categories */}
             <nav className="flex gap-6 text-xs font-semibold whitespace-nowrap overflow-x-auto">
               <a href="/" className="hover:opacity-90">Sản phẩm mới</a>
               <a href="/" className="hover:opacity-90">Hàng Bán Chạy</a>
-              <a href="/" className="hover:opacity-90">PHỤ TÙNG XE MÁY</a>
-              <a href="/" className="hover:opacity-90">MÁY NÔNG NGHIỆP</a>
-              <a href="/" className="hover:opacity-90">BẢO DƯỠNG</a>
+              <CategoryMenu onSelectCategory={onSelectCategory || (() => {})} />
               <a href="/" className="hover:opacity-90">Liên hệ</a>
             </nav>
           </div>
