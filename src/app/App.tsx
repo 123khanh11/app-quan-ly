@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, ShoppingCart, Heart, Home, LogIn, LogOut, X } from "lucide-react";
+import { ShoppingCart, Heart, Home, LogIn, LogOut } from "lucide-react";
 import { CartProvider, useCart } from "@/app/context/CartContext";
 import { ShopHome } from "@/app/components/shop/ShopHome";
 import { CartPage } from "@/app/components/shop/Cart";
@@ -94,22 +94,6 @@ function AppContent() {
               >
                 <span className="text-sm font-semibold text-gray-700">Shop</span>
               </button>
-
-              {/* Search - Hidden for cart and order pages */}
-              {currentPage === "shop" && (
-                <div className="flex-1 max-w-xl">
-                  <div className="flex items-center border border-border rounded-md overflow-hidden bg-input-background">
-                    <input
-                      type="text"
-                      placeholder="Tìm kiếm sản phẩm..."
-                      className="flex-1 px-3 py-2 text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
-                    />
-                    <button className="px-4 py-2 bg-primary text-primary-foreground hover:bg-orange-600 transition-colors">
-                      <Search size={16} />
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Icons */}
               <div className="flex items-center gap-4 ml-auto">

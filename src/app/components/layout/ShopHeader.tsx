@@ -92,9 +92,6 @@ export function ShopHeader() {
 
           {/* Quick Links */}
           <div className="flex gap-2 flex-shrink-0">
-            <a href="/" className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-semibold text-sm transition-colors">
-              Liên hệ
-            </a>
           </div>
         </div>
       </div>
