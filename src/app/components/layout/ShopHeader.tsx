@@ -49,8 +49,8 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
   return (
     <div className="w-full">
       {/* Main Header - Logo LEFT + Search + Nav CENTER + Icons RIGHT */}
-      <div className="bg-blue-950 text-white py-3 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
+      <div className="bg-blue-950 text-white py-3 px-2 md:px-4 w-full">
+        <div className="flex items-center justify-between gap-3 md:gap-6">
           {/* Logo - LEFT */}
           <a href="/" className="flex items-center gap-2 flex-shrink-0">
             {shopInfo?.logo_url ? (
@@ -106,8 +106,8 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
       </div>
 
       {/* Orange Banner */}
-      <div className="bg-orange-500 text-white py-2 px-4 text-center">
-        <div className="max-w-7xl mx-auto text-sm font-semibold">
+      <div className="bg-orange-500 text-white py-2 px-2 md:px-4 w-full text-center">
+        <div className="text-sm font-semibold">
           KHÁM PHÁ CÁC GIẢI PHÁP PHỤ TÙNG XE MÁY & NÔNG NGHIỆP CỦA CHÚNG TÔI
         </div>
       </div>

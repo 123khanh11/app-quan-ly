@@ -79,11 +79,14 @@ function AppContent() {
         style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
       >
         {/* SHOP HEADER WITH INFO */}
-        <ShopHeader onNavigate={(page) => {
-          if (page === 'shop') setCurrentPage('shop')
-          else if (page === 'cart') setCurrentPage('cart')
-          else if (page === 'account') setIsLoginOpen(true)
-        }} />
+        <ShopHeader 
+          onNavigate={(page) => {
+            if (page === 'shop') setCurrentPage('shop')
+            else if (page === 'cart') setCurrentPage('cart')
+            else if (page === 'account') setIsLoginOpen(true)
+          }}
+          onSelectCategory={handleSelectCategory}
+        />
 
 
 

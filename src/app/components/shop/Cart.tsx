@@ -13,8 +13,8 @@ export function CartPage() {
 
     if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="px-3 md:px-4 py-12 text-center md:max-w-6xl md:mx-auto">
+      <div className="min-h-screen bg-background w-full">
+        <div className="w-full px-2 md:px-4 py-12 text-center md:max-w-6xl md:mx-auto">
           <ShoppingCart size={64} className="mx-auto text-muted-foreground mb-4 opacity-50" />
           <h1 className="text-2xl font-bold mb-2">Giỏ hàng của bạn trống</h1>
           <p className="text-muted-foreground mb-6">Hãy thêm một số sản phẩm để tiếp tục!</p>
@@ -27,8 +27,8 @@ export function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="md:max-w-6xl md:mx-auto">
+    <div className="min-h-screen bg-background w-full">
+      <div className="w-full md:max-w-6xl md:mx-auto">
         <div className="px-3 md:px-4 py-8 md:py-12">
           <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">🛒 Giỏ Hàng</h1>
         </div>

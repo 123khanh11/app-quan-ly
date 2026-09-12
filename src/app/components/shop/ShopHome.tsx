@@ -77,8 +77,8 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-background w-full">
+      <div className="w-full max-w-6xl mx-auto px-2 md:px-4 py-8">
         {/* Search Bar */}
         <div className="mb-8 space-y-4">
           {selectedCategoryId && (

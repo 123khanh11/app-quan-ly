@@ -39,7 +39,7 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center w-full">
         <p className="text-muted-foreground text-lg">⏳ Đang tải thông tin đơn hàng...</p>
       </div>
     )
@@ -47,8 +47,8 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-background py-12">
-        <div className="max-w-2xl mx-auto px-4 text-center">
+      <div className="min-h-screen bg-background py-12 w-full">
+        <div className="w-full max-w-2xl mx-auto px-2 md:px-4 text-center">
           <p className="text-red-600 text-lg font-semibold mb-4">❌ {error || 'Không tìm thấy đơn hàng'}</p>
           <a href="/" className="inline-block bg-primary text-primary-foreground px-6 py-2.5 rounded-md font-semibold hover:bg-orange-600 transition-colors">
             Quay Về Trang Chủ
@@ -61,8 +61,8 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
   const currentStatusIndex = STATUS_STEPS.findIndex((s) => s.key === order.order_status)
 
   return (
-    <div className="min-h-screen bg-background py-12">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-background py-12 w-full">
+      <div className="w-full max-w-4xl mx-auto px-2 md:px-4">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">📦 Theo Dõi Đơn Hàng</h1>
