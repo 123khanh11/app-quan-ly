@@ -50,9 +50,9 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
     <div className="w-full">
       {/* Main Header - Logo LEFT + Search + Nav CENTER + Icons RIGHT */}
       <div className="bg-blue-950 text-white py-3 px-2 md:px-4 w-full">
-        <div className="flex items-center justify-between gap-3 md:gap-6">
+        <div className="flex items-center justify-between gap-3 md:gap-6 min-w-0">
           {/* Logo - LEFT */}
-          <a href="/" className="flex items-center gap-2 flex-shrink-0">
+          <a href="/" className="flex items-center gap-2 flex-shrink-0 min-w-0">
             {shopInfo?.logo_url ? (
               <img src={shopInfo.logo_url} alt={shopInfo?.shop_name} className="h-20 w-auto object-contain" />
             ) : (
@@ -63,7 +63,7 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
           </a>
 
           {/* Search Bar + Nav - CENTER */}
-          <div className="flex-1 flex flex-col items-center gap-2">
+          <div className="flex-1 flex flex-col items-center gap-2 min-w-0">
             {/* Search Bar */}
             <div className="w-full max-w-md">
               <div className="flex items-center bg-white rounded-md overflow-hidden">
@@ -88,7 +88,7 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
           </div>
 
           {/* Icons - RIGHT */}
-          <div className="flex items-center gap-6 flex-shrink-0">
+          <div className="flex items-center gap-6 flex-shrink-0 min-w-0">
             <button onClick={() => onNavigate?.('favorites')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
               <span className="text-xl">❤️</span>
               <span>Yêu thích</span>
