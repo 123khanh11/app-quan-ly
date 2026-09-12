@@ -15,6 +15,7 @@ interface ShopInfo {
   email?: string
   facebook_url?: string
   logo_url?: string
+  description?: string
 }
 
 export function ShopHeader() {
@@ -46,67 +47,90 @@ export function ShopHeader() {
 
   return (
     <div className="w-full">
-      {/* Top Info Bar - Dark Blue */}
-      <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 text-white py-2 px-4 text-sm">
-        <div className="max-w-7xl mx-auto flex justify-between items-center flex-wrap gap-3">
-          <div className="flex items-center gap-6">
+      {/* Top Blue Bar */}
+      <div className="bg-blue-900 text-white py-2 px-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-8 text-sm">
             {shopInfo?.phone && (
-              <a href={`tel:${shopInfo.phone}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <span>📞</span>
+              <a href={`tel:${shopInfo.phone}`} className="flex items-center gap-2 hover:opacity-80">
+                <span>☎</span>
                 <span>{shopInfo.phone}</span>
               </a>
             )}
-            {shopInfo?.email && (
-              <a href={`mailto:${shopInfo.email}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity hidden md:flex">
-                <span>✉️</span>
-                <span>{shopInfo.email}</span>
-              </a>
-            )}
+          </div>
+          <div className="flex items-center gap-6 text-xs">
+            <a href="/" className="hover:opacity-80">Trang chủ</a>
+            <a href="/" className="hover:opacity-80">Yêu thích</a>
+            <a href="/" className="hover:opacity-80">Giỏ hàng</a>
+            <a href="/" className="hover:opacity-80">Tài khoản</a>
           </div>
         </div>
       </div>
 
-      {/* Main Header */}
-      <div className="bg-white border-b-4 border-blue-600 py-3 px-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo/Shop Name */}
-          <a href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity flex-shrink-0">
+      {/* Main Header - Logo + Search */}
+      <div className="bg-blue-900 text-white py-3 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
+          {/* Logo */}
+          <a href="/" className="flex items-center gap-2 flex-shrink-0">
             {shopInfo?.logo_url ? (
-              <img src={shopInfo.logo_url} alt={shopInfo.shop_name} className="h-20 w-auto object-contain" />
+              <img src={shopInfo.logo_url} alt={shopInfo?.shop_name} className="h-14 w-auto object-contain" />
             ) : (
-              <img 
-                src="https://via.placeholder.com/200x100?text=KHƯƠNG+THỊNH+Machine" 
-                alt={shopInfo?.shop_name || "Logo"} 
-                className="h-20 w-auto object-contain"
-              />
+              <div className="text-white font-bold text-sm">
+                {shopInfo?.shop_name || 'Shop'}
+              </div>
             )}
           </a>
 
-          {/* Address Info - Hidden on mobile */}
-          <div className="text-sm text-gray-700 flex items-center gap-2 hidden md:flex flex-1 mx-6">
-            <span>📍</span>
-            <div>
-              <div className="font-semibold text-gray-900">{shopInfo?.address}</div>
-              <div className="text-xs text-gray-600">{shopInfo?.ward}, {shopInfo?.district}, {shopInfo?.city}</div>
+          {/* Search Bar - Center */}
+          <div className="flex-1 max-w-md">
+            <div className="flex items-center bg-white rounded-md overflow-hidden">
+              <input
+                type="text"
+                placeholder="Tìm kiếm sản phẩm..."
+                className="flex-1 px-3 py-2 text-sm text-gray-800 outline-none"
+              />
+              <button className="px-4 py-2 bg-blue-700 text-white font-semibold text-sm hover:bg-blue-800">
+                Tìm
+              </button>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="flex gap-2 flex-shrink-0">
+          {/* Icons - Right */}
+          <div className="flex items-center gap-6 text-sm flex-shrink-0">
+            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80">
+              <span>❤️</span>
+              <span className="text-xs">Yêu thích</span>
+            </a>
+            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80">
+              <span>🛒</span>
+              <span className="text-xs">Giỏ hàng</span>
+            </a>
+            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80">
+              <span>👤</span>
+              <span className="text-xs">Tài khoản</span>
+            </a>
           </div>
         </div>
       </div>
 
-      {/* Navigation Bar - Orange */}
-      <nav className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 px-4 shadow-md">
+      {/* Navigation Bar - Blue */}
+      <nav className="bg-blue-800 text-white py-2 px-4">
         <div className="max-w-7xl mx-auto flex gap-8 text-sm font-semibold overflow-x-auto">
-          <a href="/" className="hover:opacity-90 transition-opacity whitespace-nowrap">Trang chủ</a>
-          <a href="/products" className="hover:opacity-90 transition-opacity whitespace-nowrap">Sản phẩm nổi bật</a>
-          <a href="/categories" className="hover:opacity-90 transition-opacity whitespace-nowrap">Danh mục</a>
-          <a href="/promotions" className="hover:opacity-90 transition-opacity whitespace-nowrap">Khuyến mãi</a>
-          <a href="/contact" className="hover:opacity-90 transition-opacity whitespace-nowrap">Liên hệ</a>
+          <a href="/" className="hover:opacity-90 whitespace-nowrap">Sản phẩm mới</a>
+          <a href="/" className="hover:opacity-90 whitespace-nowrap">Hàng Bán Chạy</a>
+          <a href="/" className="hover:opacity-90 whitespace-nowrap">PHỤ TÙNG XE MÁY</a>
+          <a href="/" className="hover:opacity-90 whitespace-nowrap">MÁY NÔNG NGHIỆP</a>
+          <a href="/" className="hover:opacity-90 whitespace-nowrap">BẢO DƯỠNG</a>
+          <a href="/" className="hover:opacity-90 whitespace-nowrap">Liên hệ</a>
         </div>
       </nav>
+
+      {/* Orange Banner */}
+      <div className="bg-orange-500 text-white py-2 px-4 text-center">
+        <div className="max-w-7xl mx-auto text-sm font-semibold">
+          KHÁM PHÁ CÁC GIẢI PHÁP PHỤ TÙNG XE MÁY & NÔNG NGHIỆP CỦA CHÚNG TÔI
+        </div>
+      </div>
     </div>
   )
 }
