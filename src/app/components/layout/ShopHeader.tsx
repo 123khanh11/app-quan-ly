@@ -72,12 +72,13 @@ export function ShopHeader() {
           {/* Logo/Shop Name */}
           <a href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity flex-shrink-0">
             {shopInfo?.logo_url ? (
-              <img src={shopInfo.logo_url} alt={shopInfo.shop_name} className="h-16 w-auto object-contain" />
+              <img src={shopInfo.logo_url} alt={shopInfo.shop_name} className="h-20 w-auto object-contain" />
             ) : (
-              <div>
-                <div className="text-2xl font-bold text-blue-900">{shopInfo?.shop_name}</div>
-                <div className="text-xs text-orange-600 font-semibold">Machine</div>
-              </div>
+              <img 
+                src="https://via.placeholder.com/200x100?text=KHƯƠNG+THỊNH+Machine" 
+                alt={shopInfo?.shop_name || "Logo"} 
+                className="h-20 w-auto object-contain"
+              />
             )}
           </a>
 
