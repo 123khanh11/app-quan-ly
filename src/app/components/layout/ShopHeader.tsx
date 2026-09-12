@@ -47,22 +47,50 @@ export function ShopHeader({ onNavigate }: { onNavigate?: (page: string) => void
 
   return (
     <div className="w-full">
-      {/* Top Blue Bar - with icons */}
+
+      {/* Main Header - Logo LEFT + Search + Nav CENTER + Icons RIGHT */}
       <div className="bg-blue-950 text-white py-3 px-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center gap-6">
-          <div className="flex items-center gap-8 text-sm">
-            {shopInfo?.phone && (
-              <a href={`tel:${shopInfo.phone}`} className="flex items-center gap-2 hover:opacity-80">
-                <span>☎</span>
-                <span>{shopInfo.phone}</span>
-              </a>
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
+          {/* Logo - LEFT */}
+          <a href="/" className="flex items-center gap-2 flex-shrink-0">
+            {shopInfo?.logo_url ? (
+              <img src={shopInfo.logo_url} alt={shopInfo?.shop_name} className="h-20 w-auto object-contain" />
+            ) : (
+              <div className="text-white font-bold text-lg">
+                {shopInfo?.shop_name || 'Shop'}
+              </div>
             )}
+          </a>
+
+          {/* Search Bar + Nav - CENTER */}
+          <div className="flex-1 flex flex-col items-center gap-2">
+            {/* Search Bar */}
+            <div className="w-full max-w-md">
+              <div className="flex items-center bg-white rounded-md overflow-hidden">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm sản phẩm..."
+                  className="flex-1 px-3 py-2 text-sm text-gray-800 outline-none"
+                />
+                <button className="px-4 py-2 bg-blue-700 text-white font-semibold text-sm hover:bg-blue-800">
+                  Tìm
+                </button>
+              </div>
+            </div>
+
+            {/* Navigation Bar */}
+            <nav className="flex gap-6 text-xs font-semibold whitespace-nowrap overflow-x-auto">
+              <a href="/" className="hover:opacity-90">Sản phẩm mới</a>
+              <a href="/" className="hover:opacity-90">Hàng Bán Chạy</a>
+              <a href="/" className="hover:opacity-90">PHỤ TÙNG XE MÁY</a>
+              <a href="/" className="hover:opacity-90">MÁY NÔNG NGHIỆP</a>
+              <a href="/" className="hover:opacity-90">BẢO DƯỠNG</a>
+              <a href="/" className="hover:opacity-90">Liên hệ</a>
+            </nav>
           </div>
-          <div className="flex items-center gap-8">
-            <button onClick={() => onNavigate?.('shop')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
-              <span className="text-xl">🏠</span>
-              <span>Cửa Hàng</span>
-            </button>
+
+          {/* Icons - RIGHT */}
+          <div className="flex items-center gap-6 flex-shrink-0">
             <button onClick={() => onNavigate?.('favorites')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
               <span className="text-xl">❤️</span>
               <span>Yêu thích</span>
@@ -78,52 +106,6 @@ export function ShopHeader({ onNavigate }: { onNavigate?: (page: string) => void
           </div>
         </div>
       </div>
-
-      {/* Main Header - Logo FULL SIZE */}
-      <div className="bg-blue-950 text-white py-4 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
-          {/* Logo - TALL */}
-          <a href="/" className="flex items-center gap-2 flex-shrink-0">
-            {shopInfo?.logo_url ? (
-              <img src={shopInfo.logo_url} alt={shopInfo?.shop_name} className="h-32 w-auto object-contain" />
-            ) : (
-              <div className="text-white font-bold text-lg">
-                {shopInfo?.shop_name || 'Shop'}
-              </div>
-            )}
-          </a>
-
-          {/* Search Bar - Center */}
-          <div className="flex-1 max-w-md">
-            <div className="flex items-center bg-white rounded-md overflow-hidden">
-              <input
-                type="text"
-                placeholder="Tìm kiếm sản phẩm..."
-                className="flex-1 px-3 py-2 text-sm text-gray-800 outline-none"
-              />
-              <button className="px-4 py-2 bg-blue-700 text-white font-semibold text-sm hover:bg-blue-800">
-                Tìm
-              </button>
-            </div>
-          </div>
-
-          {/* Icons - Right */}
-          <div className="flex-shrink-0">
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Bar - Blue */}
-      <nav className="bg-blue-800 text-white py-2 px-4">
-        <div className="max-w-7xl mx-auto flex gap-8 text-sm font-semibold overflow-x-auto">
-          <a href="/" className="hover:opacity-90 whitespace-nowrap">Sản phẩm mới</a>
-          <a href="/" className="hover:opacity-90 whitespace-nowrap">Hàng Bán Chạy</a>
-          <a href="/" className="hover:opacity-90 whitespace-nowrap">PHỤ TÙNG XE MÁY</a>
-          <a href="/" className="hover:opacity-90 whitespace-nowrap">MÁY NÔNG NGHIỆP</a>
-          <a href="/" className="hover:opacity-90 whitespace-nowrap">BẢO DƯỠNG</a>
-          <a href="/" className="hover:opacity-90 whitespace-nowrap">Liên hệ</a>
-        </div>
-      </nav>
 
       {/* Orange Banner */}
       <div className="bg-orange-500 text-white py-2 px-4 text-center">
