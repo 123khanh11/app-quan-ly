@@ -75,7 +75,7 @@ function AppContent() {
   return (
     <>
       <div
-        className="min-h-screen bg-background flex flex-col"
+        className="min-h-screen w-full bg-background flex flex-col"
         style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
       >
         {/* SHOP HEADER WITH INFO */}
