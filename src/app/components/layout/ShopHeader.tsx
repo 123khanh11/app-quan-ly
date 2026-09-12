@@ -78,8 +78,8 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
               </div>
             </div>
 
-            {/* Navigation Bar - Dynamic Categories */}
-            <nav className="flex gap-6 text-xs font-semibold whitespace-nowrap overflow-x-auto">
+            {/* Navigation Bar - Dynamic Categories - NO OVERFLOW */}
+            <nav className="flex gap-6 text-xs font-semibold whitespace-nowrap">
               <a href="/" className="hover:opacity-90">Sản phẩm mới</a>
               <a href="/" className="hover:opacity-90">Hàng Bán Chạy</a>
               <CategoryMenu onSelectCategory={onSelectCategory || (() => {})} />
