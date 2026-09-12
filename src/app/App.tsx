@@ -6,6 +6,8 @@ import { CartPage } from "@/app/components/shop/Cart";
 import { OrderTrackingPage } from "@/app/components/shop/OrderTracking";
 import { LoginModal } from "@/app/components/auth/LoginModal";
 import MegaMenu from "@/app/components/ui/mega-menu";
+import { ShopHeader } from "@/app/components/layout/ShopHeader";
+import { ShopFooter } from "@/app/components/layout/ShopFooter";
 import { supabase } from "@/services/supabase";
 
 function AppContent() {
@@ -75,9 +77,12 @@ function AppContent() {
   return (
     <>
       <div
-        className="min-h-screen bg-background"
+        className="min-h-screen bg-background flex flex-col"
         style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
       >
+        {/* SHOP HEADER WITH INFO */}
+        <ShopHeader />
+
         {/* ── HEADER ── */}
         <header className="bg-white border-b border-border sticky top-0 z-40 shadow-sm">
           <div className="max-w-6xl mx-auto px-4">
@@ -254,6 +259,9 @@ function AppContent() {
           {currentPage === "cart" && <CartPage />}
           {currentPage === "order" && <OrderTrackingPage orderId={selectedOrderId} />}
         </main>
+
+        {/* SHOP FOOTER */}
+        <ShopFooter />
       </div>
 
       {/* ── LOGIN MODAL ── */}
