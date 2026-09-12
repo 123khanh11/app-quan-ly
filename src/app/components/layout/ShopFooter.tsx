@@ -42,8 +42,8 @@ export function ShopFooter() {
   if (!shopInfo) return null
 
   return (
-    <footer className="bg-gray-900 text-gray-300 py-8 px-2 md:px-4 mt-12 w-full">
-      <div className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+    <footer className="bg-gray-900 text-gray-300 py-6 md:py-8 px-2 md:px-4 mt-8 md:mt-12 w-full">
+      <div className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
         {/* About */}
         <div>
           <h3 className="text-white font-bold text-lg mb-3">{shopInfo.shop_name}</h3>
