@@ -47,9 +47,9 @@ export function ShopHeader() {
 
   return (
     <div className="w-full">
-      {/* Top Blue Bar */}
-      <div className="bg-blue-900 text-white py-2 px-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+      {/* Top Blue Bar - with icons */}
+      <div className="bg-blue-900 text-white py-3 px-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center gap-6">
           <div className="flex items-center gap-8 text-sm">
             {shopInfo?.phone && (
               <a href={`tel:${shopInfo.phone}`} className="flex items-center gap-2 hover:opacity-80">
@@ -58,11 +58,23 @@ export function ShopHeader() {
               </a>
             )}
           </div>
-          <div className="flex items-center gap-6 text-xs">
-            <a href="/" className="hover:opacity-80">Trang chủ</a>
-            <a href="/" className="hover:opacity-80">Yêu thích</a>
-            <a href="/" className="hover:opacity-80">Giỏ hàng</a>
-            <a href="/" className="hover:opacity-80">Tài khoản</a>
+          <div className="flex items-center gap-8">
+            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80 text-xs">
+              <span className="text-xl">🏠</span>
+              <span>Cửa Hàng</span>
+            </a>
+            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80 text-xs">
+              <span className="text-xl">❤️</span>
+              <span>Yêu thích</span>
+            </a>
+            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80 text-xs">
+              <span className="text-xl">🛒</span>
+              <span>Giỏ hàng</span>
+            </a>
+            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80 text-xs">
+              <span className="text-xl">👤</span>
+              <span>Tài khoản</span>
+            </a>
           </div>
         </div>
       </div>
@@ -96,19 +108,7 @@ export function ShopHeader() {
           </div>
 
           {/* Icons - Right */}
-          <div className="flex items-center gap-6 text-sm flex-shrink-0">
-            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80">
-              <span>❤️</span>
-              <span className="text-xs">Yêu thích</span>
-            </a>
-            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80">
-              <span>🛒</span>
-              <span className="text-xs">Giỏ hàng</span>
-            </a>
-            <a href="/" className="flex flex-col items-center gap-1 hover:opacity-80">
-              <span>👤</span>
-              <span className="text-xs">Tài khoản</span>
-            </a>
+          <div className="flex-shrink-0">
           </div>
         </div>
       </div>
