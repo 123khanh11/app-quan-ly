@@ -5,7 +5,6 @@ import { ShopHome } from "@/app/components/shop/ShopHome";
 import { CartPage } from "@/app/components/shop/Cart";
 import { OrderTrackingPage } from "@/app/components/shop/OrderTracking";
 import { LoginModal } from "@/app/components/auth/LoginModal";
-import MegaMenu from "@/app/components/ui/mega-menu";
 import { ShopHeader } from "@/app/components/layout/ShopHeader";
 import { ShopFooter } from "@/app/components/layout/ShopFooter";
 import { supabase } from "@/services/supabase";
@@ -236,13 +235,6 @@ function AppContent() {
               </div>
             </div>
           </div>
-          {currentPage === "shop" && (
-            <MegaMenu
-              selectedCategoryId={selectedCategoryId}
-              selectedCategoryName={selectedCategoryName}
-              onSelectCategory={handleSelectCategory}
-            />
-          )}
         </header>
 
         {/* ── PAGE CONTENT ── */}

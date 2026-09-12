@@ -95,9 +95,6 @@ export function ShopHeader() {
             <a href="/" className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-semibold text-sm transition-colors">
               Liên hệ
             </a>
-            <a href="/" className="px-3 py-2 border-2 border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 font-semibold text-sm transition-colors">
-              Về chúng tôi
-            </a>
           </div>
         </div>
       </div>
