@@ -372,46 +372,46 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         </div>
 
         <div>
-          <p className="text-sm font-semibold mb-2">Customer Information</p>
-          <input type="text" placeholder="Full Name (required)" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required />
-          <input type="email" placeholder="Email (optional)" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" />
-          <input type="tel" placeholder="Phone (required)" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm" required />
+          <p className="text-sm font-semibold mb-2">📋 Thông Tin Khách Hàng</p>
+          <input type="text" placeholder="Họ và tên (bắt buộc)" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required />
+          <input type="email" placeholder="Email (tùy chọn)" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" />
+          <input type="tel" placeholder="Số điện thoại (bắt buộc)" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm" required />
         </div>
 
         <div>
-          <p className="text-sm font-semibold mb-2">Shipping Address</p>
+          <p className="text-sm font-semibold mb-2">📍 Địa Chỉ Giao Hàng</p>
           <select value={formData.province} onChange={(e) => setFormData({ ...formData, province: e.target.value, district: '', districtId: 0, ward: '', wardCode: '' })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required>
-            <option value="">Select Province</option>
+            <option value="">Chọn Tỉnh/Thành Phố</option>
             {provinces.map((p) => <option key={p.province_id} value={p.province_id}>{p.province_name}</option>)}
           </select>
 
           <select value={formData.districtId} onChange={(e) => { const id = parseInt(e.target.value); const d = districts.find((x) => x.district_id === id); setFormData({ ...formData, districtId: id, district: d?.district_name || '', ward: '', wardCode: '' }); }} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required>
-            <option value="">Select District</option>
+            <option value="">Chọn Quận/Huyện</option>
             {districts.map((d) => <option key={d.district_id} value={d.district_id}>{d.district_name}</option>)}
           </select>
 
           <select value={formData.wardCode} onChange={(e) => { const w = wards.find((x) => x.ward_code === e.target.value); setFormData({ ...formData, wardCode: e.target.value, ward: w?.ward_name || '' }); }} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required>
-            <option value="">Select Ward</option>
+            <option value="">Chọn Phường/Xã</option>
             {wards.map((w) => <option key={w.ward_code} value={w.ward_code}>{w.ward_name}</option>)}
           </select>
 
-          <textarea placeholder="Detailed address" value={formData.detailedAddress} onChange={(e) => setFormData({ ...formData, detailedAddress: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none" rows={2} required />
+          <textarea placeholder="Địa chỉ chi tiết" value={formData.detailedAddress} onChange={(e) => setFormData({ ...formData, detailedAddress: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none" rows={2} required />
         </div>
 
-        <textarea placeholder="Notes (optional)" value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none" rows={2} />
+        <textarea placeholder="Ghi chú (tùy chọn)" value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none" rows={2} />
 
         <div className="bg-muted p-3 rounded-md space-y-2">
-          <div className="flex justify-between text-sm"><span>Subtotal:</span><span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}đ</span></div>
-          <div className="flex justify-between text-sm border-t border-border pt-2"><span>Shipping:</span><span className="font-semibold">{loadingShipping ? 'Calculating...' : `${shippingFee.toLocaleString('vi-VN')}đ`}</span></div>
-          <div className="flex justify-between text-base font-bold border-t border-border pt-2"><span>Total:</span><span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span></div>
+          <div className="flex justify-between text-sm"><span>💰 Tạm Tính:</span><span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}đ</span></div>
+          <div className="flex justify-between text-sm border-t border-border pt-2"><span>🚚 Vận Chuyển:</span><span className="font-semibold">{loadingShipping ? '⏳ Đang tính...' : `${shippingFee.toLocaleString('vi-VN')}đ`}</span></div>
+          <div className="flex justify-between text-base font-bold border-t border-border pt-2"><span>📊 Tổng Cộng:</span><span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span></div>
         </div>
 
         <div className="flex gap-2">
           <button type="submit" disabled={loading} className="flex-1 bg-primary text-white font-bold py-2 rounded-md hover:bg-orange-600 disabled:opacity-50">
-            {loading ? 'Processing...' : `Checkout (${selectedItems.size})`}
+            {loading ? '⏳ Đang xử lý...' : `✅ Thanh Toán (${selectedItems.size})`}
           </button>
           <button type="button" onClick={onClose} className="flex-1 border border-border font-semibold py-2 rounded-md hover:bg-muted">
-            Cancel
+            ❌ Hủy
           </button>
         </div>
 
