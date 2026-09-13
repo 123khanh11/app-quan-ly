@@ -2,8 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { Product, supabase } from '@/services/supabase'
-import { ShopHeader } from '@/app/components/layout/ShopHeader'
-import { Copy, Check, ChevronLeft } from 'lucide-react'
+import { Copy, Check, ChevronLeft, ShoppingCart } from 'lucide-react'
+import { useCart } from '@/app/context/CartContext'
+
+interface ProductVariant {
+  id: string
+  product_id: string
+  sku: string
+  color?: string
+  size?: string
+  stock: number
+  price: number
+}
 
 interface ProductDetailProps {
   productId: string
@@ -12,27 +22,46 @@ interface ProductDetailProps {
 
 export function ProductDetail({ productId, onClose }: ProductDetailProps) {
   const [product, setProduct] = useState<Product | null>(null)
+  const [variants, setVariants] = useState<ProductVariant[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null)
+  const [quantity, setQuantity] = useState(1)
+  const { addToCart } = useCart()
 
-  // Load product directly from Supabase
+  // Load product and variants
   useEffect(() => {
-    const loadProduct = async () => {
+    const loadProductData = async () => {
       if (!productId) {
         setError('Product ID not found')
         return
       }
       try {
         setLoading(true)
-        const { data, error: err } = await supabase
+        
+        // Load product
+        const { data: productData, error: productError } = await supabase
           .from('products')
           .select('*')
           .eq('id', productId)
           .single()
 
-        if (err) throw new Error('Product not found')
-        setProduct(data)
+        if (productError) throw new Error('Product not found')
+        setProduct(productData)
+
+        // Load variants
+        const { data: variantsData, error: variantsError } = await supabase
+          .from('product_variants')
+          .select('*')
+          .eq('product_id', productId)
+
+        if (!variantsError && variantsData) {
+          setVariants(variantsData)
+          if (variantsData.length > 0) {
+            setSelectedVariant(variantsData[0])
+          }
+        }
       } catch (err) {
         console.error('Error loading product:', err)
         setError(err instanceof Error ? err.message : 'Failed to load product')
@@ -40,14 +69,39 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
         setLoading(false)
       }
     }
-    loadProduct()
+    loadProductData()
   }, [productId])
 
   const handleCopyLink = () => {
-    const url = `${window.location.origin}/?product=${productId}`
+    const url = `${window.location.origin}/products/${productId}`
     navigator.clipboard.writeText(url)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleAddToCart = () => {
+    if (!product || !selectedVariant) {
+      alert('Vui lòng chọn một variant')
+      return
+    }
+
+    addToCart({
+      product_id: product.id,
+      variant_id: selectedVariant.id,
+      name: product.name,
+      price: selectedVariant.price,
+      quantity,
+      image_url: product.image_url,
+      color: selectedVariant.color || '',
+      size: selectedVariant.size || '',
+      sku: selectedVariant.sku,
+      weight: product.weight,
+      length: product.length,
+      width: product.width,
+      height: product.height,
+    })
+
+    alert(`✅ Đã thêm "${product.name}" vào giỏ hàng`)
   }
 
   const handleGoBack = () => {
@@ -59,9 +113,8 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-8">
-      <ShopHeader />
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-background pb-8">
+      <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Back Button */}
         <button
           onClick={handleGoBack}
@@ -89,7 +142,7 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
           <div className="bg-card border border-border rounded-lg p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Product Image */}
-              <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+              <div className="aspect-square bg-muted rounded-lg overflow-hidden flex items-center justify-center">
                 <img
                   src={product.image_url}
                   alt={product.name}
@@ -98,7 +151,7 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
               </div>
 
               {/* Product Info */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
                   <h1 className="text-3xl font-bold text-foreground mb-2">
                     {product.name}
@@ -112,14 +165,93 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
                 <div className="border-t border-b border-border py-4">
                   <p className="text-sm text-muted-foreground mb-1">Giá</p>
                   <p className="text-4xl font-bold text-primary">
-                    {product.price.toLocaleString('vi-VN')}đ
+                    {selectedVariant 
+                      ? selectedVariant.price.toLocaleString('vi-VN')
+                      : product.price.toLocaleString('vi-VN')
+                    }đ
                   </p>
                 </div>
 
-                {/* SKU */}
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Mã SKU</p>
-                  <p className="font-mono text-foreground">{product.sku}</p>
+                {/* Variants Selection */}
+                {variants.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-foreground">Chọn Loại Sản Phẩm</h3>
+                    
+                    {/* Color Variants */}
+                    {variants.some(v => v.color) && (
+                      <div>
+                        <p className="text-sm font-semibold mb-2">Màu Sắc</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[...new Set(variants.map(v => v.color).filter(Boolean))].map((color) => (
+                            <button
+                              key={color}
+                              onClick={() => {
+                                const variant = variants.find(v => v.color === color)
+                                if (variant) setSelectedVariant(variant)
+                              }}
+                              className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                                selectedVariant?.color === color
+                                  ? 'border-primary bg-primary/10'
+                                  : 'border-border hover:border-primary'
+                              }`}
+                            >
+                              {color}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Size Variants */}
+                    {variants.some(v => v.size) && (
+                      <div>
+                        <p className="text-sm font-semibold mb-2">Kích Thước</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[...new Set(variants.map(v => v.size).filter(Boolean))].map((size) => (
+                            <button
+                              key={size}
+                              onClick={() => {
+                                const variant = variants.find(v => v.size === size)
+                                if (variant) setSelectedVariant(variant)
+                              }}
+                              className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                                selectedVariant?.size === size
+                                  ? 'border-primary bg-primary/10'
+                                  : 'border-border hover:border-primary'
+                              }`}
+                            >
+                              {size}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Quantity */}
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold">Số Lượng</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="px-3 py-2 border border-border rounded-lg hover:bg-muted"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-16 px-3 py-2 border border-border rounded-lg text-center"
+                    />
+                    <button
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="px-3 py-2 border border-border rounded-lg hover:bg-muted"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
 
                 {/* Share Link */}
@@ -130,7 +262,7 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
                   <div className="flex gap-2 flex-col md:flex-row">
                     <input
                       type="text"
-                      value={`${window.location.origin}/?product=${productId}`}
+                      value={`${window.location.origin}/products/${productId}`}
                       readOnly
                       className="flex-1 px-3 py-2 border border-border rounded-lg bg-white font-mono text-sm"
                     />
@@ -151,17 +283,15 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
                       )}
                     </button>
                   </div>
-                  <p className="text-xs text-blue-700">
-                    ✓ Bạn có thể chia sẻ link này trên Facebook, Tiktok, hay các nền tảng khác để quảng cáo sản phẩm
-                  </p>
                 </div>
 
                 {/* Add to Cart Button */}
                 <button
-                  onClick={handleGoBack}
-                  className="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition-colors"
+                  onClick={handleAddToCart}
+                  className="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
                 >
-                  Xem Chi Tiết & Thêm Vào Giỏ
+                  <ShoppingCart size={20} />
+                  Thêm Vào Giỏ Hàng
                 </button>
               </div>
             </div>
