@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react'
 import { Product, supabase } from '@/services/supabase'
 import { Copy, Check, ChevronLeft, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
-import { ShopHeader } from '@/app/components/layout/ShopHeader'
-import { ShopFooter } from '@/app/components/layout/ShopFooter'
 
 interface ProductVariant {
   id: string
@@ -17,12 +15,12 @@ interface ProductVariant {
   price: number
 }
 
-interface ProductDetailProps {
+interface ProductDetailPageProps {
   productId: string
-  onClose?: () => void
+  onBack?: () => void
 }
 
-export function ProductDetail({ productId, onClose }: ProductDetailProps) {
+export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps) {
   const [product, setProduct] = useState<Product | null>(null)
   const [variants, setVariants] = useState<ProductVariant[]>([])
   const [loading, setLoading] = useState(true)
@@ -104,27 +102,15 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
     })
 
     alert(`✅ Đã thêm "${product.name}" vào giỏ hàng`)
-  }
-
-  const handleGoBack = () => {
-    if (onClose) {
-      onClose()
-    } else {
-      window.history.back()
-    }
+    if (onBack) onBack()
   }
 
   return (
-    <>
-      <ShopHeader 
-        onNavigate={() => {}}
-        onSelectCategory={() => {}}
-      />
-      <div className="min-h-screen bg-background pb-8">
-        <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="min-h-screen bg-background pb-8">
+      <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Back Button */}
         <button
-          onClick={handleGoBack}
+          onClick={onBack}
           className="flex items-center gap-2 text-primary hover:text-orange-600 mb-6 transition-colors"
         >
           <ChevronLeft size={20} />
@@ -139,7 +125,7 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
           <div className="text-center py-12">
             <p className="text-red-500">❌ {error}</p>
             <button
-              onClick={handleGoBack}
+              onClick={onBack}
               className="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-orange-600"
             >
               Về trang chủ
@@ -301,9 +287,7 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
             </div>
           </div>
         ) : null}
-        </div>
       </div>
-      <ShopFooter />
-    </>
+    </div>
   )
 }

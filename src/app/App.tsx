@@ -6,14 +6,14 @@ import { ShopHome } from "@/app/components/shop/ShopHome";
 import { CartPage } from "@/app/components/shop/Cart";
 import { OrderTrackingPage } from "@/app/components/shop/OrderTracking";
 import { FavoritesPage } from "@/app/components/shop/FavoritesPage";
-import { ProductDetail } from "@/app/pages/ProductDetail";
+import { ProductDetailPage as ProductDetailPageComponent } from "@/app/components/shop/ProductDetailPage";
 import { LoginModal } from "@/app/components/auth/LoginModal";
 import { ShopHeader } from "@/app/components/layout/ShopHeader";
 import { ShopFooter } from "@/app/components/layout/ShopFooter";
 import { supabase } from "@/services/supabase";
 
 // Product Detail Page Component
-function ProductDetailPage() {
+function ProductDetailPageRoute() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
 
@@ -22,9 +22,9 @@ function ProductDetailPage() {
   }
 
   return (
-    <ProductDetail 
+    <ProductDetailPageComponent 
       productId={productId}
-      onClose={() => navigate('/')}
+      onBack={() => navigate('/')}
     />
   );
 }
@@ -130,7 +130,7 @@ function AppContent() {
                 onClearCategory={handleClearCategory}
               />
             } />
-            <Route path="/products/:productId" element={<ProductDetailPage />} />
+            <Route path="/products/:productId" element={<ProductDetailPageRoute />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/favorites" element={<FavoritesPage />} />
             <Route path="/order/:orderId" element={<OrderTrackingPage orderId={selectedOrderId} />} />
