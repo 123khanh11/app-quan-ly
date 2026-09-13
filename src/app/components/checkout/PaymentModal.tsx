@@ -18,7 +18,9 @@ export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentM
     const randomCode = Math.random().toString(36).substring(2, 10).toUpperCase()
     const content = `DH${randomCode}`
     const bankAccount = '0865816910'
-    const qr = `https://api.vietqr.io/build-qr?accountNo=${bankAccount}&accountName=KHANH&amount=${orderTotal}&addInfo=${encodeURIComponent(content)}&templateId=compact`
+    const bankId = '970422' // MB Bank
+    // Use proper VietQR endpoint for generating QR code
+    const qr = `https://img.vietqr.io/image/${bankId}-${bankAccount}-compact.png?accountName=KHANH&amount=${orderTotal}&addInfo=${encodeURIComponent(content)}`
     return { transferContent: content, qrUrl: qr }
   }, [orderTotal])
 
