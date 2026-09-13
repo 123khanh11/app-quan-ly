@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { Product, supabase } from '@/services/supabase'
 import { Copy, Check, ChevronLeft, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
+import { ShopHeader } from '@/app/components/layout/ShopHeader'
+import { ShopFooter } from '@/app/components/layout/ShopFooter'
 
 interface ProductVariant {
   id: string
@@ -113,8 +115,13 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-8">
-      <div className="max-w-6xl mx-auto px-4 py-6">
+    <>
+      <ShopHeader 
+        onNavigate={() => {}}
+        onSelectCategory={() => {}}
+      />
+      <div className="min-h-screen bg-background pb-8">
+        <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Back Button */}
         <button
           onClick={handleGoBack}
@@ -165,10 +172,7 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
                 <div className="border-t border-b border-border py-4">
                   <p className="text-sm text-muted-foreground mb-1">Giá</p>
                   <p className="text-4xl font-bold text-primary">
-                    {selectedVariant 
-                      ? selectedVariant.price.toLocaleString('vi-VN')
-                      : product.price.toLocaleString('vi-VN')
-                    }đ
+                    {(selectedVariant?.price || product?.price || 0).toLocaleString('vi-VN')}đ
                   </p>
                 </div>
 
@@ -297,7 +301,9 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
             </div>
           </div>
         ) : null}
+        </div>
       </div>
-    </div>
+      <ShopFooter />
+    </>
   )
 }

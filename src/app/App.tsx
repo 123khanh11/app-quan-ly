@@ -22,19 +22,10 @@ function ProductDetailPage() {
   }
 
   return (
-    <>
-      <ShopHeader 
-        onNavigate={(page) => {
-          if (page === 'shop') navigate('/')
-        }}
-        onSelectCategory={() => {}}
-      />
-      <ProductDetail 
-        productId={productId}
-        onClose={() => navigate('/')}
-      />
-      <ShopFooter />
-    </>
+    <ProductDetail 
+      productId={productId}
+      onClose={() => navigate('/')}
+    />
   );
 }
 
