@@ -325,7 +325,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       setCreatedOrderId(orderId)
       clearCart()
       
-      let message = `✅ Đơn hàng được tạo!\nMã Đơn: ${orderId}\nTổng Tiền: ${totalWithShipping.toLocaleString()} VND`
+      let message = `✅ Đơn hàng được tạo!\nMã Đơn: ${orderId}\nTổng Tiền: ${(totalWithShipping || 0).toLocaleString()} VND`
       
       // Only show QR + transaction ID for bank_transfer
       if (paymentMethod === 'bank_transfer') {
@@ -365,7 +365,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
                     <p className="text-xs text-muted-foreground">{item.color}{item.size && ` x ${item.size}`}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-primary text-sm">{(item.price * item.quantity).toLocaleString()} VND</p>
+                    <p className="font-bold text-primary text-sm">{((item.price || 0) * item.quantity).toLocaleString()} VND</p>
                     <p className="text-xs">x{item.quantity}</p>
                   </div>
                   <input type="checkbox" checked={selectedItems.has(itemKey)} onChange={() => handleToggleItem(itemKey)} className="w-5 h-5 cursor-pointer" />
@@ -405,7 +405,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         <textarea placeholder="Ghi chú (tùy chọn)" value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none" rows={2} />
 
         <div className="bg-muted p-3 rounded-md space-y-2">
-          <div className="flex justify-between text-sm"><span>Tạm Tính:</span><span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}đ</span></div>
+          <div className="flex justify-between text-sm"><span>Tạm Tính:</span><span className="font-semibold">{(selectedTotal || 0).toLocaleString('vi-VN')}đ</span></div>
           <div className="flex justify-between text-sm border-t border-border pt-2"><span>Vận Chuyển:</span><span className="font-semibold">{loadingShipping ? 'Đang tính...' : `${shippingFee.toLocaleString('vi-VN')}đ`}</span></div>
           <div className="flex justify-between text-base font-bold border-t border-border pt-2"><span>Tổng Cộng:</span><span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span></div>
         </div>

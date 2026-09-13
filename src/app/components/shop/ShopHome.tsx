@@ -172,7 +172,7 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
                     {/* Price */}
                     <div className="mb-3">
                       <p className="text-lg font-bold text-primary">
-                        {product.price.toLocaleString('vi-VN')}đ
+                        {(product.price || 0).toLocaleString('vi-VN')}đ
                       </p>
                     </div>
 

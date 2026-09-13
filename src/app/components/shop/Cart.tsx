@@ -85,7 +85,7 @@ export function CartPage() {
                           </div>
                         </td>
                         <td className="px-4 py-4 text-center font-semibold text-foreground">
-                          {item.price.toLocaleString('vi-VN')}đ
+                          {(item.price || 0).toLocaleString('vi-VN')}đ
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex items-center justify-center gap-2">
@@ -113,7 +113,7 @@ export function CartPage() {
                           </div>
                         </td>
                         <td className="px-4 py-4 text-right font-bold text-primary">
-                          {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+                          {((item.price || 0) * item.quantity).toLocaleString('vi-VN')}đ
                         </td>
                         <td className="px-4 py-4 text-center">
                           <button
@@ -180,7 +180,7 @@ export function CartPage() {
                     {/* Price Row */}
                     <div className="flex justify-between items-center pt-1">
                       <span className="text-xs text-gray-500">Giá:</span>
-                      <span className="font-bold text-primary text-sm">{item.price.toLocaleString('vi-VN')}đ</span>
+                      <span className="font-bold text-primary text-sm">{(item.price || 0).toLocaleString('vi-VN')}đ</span>
                     </div>
 
                     {/* Quantity Control & Total Row */}
@@ -211,7 +211,7 @@ export function CartPage() {
 
                       <div className="text-right flex-1">
                         <p className="text-xs text-gray-500">Tổng</p>
-                        <p className="font-bold text-primary text-base">{(item.price * item.quantity).toLocaleString('vi-VN')}đ</p>
+                        <p className="font-bold text-primary text-base">{((item.price || 0) * item.quantity).toLocaleString('vi-VN')}đ</p>
                       </div>
 
                       <button
