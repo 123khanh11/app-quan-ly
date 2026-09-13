@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Heart, ShoppingCart, Search } from 'lucide-react'
 import { getProducts, Product } from '@/services/supabase'
 import { useCart } from '@/app/context/CartContext'
+import { useFavorites } from '@/app/context/FavoritesContext'
 import { ProductDetailModal } from './ProductDetailModal'
 
 interface ShopHomeProps {
@@ -14,16 +15,10 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
   const [products, setProducts] = useState<Product[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [wishlist, setWishlist] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const { addToCart } = useCart()
-
-  // Load wishlist from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('wishlist')
-    if (saved) setWishlist(JSON.parse(saved))
-  }, [])
+  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites()
 
   // Fetch products
   useEffect(() => {
@@ -62,12 +57,18 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
     setFilteredProducts(updatedProducts)
   }, [searchQuery, products, selectedCategoryId])
 
-  const toggleWishlist = (productId: string) => {
-    const updated = wishlist.includes(productId)
-      ? wishlist.filter((id) => id !== productId)
-      : [...wishlist, productId]
-    setWishlist(updated)
-    localStorage.setItem('wishlist', JSON.stringify(updated))
+  const toggleWishlist = (product: Product) => {
+    if (isFavorite(product.id)) {
+      removeFavorite(product.id)
+    } else {
+      addFavorite({
+        product_id: product.id,
+        name: product.name,
+        price: product.price,
+        image_url: product.image_url,
+        sku: product.sku,
+      })
+    }
   }
 
   const handleAddToCart = (product: Product) => {
@@ -143,17 +144,17 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        toggleWishlist(product.id)
+                        toggleWishlist(product)
                       }}
                       className={`absolute top-2 right-2 p-2 rounded-full shadow transition-colors ${
-                        wishlist.includes(product.id)
+                        isFavorite(product.id)
                           ? 'bg-primary text-white'
                           : 'bg-white/90 text-muted-foreground opacity-0 group-hover:opacity-100'
                       }`}
                     >
                       <Heart
                         size={18}
-                        fill={wishlist.includes(product.id) ? 'currentColor' : 'none'}
+                        fill={isFavorite(product.id) ? 'currentColor' : 'none'}
                       />
                     </button>
                   </div>

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/services/supabase'
 import { CategoryMenu } from '../shop/CategoryMenu'
+import { useFavorites } from '@/app/context/FavoritesContext'
+import { useCart } from '@/app/context/CartContext'
 import { Menu, X } from 'lucide-react'
 
 interface ShopInfo {
@@ -20,11 +22,49 @@ interface ShopInfo {
   description?: string
 }
 
+interface UserProfile {
+  user_id: string
+  full_name?: string
+  avatar_url?: string
+  email: string
+}
+
 export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (page: string) => void; onSelectCategory?: (categoryId: string, categoryName: string) => void }) {
   const [shopInfo, setShopInfo] = useState<ShopInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const { favorites } = useFavorites()
+  const { cartCount } = useCart()
 
+  // Get user and profile on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        setUser(session.user)
+      }
+    }
+
+    checkAuth()
+
+    // Listen to auth changes
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser(session.user)
+      } else {
+        setUser(null)
+        setUserProfile(null)
+      }
+    })
+
+    return () => {
+      subscription?.subscription.unsubscribe()
+    }
+  }, [])
+
+  // Load shop info
   useEffect(() => {
     const loadShopInfo = async () => {
       try {
@@ -73,16 +113,41 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
           </button>
 
           {/* Icons - RIGHT (Mobile) */}
-          <div className="flex items-center gap-3">
-            <button onClick={() => onNavigate?.('favorites')} className="flex flex-col items-center gap-0.5 hover:opacity-80 text-xs cursor-pointer">
+          <div className="flex items-center gap-2">
+            {/* Favorites */}
+            <button onClick={() => onNavigate?.('favorites')} className="relative flex flex-col items-center gap-0.5 hover:opacity-80 cursor-pointer">
               <span className="text-lg">❤️</span>
+              {favorites.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  {favorites.length}
+                </span>
+              )}
             </button>
-            <button onClick={() => onNavigate?.('cart')} className="flex flex-col items-center gap-0.5 hover:opacity-80 text-xs cursor-pointer">
+
+            {/* Cart */}
+            <button onClick={() => onNavigate?.('cart')} className="relative flex flex-col items-center gap-0.5 hover:opacity-80 cursor-pointer">
               <span className="text-lg">🛒</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  {cartCount}
+                </span>
+              )}
             </button>
-            <button onClick={() => onNavigate?.('account')} className="flex flex-col items-center gap-0.5 hover:opacity-80 text-xs cursor-pointer">
-              <span className="text-lg">👤</span>
-            </button>
+
+            {/* Account */}
+            {user ? (
+              <button onClick={() => onNavigate?.('account')} className="flex flex-col items-center gap-0.5 hover:opacity-80 cursor-pointer">
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-6 h-6 rounded-full" />
+                ) : (
+                  <span className="text-lg">👤</span>
+                )}
+              </button>
+            ) : (
+              <button onClick={() => onNavigate?.('account')} className="flex flex-col items-center gap-0.5 hover:opacity-80 cursor-pointer">
+                <span className="text-lg">👤</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -163,18 +228,49 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
 
           {/* Icons - RIGHT (Desktop) */}
           <div className="flex items-center gap-6 flex-shrink-0 min-w-0">
-            <button onClick={() => onNavigate?.('favorites')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
+            {/* Favorites */}
+            <button onClick={() => onNavigate?.('favorites')} className="relative flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
               <span className="text-xl">❤️</span>
               <span>Yêu thích</span>
+              {favorites.length > 0 && (
+                <span className="absolute -top-2 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  {favorites.length}
+                </span>
+              )}
             </button>
-            <button onClick={() => onNavigate?.('cart')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
+
+            {/* Cart */}
+            <button onClick={() => onNavigate?.('cart')} className="relative flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
               <span className="text-xl">🛒</span>
               <span>Giỏ hàng</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  {cartCount}
+                </span>
+              )}
             </button>
-            <button onClick={() => onNavigate?.('account')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
-              <span className="text-xl">👤</span>
-              <span>Tài khoản</span>
-            </button>
+
+            {/* Account */}
+            {user ? (
+              <button onClick={() => onNavigate?.('account')} className="relative flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
+                {user.user_metadata?.avatar_url ? (
+                  <>
+                    <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full" />
+                    <span className="text-xs">Tài khoản</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xl">👤</span>
+                    <span>Tài khoản</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <button onClick={() => onNavigate?.('account')} className="flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
+                <span className="text-xl">👤</span>
+                <span>Tài khoản</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

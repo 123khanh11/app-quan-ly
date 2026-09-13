@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { CartProvider, useCart } from "@/app/context/CartContext";
+import { FavoritesProvider } from "@/app/context/FavoritesContext";
 import { ShopHome } from "@/app/components/shop/ShopHome";
 import { CartPage } from "@/app/components/shop/Cart";
 import { OrderTrackingPage } from "@/app/components/shop/OrderTracking";
+import { FavoritesPage } from "@/app/components/shop/FavoritesPage";
 import { LoginModal } from "@/app/components/auth/LoginModal";
 import { ShopHeader } from "@/app/components/layout/ShopHeader";
 import { ShopFooter } from "@/app/components/layout/ShopFooter";
 import { supabase } from "@/services/supabase";
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState<"shop" | "cart" | "order">("shop");
+  const [currentPage, setCurrentPage] = useState<"shop" | "cart" | "order" | "favorites">("shop");
   const [selectedOrderId, setSelectedOrderId] = useState<string>("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [selectedCategoryName, setSelectedCategoryName] = useState<string>("");
@@ -83,6 +85,7 @@ function AppContent() {
           onNavigate={(page) => {
             if (page === 'shop') setCurrentPage('shop')
             else if (page === 'cart') setCurrentPage('cart')
+            else if (page === 'favorites') setCurrentPage('favorites')
             else if (page === 'account') setIsLoginOpen(true)
           }}
           onSelectCategory={handleSelectCategory}
@@ -100,6 +103,7 @@ function AppContent() {
             />
           )}
           {currentPage === "cart" && <CartPage />}
+          {currentPage === "favorites" && <FavoritesPage />}
           {currentPage === "order" && <OrderTrackingPage orderId={selectedOrderId} />}
         </main>
 
@@ -116,7 +120,9 @@ function AppContent() {
 export default function App() {
   return (
     <CartProvider>
-      <AppContent />
+      <FavoritesProvider>
+        <AppContent />
+      </FavoritesProvider>
     </CartProvider>
   );
 }
