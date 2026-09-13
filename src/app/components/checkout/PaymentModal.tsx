@@ -1,18 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { X, Copy, Check } from 'lucide-react'
 
 interface PaymentModalProps {
+  orderTotal: number
   onClose: () => void
-  onConfirmPayment: (paymentMethod: 'bank_transfer' | 'cod') => void
+  onConfirmPayment: (paymentMethod: 'bank_transfer' | 'cod', transferContent: string, qrUrl: string) => void
 }
 
-export function PaymentModal({ onClose, onConfirmPayment }: PaymentModalProps) {
+export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentModalProps) {
   const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'cod'>('cod')
   const [copied, setCopied] = useState(false)
 
-  // Just show placeholders - actual values will be shown after order is created
+  // Generate transfer content and QR when payment method is selected
+  const { transferContent, qrUrl } = useMemo(() => {
+    const randomCode = Math.random().toString(36).substring(2, 10).toUpperCase()
+    const content = `DH${randomCode}`
+    const bankAccount = '0865816910'
+    const qr = `https://api.vietqr.io/build-qr?accountNo=${bankAccount}&accountName=KHANH&amount=${orderTotal}&addInfo=${encodeURIComponent(content)}&templateId=compact`
+    return { transferContent: content, qrUrl: qr }
+  }, [orderTotal])
+
   const bankDetails = {
     bank: 'MB Bank (Ngân hàng Quân đội)',
     accountNumber: '0865816910',
@@ -25,8 +34,14 @@ export function PaymentModal({ onClose, onConfirmPayment }: PaymentModalProps) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleCopyContent = () => {
+    navigator.clipboard.writeText(transferContent)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   const handleConfirm = () => {
-    onConfirmPayment(paymentMethod)
+    onConfirmPayment(paymentMethod, transferContent, qrUrl)
   }
 
   return (
@@ -75,13 +90,23 @@ export function PaymentModal({ onClose, onConfirmPayment }: PaymentModalProps) {
             </button>
           </div>
 
-          {/* Bank Transfer Details - Just show info, not QR */}
+          {/* Bank Transfer Details - Show QR & transfer content */}
           {paymentMethod === 'bank_transfer' && (
             <div className="space-y-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <p className="text-sm font-medium text-blue-900 mb-3">
-                💡 Thông tin chi tiết sẽ được hiển thị sau khi tạo đơn hàng
-              </p>
               <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Số Tiền</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={orderTotal.toLocaleString('vi-VN')}
+                      readOnly
+                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-white"
+                    />
+                    <span className="text-sm font-medium">VNĐ</span>
+                  </div>
+                </div>
+
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Ngân Hàng</p>
                   <input
@@ -109,6 +134,38 @@ export function PaymentModal({ onClose, onConfirmPayment }: PaymentModalProps) {
                     </button>
                   </div>
                 </div>
+
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Nội Dung Chuyển Khoản</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={transferContent}
+                      readOnly
+                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-white font-mono font-bold text-primary"
+                    />
+                    <button
+                      onClick={handleCopyContent}
+                      className="p-2 hover:bg-white rounded-lg border border-border"
+                    >
+                      {copied ? <Check size={18} className="text-green-600" /> : <Copy size={18} />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    💡 Dùng nội dung này để mã đơn hàng của bạn được xác nhận tự động
+                  </p>
+                </div>
+              </div>
+
+              {/* QR Code */}
+              <div className="flex flex-col items-center pt-4 border-t border-blue-200">
+                <p className="text-sm font-medium mb-3">Quét Mã QR</p>
+                <img
+                  src={qrUrl}
+                  alt="VietQR"
+                  className="w-48 h-48 border border-border rounded-lg"
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" font-size="14" fill="%23999" text-anchor="middle" dy=".3em"%3EError loading QR%3C/text%3E%3C/svg%3E' }}
+                />
               </div>
             </div>
           )}

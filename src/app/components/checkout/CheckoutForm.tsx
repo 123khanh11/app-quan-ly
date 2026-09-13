@@ -225,7 +225,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     setShowPaymentModal(true)
   }
 
-  const handlePaymentConfirm = async (paymentMethod: 'bank_transfer' | 'cod') => {
+  const handlePaymentConfirm = async (paymentMethod: 'bank_transfer' | 'cod', transferContent: string, qrUrl: string) => {
     setShowPaymentModal(false)
     setLoading(true)
     setError(null)
@@ -294,14 +294,11 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       console.log('✅ Order created:', orderId)
 
       // 2️⃣ ALWAYS Create payment transfer (for both bank_transfer and cod methods)
-      // Generate RANDOM transfer content (not from orderId)
-      const randomCode = Math.random().toString(36).substring(2, 10).toUpperCase()
-      const transferContent = `DH${randomCode}`
+      // Use transfer_content passed from PaymentModal
       const bankAccount = '0865816910'
       const bankName = 'MB Bank'
-      const qrUrl = `https://api.vietqr.io/build-qr?accountNo=${bankAccount}&accountName=KHANH&amount=${totalWithShipping}&addInfo=${encodeURIComponent(transferContent)}&templateId=compact`
       
-      console.log('📝 Transfer content (random):', transferContent)
+      console.log('📝 Transfer content:', transferContent)
       console.log('🔗 QR URL:', qrUrl)
 
       const transferResponse = await fetch('/api/payment-transfers', {
