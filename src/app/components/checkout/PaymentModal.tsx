@@ -2,31 +2,25 @@
 
 import { useState } from 'react'
 import { X, Copy, Check } from 'lucide-react'
-import { generateVietQRUrl, getBankTransferDetails, formatTransferContent } from '@/services/vietqr'
 
 interface PaymentModalProps {
-  orderId: string
-  orderTotal: number
   onClose: () => void
   onConfirmPayment: (paymentMethod: 'bank_transfer' | 'cod') => void
 }
 
-export function PaymentModal({ orderId, orderTotal, onClose, onConfirmPayment }: PaymentModalProps) {
+export function PaymentModal({ onClose, onConfirmPayment }: PaymentModalProps) {
   const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'cod'>('cod')
   const [copied, setCopied] = useState(false)
 
-  const transferContent = formatTransferContent(orderId)
-  const bankDetails = getBankTransferDetails(transferContent)
-  const qrUrl = generateVietQRUrl(orderTotal, transferContent)
+  // Just show placeholders - actual values will be shown after order is created
+  const bankDetails = {
+    bank: 'MB Bank (Ngân hàng Quân đội)',
+    accountNumber: '0865816910',
+    accountName: 'E-Commerce Store',
+  }
 
   const handleCopyAccount = () => {
     navigator.clipboard.writeText(bankDetails.accountNumber)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleCopyContent = () => {
-    navigator.clipboard.writeText(transferContent)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -81,23 +75,13 @@ export function PaymentModal({ orderId, orderTotal, onClose, onConfirmPayment }:
             </button>
           </div>
 
-          {/* Bank Transfer Details */}
+          {/* Bank Transfer Details - Just show info, not QR */}
           {paymentMethod === 'bank_transfer' && (
             <div className="space-y-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <p className="text-sm font-medium text-blue-900 mb-3">
+                💡 Thông tin chi tiết sẽ được hiển thị sau khi tạo đơn hàng
+              </p>
               <div className="space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Số Tiền</p>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={orderTotal.toLocaleString('vi-VN')}
-                      readOnly
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-white"
-                    />
-                    <span className="text-sm font-medium">VNĐ</span>
-                  </div>
-                </div>
-
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Ngân Hàng</p>
                   <input
@@ -125,37 +109,6 @@ export function PaymentModal({ orderId, orderTotal, onClose, onConfirmPayment }:
                     </button>
                   </div>
                 </div>
-
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Nội Dung Chuyển Khoản</p>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={transferContent}
-                      readOnly
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-white font-mono font-bold"
-                    />
-                    <button
-                      onClick={handleCopyContent}
-                      className="p-2 hover:bg-white rounded-lg border border-border"
-                    >
-                      {copied ? <Check size={18} className="text-green-600" /> : <Copy size={18} />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    💡 Dùng nội dung này để mã đơn hàng của bạn được xác nhận tự động
-                  </p>
-                </div>
-              </div>
-
-              {/* QR Code */}
-              <div className="flex flex-col items-center pt-4 border-t border-blue-200">
-                <p className="text-sm font-medium mb-3">Quét Mã QR</p>
-                <img
-                  src={qrUrl}
-                  alt="VietQR"
-                  className="w-48 h-48 border border-border rounded-lg"
-                />
               </div>
             </div>
           )}
