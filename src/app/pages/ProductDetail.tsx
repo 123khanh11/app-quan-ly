@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Product } from '@/services/supabase'
+import { Product, supabase } from '@/services/supabase'
 import { ShopHeader } from '@/app/components/layout/ShopHeader'
 import { Copy, Check, ChevronLeft } from 'lucide-react'
 
@@ -16,7 +16,7 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
-  // Load product
+  // Load product directly from Supabase
   useEffect(() => {
     const loadProduct = async () => {
       if (!productId) {
@@ -25,10 +25,14 @@ export function ProductDetail({ productId, onClose }: ProductDetailProps) {
       }
       try {
         setLoading(true)
-        const response = await fetch(`/api/products/${productId}`)
-        if (!response.ok) throw new Error('Failed to load product')
-        const data = await response.json()
-        setProduct(data.product)
+        const { data, error: err } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', productId)
+          .single()
+
+        if (err) throw new Error('Product not found')
+        setProduct(data)
       } catch (err) {
         console.error('Error loading product:', err)
         setError(err instanceof Error ? err.message : 'Failed to load product')
