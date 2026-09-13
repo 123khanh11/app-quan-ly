@@ -293,43 +293,44 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       const orderId = orderResult.order.id
       console.log('✅ Order created:', orderId)
 
-      // 2️⃣ Create payment transfer if bank_transfer
-      let paymentTransferId = null
-      if (paymentMethod === 'bank_transfer') {
-        // Generate transfer content and QR code
-        const transferContent = `DH${orderId.substring(0, 8).toUpperCase()}`
-        const bankAccount = '0865816910'
-        const bankName = 'MB Bank'
-        const qrUrl = `https://api.vietqr.io/build-qr?accountNo=${bankAccount}&accountName=KHANH&amount=${totalWithShipping}&addInfo=${encodeURIComponent(transferContent)}&templateId=compact`
+      // 2️⃣ ALWAYS Create payment transfer (for both bank_transfer and cod methods)
+      // Generate transfer content and QR code
+      const transferContent = `DH${orderId.substring(0, 8).toUpperCase()}`
+      const bankAccount = '0865816910'
+      const bankName = 'MB Bank'
+      const qrUrl = `https://api.vietqr.io/build-qr?accountNo=${bankAccount}&accountName=KHANH&amount=${totalWithShipping}&addInfo=${encodeURIComponent(transferContent)}&templateId=compact`
 
-        const transferResponse = await fetch('/api/payment-transfers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            order_id: orderId,
-            user_id: userId || null,
-            transfer_content: transferContent,
-            qr_code_url: qrUrl,
-            bank_account: bankAccount,
-            bank_name: bankName,
-            amount: totalWithShipping,
-            payment_method: paymentMethod,
-          }),
-        })
+      const transferResponse = await fetch('/api/payment-transfers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_id: orderId,
+          user_id: userId || null,
+          transfer_content: transferContent,
+          qr_code_url: qrUrl,
+          bank_account: bankAccount,
+          bank_name: bankName,
+          amount: totalWithShipping,
+          payment_method: paymentMethod,
+        }),
+      })
 
-        const transferResult = await transferResponse.json()
-        if (!transferResponse.ok) throw new Error(transferResult.error || 'Failed to create payment transfer')
+      const transferResult = await transferResponse.json()
+      if (!transferResponse.ok) throw new Error(transferResult.error || 'Failed to create payment transfer')
 
-        paymentTransferId = transferResult.payment_transfer_id
-        console.log('✅ Payment transfer created:', paymentTransferId)
-      }
+      const paymentTransferId = transferResult.payment_transfer_id
+      console.log('✅ Payment transfer created:', paymentTransferId)
 
       setCreatedOrderId(orderId)
       clearCart()
       
-      let message = `✅ Order placed!\nID: ${orderId}\nTotal: ${totalWithShipping.toLocaleString()} VND`
-      if (paymentTransferId) {
-        message += `\n\n💳 Payment Transfer ID:\n${paymentTransferId}`
+      let message = `✅ Đơn hàng được tạo!\nMã Đơn: ${orderId}\nTổng Tiền: ${totalWithShipping.toLocaleString()} VND`
+      message += `\n\n💳 Mã Giao Dịch:\n${paymentTransferId}`
+      
+      if (paymentMethod === 'bank_transfer') {
+        message += `\n\n📱 Quý khách vui lòng chuyển khoản theo thông tin QR`
+      } else if (paymentMethod === 'cod') {
+        message += `\n\n📦 Quý khách sẽ trả tiền khi nhận hàng`
       }
       
       alert(message)
