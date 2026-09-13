@@ -178,7 +178,7 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
         <div className="flex items-center bg-white rounded-md overflow-hidden">
           <input
             type="text"
-            placeholder="Tìm kiếm..."
+            placeholder="🔍 Tìm kiếm sản phẩm..."
             className="flex-1 px-3 py-2 text-sm text-gray-800 outline-none"
           />
           <button className="px-3 py-2 bg-orange-500 text-white font-semibold text-sm hover:bg-orange-600">
@@ -208,7 +208,7 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
               <div className="flex items-center bg-white rounded-md overflow-hidden">
                 <input
                   type="text"
-                  placeholder="Tìm kiếm sản phẩm..."
+                  placeholder="🔍 Tìm kiếm sản phẩm..."
                   className="flex-1 px-3 py-2 text-sm text-gray-800 outline-none"
                 />
                 <button className="px-4 py-2 bg-blue-700 text-white font-semibold text-sm hover:bg-blue-800">
@@ -219,10 +219,10 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
 
             {/* Navigation Bar - Dynamic Categories */}
             <nav className="flex gap-6 text-xs font-semibold whitespace-nowrap">
-              <a href="/" className="hover:opacity-90">Sản phẩm mới</a>
-              <a href="/" className="hover:opacity-90">Hàng Bán Chạy</a>
+              <a href="/" className="hover:opacity-90">🆕 Sản Phẩm Mới</a>
+              <a href="/" className="hover:opacity-90">🔥 Hàng Bán Chạy</a>
               <CategoryMenu onSelectCategory={onSelectCategory || (() => {})} />
-              <a href="/" className="hover:opacity-90">Liên hệ</a>
+              <a href="/" className="hover:opacity-90">📞 Liên Hệ</a>
             </nav>
           </div>
 
@@ -242,7 +242,7 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
             {/* Cart */}
             <button onClick={() => onNavigate?.('cart')} className="relative flex flex-col items-center gap-1 hover:opacity-80 text-xs cursor-pointer">
               <span className="text-xl">🛒</span>
-              <span>Giỏ hàng</span>
+              <span>Giỏ Hàng</span>
               {cartCount > 0 && (
                 <span className="absolute -top-2 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                   {cartCount}
@@ -278,7 +278,7 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
       {/* Orange Banner */}
       <div className="bg-orange-500 text-white py-2 px-2 md:px-4 w-full text-center">
         <div className="text-xs md:text-sm font-semibold">
-          KHÁM PHÁ CÁC GIẢI PHÁP PHỤ TÙNG XE MÁY & NÔNG NGHIỆP CỦA CHÚNG TÔI
+          🏪 KHÁM PHÁ CÁC GIẢI PHÁP PHỤ TÙNG XE MÁY & NÔNG NGHIỆP CỦA CHÚNG TÔI
         </div>
       </div>
     </div>

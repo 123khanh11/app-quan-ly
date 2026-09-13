@@ -26,10 +26,10 @@ export function FavoritesPage() {
       <div className="min-h-screen bg-background w-full flex items-center justify-center">
         <div className="text-center">
           <Heart size={64} className="mx-auto text-muted-foreground mb-4 opacity-50" />
-          <h1 className="text-2xl font-bold mb-2">Danh Sách Yêu Thích Trống</h1>
+          <h1 className="text-2xl font-bold mb-2">❤️ Danh Sách Yêu Thích Trống</h1>
           <p className="text-muted-foreground mb-6">Hãy thêm sản phẩm yêu thích để xem ở đây!</p>
           <a href="/" className="inline-block bg-primary text-primary-foreground px-6 py-2.5 rounded-md font-semibold hover:bg-orange-600 transition-colors">
-            Tiếp Tục Mua Sắm
+            ← Tiếp Tục Mua Sắm
           </a>
         </div>
       </div>
