@@ -424,6 +424,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       {showPaymentModal && (
         <PaymentModal 
+          orderTotal={totalWithShipping}
           onClose={() => setShowPaymentModal(false)} 
           onConfirmPayment={handlePaymentConfirm}
         />
