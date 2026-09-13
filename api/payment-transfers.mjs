@@ -54,16 +54,8 @@ async function handler(req, res) {
       })
     }
 
-    // Only create payment_transfer if payment_method is bank_transfer
-    if (payment_method !== 'bank_transfer') {
-      console.log('ℹ️ Payment method is COD, skipping payment_transfer creation')
-      return res.status(200).json({
-        success: true,
-        message: 'COD payment, no transfer needed'
-      })
-    }
-
-    console.log('💳 Creating payment transfer for order:', order_id)
+    // ALWAYS create payment_transfer for BOTH bank_transfer and cod
+    console.log('💳 Creating payment transfer for order:', order_id, 'payment_method:', payment_method)
 
     // Create payment transfer
     const { data: transferData, error: transferError } = await supabase
