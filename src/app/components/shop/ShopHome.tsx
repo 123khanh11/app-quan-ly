@@ -3,7 +3,7 @@ import { Heart, ShoppingCart, Search } from 'lucide-react'
 import { getProducts, Product } from '@/services/supabase'
 import { useCart } from '@/app/context/CartContext'
 import { useFavorites } from '@/app/context/FavoritesContext'
-import { ProductDetailModal } from './ProductDetailModal'
+import { ProductDetail } from '@/app/pages/ProductDetail'
 
 interface ShopHomeProps {
   selectedCategoryId: string
@@ -72,8 +72,7 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
   }
 
   const handleAddToCart = (product: Product) => {
-    // Open product detail modal instead of adding directly
-    // This forces user to select a variant before adding to cart
+    // Open product detail page for sharing/viewing
     setSelectedProductId(product.id)
   }
 
@@ -193,10 +192,12 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
 
       {/* Product Detail Modal */}
       {selectedProductId && (
-        <ProductDetailModal
-          productId={selectedProductId}
-          onClose={() => setSelectedProductId(null)}
-        />
+        <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+          <ProductDetail
+            productId={selectedProductId}
+            onClose={() => setSelectedProductId(null)}
+          />
+        </div>
       )}
     </div>
   )
