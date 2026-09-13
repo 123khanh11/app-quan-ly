@@ -1,14 +1,42 @@
 import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useNavigate, useParams } from "react-router-dom";
 import { CartProvider, useCart } from "@/app/context/CartContext";
 import { FavoritesProvider } from "@/app/context/FavoritesContext";
 import { ShopHome } from "@/app/components/shop/ShopHome";
 import { CartPage } from "@/app/components/shop/Cart";
 import { OrderTrackingPage } from "@/app/components/shop/OrderTracking";
 import { FavoritesPage } from "@/app/components/shop/FavoritesPage";
+import { ProductDetail } from "@/app/pages/ProductDetail";
 import { LoginModal } from "@/app/components/auth/LoginModal";
 import { ShopHeader } from "@/app/components/layout/ShopHeader";
 import { ShopFooter } from "@/app/components/layout/ShopFooter";
 import { supabase } from "@/services/supabase";
+
+// Product Detail Page Component
+function ProductDetailPage() {
+  const { productId } = useParams<{ productId: string }>();
+  const navigate = useNavigate();
+
+  if (!productId) {
+    return <div>Product not found</div>;
+  }
+
+  return (
+    <>
+      <ShopHeader 
+        onNavigate={(page) => {
+          if (page === 'shop') navigate('/')
+        }}
+        onSelectCategory={() => {}}
+      />
+      <ProductDetail 
+        productId={productId}
+        onClose={() => navigate('/')}
+      />
+      <ShopFooter />
+    </>
+  );
+}
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<"shop" | "cart" | "order" | "favorites">("shop");
@@ -19,6 +47,7 @@ function AppContent() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { cartCount } = useCart();
+  const navigate = useNavigate();
 
   // Check auth on mount
   useEffect(() => {
@@ -83,28 +112,38 @@ function AppContent() {
         {/* SHOP HEADER WITH INFO */}
         <ShopHeader 
           onNavigate={(page) => {
-            if (page === 'shop') setCurrentPage('shop')
-            else if (page === 'cart') setCurrentPage('cart')
-            else if (page === 'favorites') setCurrentPage('favorites')
+            if (page === 'shop') {
+              setCurrentPage('shop')
+              navigate('/')
+            }
+            else if (page === 'cart') {
+              setCurrentPage('cart')
+              navigate('/cart')
+            }
+            else if (page === 'favorites') {
+              setCurrentPage('favorites')
+              navigate('/favorites')
+            }
             else if (page === 'account') setIsLoginOpen(true)
           }}
           onSelectCategory={handleSelectCategory}
         />
 
-
-
         {/* ── PAGE CONTENT ── */}
         <main>
-          {currentPage === "shop" && (
-            <ShopHome
-              selectedCategoryId={selectedCategoryId}
-              selectedCategoryName={selectedCategoryName}
-              onClearCategory={handleClearCategory}
-            />
-          )}
-          {currentPage === "cart" && <CartPage />}
-          {currentPage === "favorites" && <FavoritesPage />}
-          {currentPage === "order" && <OrderTrackingPage orderId={selectedOrderId} />}
+          <Routes>
+            <Route path="/" element={
+              <ShopHome
+                selectedCategoryId={selectedCategoryId}
+                selectedCategoryName={selectedCategoryName}
+                onClearCategory={handleClearCategory}
+              />
+            } />
+            <Route path="/products/:productId" element={<ProductDetailPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
+            <Route path="/order/:orderId" element={<OrderTrackingPage orderId={selectedOrderId} />} />
+          </Routes>
         </main>
 
         {/* SHOP FOOTER */}
@@ -119,10 +158,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <CartProvider>
-      <FavoritesProvider>
-        <AppContent />
-      </FavoritesProvider>
-    </CartProvider>
+    <BrowserRouter>
+      <CartProvider>
+        <FavoritesProvider>
+          <AppContent />
+        </FavoritesProvider>
+      </CartProvider>
+    </BrowserRouter>
   );
 }

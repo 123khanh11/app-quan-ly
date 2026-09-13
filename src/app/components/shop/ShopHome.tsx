@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Heart, ShoppingCart, Search } from 'lucide-react'
 import { getProducts, Product } from '@/services/supabase'
 import { useCart } from '@/app/context/CartContext'
@@ -17,6 +18,7 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
+  const navigate = useNavigate()
   const { addToCart } = useCart()
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites()
 
@@ -72,8 +74,8 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
   }
 
   const handleAddToCart = (product: Product) => {
-    // Open product detail page for sharing/viewing
-    setSelectedProductId(product.id)
+    // Navigate to product detail page with URL
+    navigate(`/products/${product.id}`)
   }
 
   return (
@@ -133,7 +135,7 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
                   className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group"
                 >
                   {/* Product Image */}
-                  <div className="relative overflow-hidden aspect-[3/4] bg-muted cursor-pointer" onClick={() => setSelectedProductId(product.id)}>
+                  <div className="relative overflow-hidden aspect-[3/4] bg-muted cursor-pointer" onClick={() => navigate(`/products/${product.id}`)}>
                     <img
                       src={product.image_url}
                       alt={product.name}
@@ -189,16 +191,6 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
           </>
         )}
       </div>
-
-      {/* Product Detail Modal */}
-      {selectedProductId && (
-        <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
-          <ProductDetail
-            productId={selectedProductId}
-            onClose={() => setSelectedProductId(null)}
-          />
-        </div>
-      )}
     </div>
   )
 }
