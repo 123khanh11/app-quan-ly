@@ -294,11 +294,15 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       console.log('✅ Order created:', orderId)
 
       // 2️⃣ ALWAYS Create payment transfer (for both bank_transfer and cod methods)
-      // Generate transfer content and QR code
-      const transferContent = `DH${orderId.substring(0, 8).toUpperCase()}`
+      // Generate transfer content from order ID (remove dashes, take first 8 chars)
+      const orderIdShort = orderId.replace(/-/g, '').substring(0, 8).toUpperCase()
+      const transferContent = `DH${orderIdShort}`
       const bankAccount = '0865816910'
       const bankName = 'MB Bank'
       const qrUrl = `https://api.vietqr.io/build-qr?accountNo=${bankAccount}&accountName=KHANH&amount=${totalWithShipping}&addInfo=${encodeURIComponent(transferContent)}&templateId=compact`
+      
+      console.log('📝 Transfer content:', transferContent)
+      console.log('🔗 QR URL:', qrUrl)
 
       const transferResponse = await fetch('/api/payment-transfers', {
         method: 'POST',
