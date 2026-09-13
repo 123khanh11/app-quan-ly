@@ -372,14 +372,14 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         </div>
 
         <div>
-          <p className="text-sm font-semibold mb-2">📋 Thông Tin Khách Hàng</p>
+          <p className="text-sm font-semibold mb-2">Thông Tin Khách Hàng</p>
           <input type="text" placeholder="Họ và tên (bắt buộc)" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required />
           <input type="email" placeholder="Email (tùy chọn)" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" />
           <input type="tel" placeholder="Số điện thoại (bắt buộc)" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm" required />
         </div>
 
         <div>
-          <p className="text-sm font-semibold mb-2">📍 Địa Chỉ Giao Hàng</p>
+          <p className="text-sm font-semibold mb-2">Địa Chỉ Giao Hàng</p>
           <select value={formData.province} onChange={(e) => setFormData({ ...formData, province: e.target.value, district: '', districtId: 0, ward: '', wardCode: '' })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required>
             <option value="">Chọn Tỉnh/Thành Phố</option>
             {provinces.map((p) => <option key={p.province_id} value={p.province_id}>{p.province_name}</option>)}
@@ -401,17 +401,17 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         <textarea placeholder="Ghi chú (tùy chọn)" value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none" rows={2} />
 
         <div className="bg-muted p-3 rounded-md space-y-2">
-          <div className="flex justify-between text-sm"><span>💰 Tạm Tính:</span><span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}đ</span></div>
-          <div className="flex justify-between text-sm border-t border-border pt-2"><span>🚚 Vận Chuyển:</span><span className="font-semibold">{loadingShipping ? '⏳ Đang tính...' : `${shippingFee.toLocaleString('vi-VN')}đ`}</span></div>
-          <div className="flex justify-between text-base font-bold border-t border-border pt-2"><span>📊 Tổng Cộng:</span><span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span></div>
+          <div className="flex justify-between text-sm"><span>Tạm Tính:</span><span className="font-semibold">{selectedTotal.toLocaleString('vi-VN')}đ</span></div>
+          <div className="flex justify-between text-sm border-t border-border pt-2"><span>Vận Chuyển:</span><span className="font-semibold">{loadingShipping ? 'Đang tính...' : `${shippingFee.toLocaleString('vi-VN')}đ`}</span></div>
+          <div className="flex justify-between text-base font-bold border-t border-border pt-2"><span>Tổng Cộng:</span><span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span></div>
         </div>
 
         <div className="flex gap-2">
           <button type="submit" disabled={loading} className="flex-1 bg-primary text-white font-bold py-2 rounded-md hover:bg-orange-600 disabled:opacity-50">
-            {loading ? '⏳ Đang xử lý...' : `✅ Thanh Toán (${selectedItems.size})`}
+            {loading ? 'Đang xử lý...' : `Thanh Toán (${selectedItems.size})`}
           </button>
           <button type="button" onClick={onClose} className="flex-1 border border-border font-semibold py-2 rounded-md hover:bg-muted">
-            ❌ Hủy
+            Hủy
           </button>
         </div>
 
