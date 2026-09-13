@@ -325,11 +325,13 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       clearCart()
       
       let message = `✅ Đơn hàng được tạo!\nMã Đơn: ${orderId}\nTổng Tiền: ${totalWithShipping.toLocaleString()} VND`
-      message += `\n\n💳 Mã Giao Dịch:\n${paymentTransferId}`
       
+      // Only show QR + transaction ID for bank_transfer
       if (paymentMethod === 'bank_transfer') {
+        message += `\n\n💳 Mã Giao Dịch:\n${paymentTransferId}`
         message += `\n\n📱 Quý khách vui lòng chuyển khoản theo thông tin QR`
       } else if (paymentMethod === 'cod') {
+        // For COD, just show order confirmation (payment_transfer still saved to DB)
         message += `\n\n📦 Quý khách sẽ trả tiền khi nhận hàng`
       }
       
