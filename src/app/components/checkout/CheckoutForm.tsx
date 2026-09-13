@@ -47,6 +47,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     new Set(cartItems.map((item) => `${item.product_id}-${item.color}-${item.size}`))
   )
   const [formData, setFormData] = useState({
+    customerName: '',
     email: '',
     phone: '',
     province: '',
@@ -230,6 +231,17 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     setError(null)
 
     try {
+      // Validate required fields
+      if (!formData.customerName.trim()) {
+        throw new Error('Vui lòng nhập họ và tên')
+      }
+      if (!formData.phone.trim()) {
+        throw new Error('Vui lòng nhập số điện thoại')
+      }
+      if (!formData.detailedAddress.trim()) {
+        throw new Error('Vui lòng nhập địa chỉ chi tiết')
+      }
+
       const fullAddress = `${formData.detailedAddress}, ${formData.ward}, ${formData.district}, ${formData.province}`
       const orderItems = cartItems
         .filter((item) => selectedItems.has(`${item.product_id}-${item.color}-${item.size}`))
@@ -266,7 +278,8 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
             payment_status: paymentMethod === 'bank_transfer' ? 'pending' : 'cod',
             order_status: 'pending',
             shipping_address: fullAddress,
-            customer_email: formData.email,
+            customer_name: formData.customerName,
+            customer_email: formData.email || null,
             customer_phone: formData.phone,
             note: formData.note,
           },
@@ -359,9 +372,10 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         </div>
 
         <div>
-          <p className="text-sm font-semibold mb-2">Contact</p>
-          <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required />
-          <input type="tel" placeholder="Phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm" required />
+          <p className="text-sm font-semibold mb-2">Customer Information</p>
+          <input type="text" placeholder="Full Name (required)" value={formData.customerName} onChange={(e) => setFormData({ ...formData, customerName: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" required />
+          <input type="email" placeholder="Email (optional)" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm mb-2" />
+          <input type="tel" placeholder="Phone (required)" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm" required />
         </div>
 
         <div>
