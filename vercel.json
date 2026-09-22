@@ -1,19 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "outputDirectory": "dist",
-  "routes": [
-    {
-      "src": "/assets/(.*)",
-      "destination": "/assets/$1"
-    },
-    {
-      "src": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "src": "^/.*",
-      "destination": "/index.html"
-    }
-  ]
+  "env": {
+    "GHN_FROM_DISTRICT_ID": "1976",
+    "GHN_FROM_WARD_CODE": "141005"
+  }
 }
