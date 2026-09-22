@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Product, supabase } from '@/services/supabase'
+import { Product, supabase, getProductsByCategory } from '@/services/supabase'
 import { Copy, Check, ChevronLeft, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
+import { useNavigate } from 'react-router-dom'
 
 interface ProductVariant {
   id: string
@@ -13,6 +14,7 @@ interface ProductVariant {
   size?: string
   stock: number
   price: number
+  image_url?: string
 }
 
 interface ProductDetailPageProps {
@@ -28,7 +30,9 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
   const [copied, setCopied] = useState(false)
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null)
   const [quantity, setQuantity] = useState(1)
+  const [similarProducts, setSimilarProducts] = useState<Product[]>([])
   const { addToCart } = useCart()
+  const navigate = useNavigate()
 
   // Load product and variants
   useEffect(() => {
@@ -47,7 +51,10 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
           .eq('id', productId)
           .single()
 
-        if (productError) throw new Error('Product not found')
+        if (productError) {
+          console.error('Product error:', productError)
+          throw new Error('Product not found')
+        }
         setProduct(productData)
 
         // Load variants
@@ -55,12 +62,38 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
           .from('product_variants')
           .select('*')
           .eq('product_id', productId)
+          .order('created_at', { ascending: true })
 
-        if (!variantsError && variantsData) {
+        if (variantsError) {
+          console.warn('Variants error:', variantsError)
+        }
+
+        if (variantsData && variantsData.length > 0) {
           setVariants(variantsData)
-          if (variantsData.length > 0) {
-            setSelectedVariant(variantsData[0])
+          setSelectedVariant(variantsData[0])
+        } else {
+          // No variants - create a fallback variant from product
+          if (productData) {
+            const fallbackVariant: ProductVariant = {
+              id: productData.id,
+              product_id: productData.id,
+              sku: productData.sku || 'DEFAULT',
+              color: undefined,
+              size: undefined,
+              stock: 100,
+              price: productData.price || 0,
+            }
+            setVariants([fallbackVariant])
+            setSelectedVariant(fallbackVariant)
           }
+        }
+
+        // Load similar products (same category)
+        if (productData?.category_id) {
+          console.log('Loading similar products for category:', productData.category_id)
+          const similar = await getProductsByCategory(productData.category_id, productId)
+          console.log('Similar products loaded:', similar)
+          setSimilarProducts(similar)
         }
       } catch (err) {
         console.error('Error loading product:', err)
@@ -89,7 +122,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
       product_id: product.id,
       variant_id: selectedVariant.id,
       name: product.name,
-      price: selectedVariant.price,
+      price: selectedVariant.price || 0,
       quantity,
       image_url: product.image_url,
       color: selectedVariant.color || '',
@@ -123,12 +156,12 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
           </div>
         ) : error ? (
           <div className="text-center py-12">
-            <p className="text-red-500">❌ {error}</p>
+            <p className="text-red-500 mb-4">❌ {error}</p>
             <button
               onClick={onBack}
-              className="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-orange-600"
+              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-orange-600"
             >
-              Về trang chủ
+              ← Quay lại trang chủ
             </button>
           </div>
         ) : product ? (
@@ -137,7 +170,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
               {/* Product Image */}
               <div className="aspect-square bg-muted rounded-lg overflow-hidden flex items-center justify-center">
                 <img
-                  src={product.image_url}
+                  src={selectedVariant?.image_url || product.image_url}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -176,7 +209,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                             <button
                               key={color}
                               onClick={() => {
-                                const variant = variants.find(v => v.color === color)
+                                const variant = variants.find(v => v.color === color && v.size === selectedVariant?.size)
                                 if (variant) setSelectedVariant(variant)
                               }}
                               className={`px-4 py-2 rounded-lg border-2 transition-colors ${
@@ -201,7 +234,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                             <button
                               key={size}
                               onClick={() => {
-                                const variant = variants.find(v => v.size === size)
+                                const variant = variants.find(v => v.size === size && v.color === selectedVariant?.color)
                                 if (variant) setSelectedVariant(variant)
                               }}
                               className={`px-4 py-2 rounded-lg border-2 transition-colors ${
@@ -244,37 +277,6 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                   </div>
                 </div>
 
-                {/* Share Link */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                  <p className="font-semibold text-blue-900">
-                    📱 Link Chia Sẻ Quảng Cáo
-                  </p>
-                  <div className="flex gap-2 flex-col md:flex-row">
-                    <input
-                      type="text"
-                      value={`${window.location.origin}/products/${productId}`}
-                      readOnly
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-white font-mono text-sm"
-                    />
-                    <button
-                      onClick={handleCopyLink}
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-orange-600 flex items-center justify-center gap-2 whitespace-nowrap transition-colors"
-                    >
-                      {copied ? (
-                        <>
-                          <Check size={18} />
-                          Đã copy
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={18} />
-                          Copy Link
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
                 {/* Add to Cart Button */}
                 <button
                   onClick={handleAddToCart}
@@ -285,6 +287,85 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                 </button>
               </div>
             </div>
+
+            {/* Product Description */}
+            {product?.description && (
+              <div className="border-t border-border pt-6 mt-6">
+                <h2 className="text-2xl font-bold text-foreground mb-4">Mô Tả Sản Phẩm</h2>
+                <div className="prose prose-sm max-w-none">
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {product.description}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Similar Products */}
+            {similarProducts.length > 0 && (
+              <div className="border-t border-border pt-6 mt-6">
+                <h2 className="text-2xl font-bold text-foreground mb-4">Sản Phẩm Tương Tự</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
+                  {similarProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
+                      onClick={() => {
+                        console.log('Navigating to product:', product.id)
+                        navigate(`/products/${product.id}`)
+                      }}
+                    >
+                      {/* Product Image */}
+                      <div className="relative overflow-hidden aspect-[3/4] bg-muted">
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+
+                      {/* Product Info */}
+                      <div className="p-3">
+                        <h3 className="font-semibold text-foreground line-clamp-2 mb-2 text-sm leading-snug">
+                          {product.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                          {product.description}
+                        </p>
+
+                        {/* Price */}
+                        <div className="mb-3">
+                          <p className="text-lg font-bold text-primary">
+                            {(product.price || 0).toLocaleString('vi-VN')}đ
+                          </p>
+                        </div>
+
+                        {/* Add to Cart Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            addToCart({
+                              product_id: product.id,
+                              variant_id: product.id,
+                              name: product.name,
+                              price: product.price,
+                              quantity: 1,
+                              image_url: product.image_url,
+                              color: '',
+                              size: '',
+                              sku: product.sku || '',
+                            })
+                            alert(`✅ Đã thêm "${product.name}" vào giỏ hàng`)
+                          }}
+                          className="w-full bg-primary text-primary-foreground font-semibold py-2 rounded-md hover:bg-orange-600 transition-colors text-xs"
+                        >
+                          Thêm Vào Giỏ
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : null}
       </div>

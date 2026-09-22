@@ -1,16 +1,23 @@
-import axios from 'axios'
+/**
+ * GHN Shipping Fee Calculator API
+ * POST /api/shipping-fee
+ * 
+ * Tính toán phí vận chuyển GHN dựa trên:
+ * - Quận/huyện và phường/xã giao hàng
+ * - Cân nặng và kích thước bưu kiện
+ * - Loại dịch vụ
+ */
 
-const GHN_API_URL = 'https://online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee'
-const GHN_TOKEN = process.env.GHN_TOKEN || process.env.VITE_GHN_TOKEN || '653bfc7b-8381-11f1-a65e-a68e06d4dd1e'
-const GHN_SHOP_ID = process.env.GHN_SHOP_ID || process.env.VITE_GHN_SHOP_ID || '6557702'
-const FROM_DISTRICT_ID = process.env.GHN_FROM_DISTRICT_ID || '1455'
-const FROM_WARD_CODE = process.env.GHN_FROM_WARD_CODE || '21617'
+const GHN_API_URL = 'https://online-gateway.ghn.vn/shiip/public-api/v2'
+const GHN_TOKEN = process.env.GHN_TOKEN || '653bfc7b-8381-11f1-a65e-a68e06d4dd1e'
+const GHN_SHOP_ID = process.env.GHN_SHOP_ID || '5430969'
+const GHN_FROM_DISTRICT_ID = process.env.GHN_FROM_DISTRICT_ID || '1455'
+const GHN_FROM_WARD_CODE = process.env.GHN_FROM_WARD_CODE || '21617'
 
 async function handler(req, res) {
-  console.log("📥 Shipping fee request received at:", new Date().toISOString())
-  
+  // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
   if (req.method === 'OPTIONS') {
@@ -18,114 +25,153 @@ async function handler(req, res) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      success: false, 
-      error: 'Method not allowed. Use POST.' 
-    })
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
 
   try {
     const {
-      service_id,
-      service_type_id,
       to_district_id,
       to_ward_code,
-      weight,
-      length,
-      width,
-      height,
-      insurance_value,
-      coupon
+      weight_gram = 1000,
+      length_cm = 20,
+      width_cm = 20,
+      height_cm = 20,
+      cod_value = 0,
+      insurance_value = 0,
+      service_type_id,
     } = req.body
-
-    console.log("📦 Calculating shipping fee with params:", {
-      service_id,
-      service_type_id,
-      to_district_id,
-      to_ward_code,
-      weight,
-      length,
-      width,
-      height
-    })
 
     // Validate required fields
     if (!to_district_id || !to_ward_code) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'to_district_id and to_ward_code are required' 
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required: to_district_id, to_ward_code'
       })
     }
 
-    if (!weight || !length || !width || !height) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'weight, length, width, height are required' 
-      })
-    }
+    console.log('📦 Calculating GHN shipping fee...')
+    console.log('To:', to_district_id, to_ward_code)
+    console.log('Weight:', weight_gram, 'gram')
 
-    // Build GHN API request
-    const ghnPayload = {
-      service_type_id: service_type_id || 2, // Default to Standard (2)
-      from_district_id: parseInt(FROM_DISTRICT_ID),
-      from_ward_code: FROM_WARD_CODE,
-      to_district_id: parseInt(to_district_id),
-      to_ward_code: to_ward_code,
-      height: parseInt(height),
-      length: parseInt(length),
-      width: parseInt(width),
-      weight: parseInt(weight),
-      insurance_value: insurance_value ? parseInt(insurance_value) : 0,
-      coupon: coupon || null,
+    // Determine service type by weight if not specified
+    let finalServiceType = service_type_id || 2
+    if (weight_gram >= 20000) {
+      finalServiceType = 5 // 20kg or more
+    } else if (!service_type_id) {
+      finalServiceType = 2 // under 20kg
     }
-
-    // If service_id is provided, use it
-    if (service_id) {
-      ghnPayload.service_id = parseInt(service_id)
-      delete ghnPayload.service_type_id
-    }
-
-    console.log("📤 Calling GHN API with payload:", JSON.stringify(ghnPayload, null, 2))
 
     // Call GHN API
-    const response = await axios.post(GHN_API_URL, ghnPayload, {
-      headers: {
-        'Token': GHN_TOKEN,
-        'ShopId': GHN_SHOP_ID,
-        'Content-Type': 'application/json',
-      },
-      timeout: 10000,
-    })
-
-    console.log("✅ GHN API response:", JSON.stringify(response.data, null, 2))
-
-    if (response.data.code !== 200) {
-      console.error("❌ GHN API error:", response.data.message)
-      throw new Error(`GHN API error: ${response.data.message}`)
+    const payload = {
+      from_district_id: parseInt(GHN_FROM_DISTRICT_ID),
+      from_ward_code: GHN_FROM_WARD_CODE,
+      to_district_id,
+      to_ward_code,
+      weight: Math.max(weight_gram, 200),
+      length: Math.max(length_cm, 10),
+      width: Math.max(width_cm, 10),
+      height: Math.max(height_cm, 10),
+      service_type_id: finalServiceType,
+      cod_value: Math.max(cod_value, 0),
+      insurance_value: Math.max(insurance_value, 0),
     }
 
-    const { total, service_fee, insurance_fee, pick_station_fee, coupon_value, r2s_fee } = response.data.data
+    console.log('📤 Calling GHN API with:', payload)
 
+    const response = await fetch(`${GHN_API_URL}/shipping-order/fee`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Token': GHN_TOKEN,
+        'ShopId': GHN_SHOP_ID
+      },
+      body: JSON.stringify(payload)
+    })
+
+    const data = await response.json()
+
+    if (data.code !== 200) {
+      console.error('❌ GHN API error:', data)
+      
+      // Fallback: return estimated fee
+      const estimatedFee = Math.max(
+        20000,
+        20000 + Math.max(0, Math.ceil(weight_gram / 1000) - 1) * 5000
+      )
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          total: estimatedFee,
+          service_fee: estimatedFee,
+          insurance_fee: 0,
+          cod_fee: 0,
+          pick_station_fee: 0,
+          pick_remote_areas_fee: 0,
+          deliver_remote_areas_fee: 0,
+          coupon_value: 0,
+          r2s_fee: 0,
+          return_again: 0,
+          document_return: 0,
+          double_check: 0,
+          cod_failed_fee: 0,
+          change_to_address_fee: 0,
+          change_return_address_fee: 0,
+          return: 0,
+        },
+        warning: data.message || 'GHN API error, using estimation'
+      })
+    }
+
+    console.log('✅ Shipping fee calculated:', data.data.total)
+
+    // Return full fee breakdown
     return res.status(200).json({
       success: true,
       data: {
-        total,
-        service_fee,
-        insurance_fee,
-        pick_station_fee,
-        coupon_value,
-        r2s_fee,
+        total: data.data.total || 0,
+        service_fee: data.data.service_fee || 0,
+        insurance_fee: data.data.insurance_fee || 0,
+        cod_fee: data.data.cod_fee || 0,
+        pick_station_fee: data.data.pick_station_fee || 0,
+        pick_remote_areas_fee: data.data.pick_remote_areas_fee || 0,
+        deliver_remote_areas_fee: data.data.deliver_remote_areas_fee || 0,
+        coupon_value: data.data.coupon_value || 0,
+        r2s_fee: data.data.r2s_fee || 0,
+        return_again: data.data.return_again || 0,
+        document_return: data.data.document_return || 0,
+        double_check: data.data.double_check || 0,
+        cod_failed_fee: data.data.cod_failed_fee || 0,
+        change_to_address_fee: data.data.change_to_address_fee || 0,
+        change_return_address_fee: data.data.change_return_address_fee || 0,
+        return: data.data.return || 0,
       }
     })
-
-  } catch (error) {
-    console.error('❌ API Error:', error.message)
-    console.error('❌ Error response:', error.response?.data)
+  } catch (err) {
+    console.error('❌ Shipping fee error:', err)
     
-    return res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to calculate shipping fee',
-      data: null
+    // Fallback: return default fee
+    return res.status(200).json({
+      success: true,
+      data: {
+        total: 50000,
+        service_fee: 50000,
+        insurance_fee: 0,
+        cod_fee: 0,
+        pick_station_fee: 0,
+        pick_remote_areas_fee: 0,
+        deliver_remote_areas_fee: 0,
+        coupon_value: 0,
+        r2s_fee: 0,
+        return_again: 0,
+        document_return: 0,
+        double_check: 0,
+        cod_failed_fee: 0,
+        change_to_address_fee: 0,
+        change_return_address_fee: 0,
+        return: 0,
+      },
+      error: err instanceof Error ? err.message : 'Unknown error'
     })
   }
 }

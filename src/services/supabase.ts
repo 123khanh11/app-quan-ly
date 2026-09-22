@@ -200,13 +200,20 @@ export async function getAllOrders(): Promise<Array<Order & { items: OrderItem[]
 
 // Product Functions
 export async function getProducts(): Promise<Product[]> {
+  console.log('Fetching products...')
   const { data, error } = await supabase
     .from('products')
     .select('*')
-    .eq('active', true)
     .order('created_at', { ascending: false })
 
-  if (error) throw new Error(error.message)
+  console.log('Products query result:', { data, error })
+  
+  if (error) {
+    console.error('Products error:', error)
+    throw new Error(error.message)
+  }
+  
+  console.log('Returning products:', data?.length || 0)
   return data || []
 }
 
@@ -316,4 +323,23 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       variant_image: v.image_url,
     })),
   }
+}
+
+// Get products by category
+export async function getProductsByCategory(categoryId: string, excludeProductId?: string): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('category_id', categoryId)
+    .order('created_at', { ascending: false })
+    .limit(8)
+
+  if (error) throw new Error(error.message)
+  
+  // Filter out current product if provided
+  if (excludeProductId) {
+    return (data || []).filter(p => p.id !== excludeProductId)
+  }
+  
+  return data || []
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useCart } from '@/app/context/CartContext'
 import { supabase } from '@/services/supabase'
+import { useShippingFee, formatShippingFee, getShippingFeeBreakdown } from '@/hooks/useShippingFee'
 import { PaymentModal } from './PaymentModal'
 
 const DEFAULT_SHIPPING_FEE = 50000
@@ -30,6 +31,8 @@ interface CheckoutFormProps {
 
 export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: CheckoutFormProps) {
   const { cartItems, clearCart } = useCart()
+  const { loading: shippingLoading, data: shippingData, error: shippingError, warning: shippingWarning, calculateFee } = useShippingFee()
+  
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [provinces, setProvinces] = useState<Province[]>([])
@@ -39,7 +42,6 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   const [loadingDistricts, setLoadingDistricts] = useState(false)
   const [loadingWards, setLoadingWards] = useState(false)
   const [shippingFee, setShippingFee] = useState<number>(DEFAULT_SHIPPING_FEE)
-  const [loadingShipping, setLoadingShipping] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null)
@@ -159,40 +161,32 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         setShippingFee(DEFAULT_SHIPPING_FEE)
         return
       }
-      setLoadingShipping(true)
-      try {
-        let totalWeight = 0
-        cartItems.forEach((item) => {
-          totalWeight += (item.weight || 300) * item.quantity
-        })
-        const response = await fetch('/api/shipping-fee', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            service_type_id: 2,
-            to_district_id: formData.districtId,
-            to_ward_code: formData.wardCode,
-            weight: Math.max(totalWeight, 200),
-            length: 15,
-            width: 15,
-            height: 15,
-            insurance_value: selectedTotal,
-          }),
-        })
-        if (!response.ok) throw new Error('Failed to calculate shipping')
-        const result = await response.json() as any
-        if (result.success && result.data) {
-          setShippingFee(result.data.total || DEFAULT_SHIPPING_FEE)
+
+      let totalWeight = 0
+      cartItems.forEach((item) => {
+        if (selectedItems.has(`${item.product_id}-${item.color}-${item.size}`)) {
+          totalWeight += (item.weight || 500) * item.quantity
         }
-      } catch (err) {
-        console.warn('Failed to calculate shipping:', err)
+      })
+
+      const result = await calculateFee({
+        to_district_id: formData.districtId,
+        to_ward_code: formData.wardCode,
+        weight: Math.max(totalWeight, 200),
+        length: 20,
+        width: 20,
+        height: 20,
+      })
+
+      if (result.success && result.data) {
+        setShippingFee(result.data.total || DEFAULT_SHIPPING_FEE)
+      } else {
         setShippingFee(DEFAULT_SHIPPING_FEE)
-      } finally {
-        setLoadingShipping(false)
       }
     }
+
     calculateShipping()
-  }, [formData.districtId, formData.wardCode, cartItems])
+  }, [formData.districtId, formData.wardCode, cartItems, selectedItems, calculateFee])
 
   const handleToggleItem = (itemKey: string) => {
     const updated = new Set(selectedItems)
@@ -218,10 +212,10 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
   const totalWithShipping = selectedTotal + (selectedItems.size > 0 ? shippingFee : 0)
 
+  const shippingBreakdown = shippingData ? getShippingFeeBreakdown(shippingData) : []
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log('✅ Form submitted!')
-    // Hiển thị payment modal ngay, validation bên trong modal
     setShowPaymentModal(true)
   }
 
@@ -231,7 +225,6 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     setError(null)
 
     try {
-      // Validate required fields
       if (!formData.customerName.trim()) {
         throw new Error('Vui lòng nhập họ và tên')
       }
@@ -265,7 +258,6 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         throw new Error('No valid products selected')
       }
 
-      // 1️⃣ Create order
       const orderResponse = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -291,15 +283,9 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       if (!orderResponse.ok) throw new Error(orderResult.error || 'Failed to create order')
 
       const orderId = orderResult.order.id
-      console.log('✅ Order created:', orderId)
 
-      // 2️⃣ ALWAYS Create payment transfer (for both bank_transfer and cod methods)
-      // Use transfer_content passed from PaymentModal
       const bankAccount = '0865816910'
       const bankName = 'MB Bank'
-      
-      console.log('📝 Transfer content:', transferContent)
-      console.log('🔗 QR URL:', qrUrl)
 
       const transferResponse = await fetch('/api/payment-transfers', {
         method: 'POST',
@@ -320,19 +306,16 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       if (!transferResponse.ok) throw new Error(transferResult.error || 'Failed to create payment transfer')
 
       const paymentTransferId = transferResult.payment_transfer_id
-      console.log('✅ Payment transfer created:', paymentTransferId)
 
       setCreatedOrderId(orderId)
       clearCart()
       
       let message = `✅ Đơn hàng được tạo!\nMã Đơn: ${orderId}\nTổng Tiền: ${(totalWithShipping || 0).toLocaleString()} VND`
       
-      // Only show QR + transaction ID for bank_transfer
       if (paymentMethod === 'bank_transfer') {
         message += `\n\n💳 Mã Giao Dịch:\n${paymentTransferId}`
         message += `\n\n📱 Quý khách vui lòng chuyển khoản theo thông tin QR`
       } else if (paymentMethod === 'cod') {
-        // For COD, just show order confirmation (payment_transfer still saved to DB)
         message += `\n\n📦 Quý khách sẽ trả tiền khi nhận hàng`
       }
       
@@ -350,9 +333,9 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       <form onSubmit={handleSubmit} className="space-y-4 border-t border-border pt-4">
         <div className="bg-muted p-3 rounded-md">
           <div className="flex items-center justify-between mb-3">
-            <p className="font-semibold">Products ({selectedItems.size}/{cartItems.length})</p>
+            <p className="font-semibold">Sản Phẩm ({selectedItems.size}/{cartItems.length})</p>
             <button type="button" onClick={handleSelectAll} className="text-sm text-primary hover:underline">
-              {selectedItems.size === cartItems.length ? 'Deselect' : 'Select All'}
+              {selectedItems.size === cartItems.length ? 'Bỏ chọn' : 'Chọn tất cả'}
             </button>
           </div>
           <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -404,14 +387,51 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
         <textarea placeholder="Ghi chú (tùy chọn)" value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md text-sm resize-none" rows={2} />
 
+        {/* Chi tiết phí vận chuyển */}
+        {shippingBreakdown.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 p-3 rounded-md space-y-1">
+            <p className="text-xs font-semibold text-blue-900">Chi tiết phí vận chuyển:</p>
+            {shippingBreakdown.map((item) => (
+              <div key={item.label} className="flex justify-between text-xs text-blue-700">
+                <span>{item.label}</span>
+                <span className="font-semibold">{formatShippingFee(item.amount)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {shippingWarning && (
+          <div className="bg-yellow-50 border border-yellow-200 p-2 rounded-md text-xs text-yellow-700">
+            ⚠️ {shippingWarning}
+          </div>
+        )}
+
+        {shippingError && (
+          <div className="bg-red-50 border border-red-200 p-2 rounded-md text-xs text-red-700">
+            ❌ {shippingError}
+          </div>
+        )}
+
+        {/* Tóm tắt đơn hàng */}
         <div className="bg-muted p-3 rounded-md space-y-2">
-          <div className="flex justify-between text-sm"><span>Tạm Tính:</span><span className="font-semibold">{(selectedTotal || 0).toLocaleString('vi-VN')}đ</span></div>
-          <div className="flex justify-between text-sm border-t border-border pt-2"><span>Vận Chuyển:</span><span className="font-semibold">{loadingShipping ? 'Đang tính...' : `${shippingFee.toLocaleString('vi-VN')}đ`}</span></div>
-          <div className="flex justify-between text-base font-bold border-t border-border pt-2"><span>Tổng Cộng:</span><span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span></div>
+          <div className="flex justify-between text-sm">
+            <span>Tạm Tính:</span>
+            <span className="font-semibold">{(selectedTotal || 0).toLocaleString('vi-VN')}đ</span>
+          </div>
+          <div className="flex justify-between text-sm border-t border-border pt-2">
+            <span>Vận Chuyển:</span>
+            <span className="font-semibold">
+              {shippingLoading ? '⏳ Đang tính...' : `${shippingFee.toLocaleString('vi-VN')}đ`}
+            </span>
+          </div>
+          <div className="flex justify-between text-base font-bold border-t border-border pt-2">
+            <span>Tổng Cộng:</span>
+            <span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span>
+          </div>
         </div>
 
         <div className="flex gap-2">
-          <button type="submit" disabled={loading} className="flex-1 bg-primary text-white font-bold py-2 rounded-md hover:bg-orange-600 disabled:opacity-50">
+          <button type="submit" disabled={loading || shippingLoading} className="flex-1 bg-primary text-white font-bold py-2 rounded-md hover:bg-orange-600 disabled:opacity-50">
             {loading ? 'Đang xử lý...' : `Thanh Toán (${selectedItems.size})`}
           </button>
           <button type="button" onClick={onClose} className="flex-1 border border-border font-semibold py-2 rounded-md hover:bg-muted">

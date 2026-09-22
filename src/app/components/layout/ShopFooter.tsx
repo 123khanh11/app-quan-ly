@@ -43,7 +43,7 @@ export function ShopFooter() {
 
   return (
     <footer className="bg-gray-900 text-gray-300 py-6 md:py-8 px-2 md:px-4 mt-8 md:mt-12 w-full">
-      <div className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+      <div className="w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         {/* About */}
         <div>
           <h3 className="text-white font-bold text-lg mb-3">{shopInfo.shop_name}</h3>
@@ -80,17 +80,6 @@ export function ShopFooter() {
               </p>
             )}
           </div>
-        </div>
-
-        {/* Quick Links */}
-        <div>
-          <h3 className="text-white font-bold text-lg mb-3">Truy cập nhanh</h3>
-          <ul className="space-y-2 text-sm">
-            <li><a href="/" className="hover:text-white">Trang chủ</a></li>
-            <li><a href="/products" className="hover:text-white">Sản phẩm</a></li>
-            <li><a href="/categories" className="hover:text-white">Danh mục</a></li>
-            <li><a href="/contact" className="hover:text-white">Liên hệ</a></li>
-          </ul>
         </div>
       </div>
 

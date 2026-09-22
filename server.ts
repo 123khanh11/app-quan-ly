@@ -18,7 +18,12 @@ const app = express()
 const PORT = process.env.PORT || 5000
 
 // Middleware
-app.use(cors())
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Token', 'ShopId']
+}))
 app.use(express.json())
 
 // GHN Configuration
@@ -208,80 +213,208 @@ app.get('/api/ghn/service', async (req: Request, res: Response) => {
   }
 })
 
-// POST /api/ghn/fee - Tính phí vận chuyển
+/**
+ * POST /api/ghn/fee - Tính phí vận chuyển (Advanced)
+ * 
+ * Tính toán phí vận chuyển từ shop → khách hàng
+ * 
+ * Request body:
+ * {
+ *   to_district_id: number (required)
+ *   to_ward_code: string (required)
+ *   weight?: number (default: 1000)
+ *   length?: number (default: 20)
+ *   width?: number (default: 20)
+ *   height?: number (default: 20)
+ *   service_id?: number (optional, auto-detect if not provided)
+ *   insurance_value?: number (default: 0)
+ *   cod_value?: number (default: 0)
+ *   coupon?: string (optional)
+ * }
+ * 
+ * Được sử dụng bởi: Giỏ hàng → Thanh toán
+ */
 app.post('/api/ghn/fee', async (req: Request, res: Response) => {
   try {
     const {
-      service_id,
-      from_district_id,
-      from_ward_code,
       to_district_id,
       to_ward_code,
-      weight,
-      length = 0,
-      width = 0,
-      height = 0,
+      weight = 1000,
+      length = 20,
+      width = 20,
+      height = 20,
+      service_id,
       insurance_value = 0,
+      cod_value = 0,
       coupon = null,
     } = req.body
 
-    console.log('📥 GHN Fee Request:', {
-      service_id,
-      from: `${from_district_id}/${from_ward_code}`,
-      to: `${to_district_id}/${to_ward_code}`,
-      weight,
-      dimensions: `${length}x${width}x${height}`,
-    })
+    // Shop location (fixed)
+    const FROM_DISTRICT_ID = process.env.GHN_FROM_DISTRICT_ID || 1455
+    const FROM_WARD_CODE = process.env.GHN_FROM_WARD_CODE || '21617'
 
-    if (!service_id || !from_district_id || !to_district_id || !to_ward_code || !weight) {
+    // Validate required params
+    if (!to_district_id || !to_ward_code) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required parameters',
+        error: 'Missing required parameters: to_district_id, to_ward_code',
+        code: 'INVALID_PARAMS',
       })
     }
 
-    const payloadForGHN = {
-      service_id, // Correct parameter name per GHN spec
-      from_district_id,
-      from_ward_code,
-      to_district_id,
-      to_ward_code,
-      weight,
-      length,
-      width,
-      height,
-      insurance_value,
-      coupon,
-    }
-
-    console.log('📤 Calling GHN API with:', payloadForGHN)
-
-    const response = await fetch(`${GHN_API_URL}/shipping-order/fee`, {
-      method: 'POST',
-      headers: getGHNHeaders(),
-      body: JSON.stringify(payloadForGHN),
+    console.log('📦 Shipping Fee Calculation Request:', {
+      from_district: FROM_DISTRICT_ID,
+      to_district: to_district_id,
+      to_ward: to_ward_code,
+      weight: weight,
+      dimensions: `${length}x${width}x${height}cm`,
     })
 
-    const data = await response.json()
+    // Step 1: Get available services if service_id not provided
+    let finalServiceId = service_id
 
-    console.log('📥 GHN API Response:', data)
+    if (!finalServiceId) {
+      try {
+        console.log('📡 Step 1: Fetching available services...')
 
-    if (data.code === 200) {
-      res.json({
+        const servicesResponse = await fetch(
+          `${GHN_API_URL}/shipping-order/available-services`,
+          {
+            method: 'POST',
+            headers: getGHNHeaders(),
+            body: JSON.stringify({
+              from_district_id: FROM_DISTRICT_ID,
+              to_district_id: to_district_id,
+            }),
+          }
+        )
+
+        const servicesData = await servicesResponse.json()
+
+        if (
+          servicesData.code === 200 &&
+          servicesData.data &&
+          Array.isArray(servicesData.data) &&
+          servicesData.data.length > 0
+        ) {
+          finalServiceId = servicesData.data[0].service_id
+          console.log(
+            `✅ Using available service: ${finalServiceId} (${servicesData.data[0].short_name})`
+          )
+        } else {
+          finalServiceId = 2
+          console.warn('⚠️ No available services found, using default service 2')
+        }
+      } catch (err) {
+        console.error('❌ Error fetching services:', err)
+        finalServiceId = 2
+        console.warn('⚠️ Error getting services, using default service 2')
+      }
+    }
+
+    // Step 2: Calculate shipping fee
+    console.log(`📡 Step 2: Calculating fee with service ${finalServiceId}...`)
+
+    const feePayload = {
+      service_id: finalServiceId,
+      from_district_id: FROM_DISTRICT_ID,
+      from_ward_code: FROM_WARD_CODE,
+      to_district_id: to_district_id,
+      to_ward_code: to_ward_code,
+      weight: Math.max(Math.ceil(weight), 200),
+      length: Math.max(Math.ceil(length), 10),
+      width: Math.max(Math.ceil(width), 10),
+      height: Math.max(Math.ceil(height), 10),
+      insurance_value: Math.max(insurance_value, 0),
+      cod_value: Math.max(cod_value, 0),
+      coupon: coupon,
+    }
+
+    const feeResponse = await fetch(`${GHN_API_URL}/shipping-order/fee`, {
+      method: 'POST',
+      headers: getGHNHeaders(),
+      body: JSON.stringify(feePayload),
+    })
+
+    const feeData = await feeResponse.json()
+
+    if (feeData.code === 200 && feeData.data) {
+      console.log(`✅ Shipping fee calculated: ${feeData.data.total} VND`)
+      return res.json({
         success: true,
-        data: data.data,
+        data: {
+          total: feeData.data.total,
+          service_fee: feeData.data.service_fee,
+          insurance_fee: feeData.data.insurance_fee,
+          cod_fee: feeData.data.cod_fee,
+          pick_station_fee: feeData.data.pick_station_fee,
+          pick_remote_areas_fee: feeData.data.pick_remote_areas_fee,
+          deliver_remote_areas_fee: feeData.data.deliver_remote_areas_fee,
+          coupon_value: feeData.data.coupon_value,
+          r2s_fee: feeData.data.r2s_fee,
+          return_again: feeData.data.return_again,
+          document_return: feeData.data.document_return,
+          double_check: feeData.data.double_check,
+          cod_failed_fee: feeData.data.cod_failed_fee,
+          change_to_address_fee: feeData.data.change_to_address_fee,
+          change_return_address_fee: feeData.data.change_return_address_fee,
+          return: feeData.data.return,
+        },
       })
     } else {
-      console.error('❌ GHN API Error:', data.message)
-      res.status(400).json({
-        success: false,
-        error: data.message,
+      console.warn('❌ GHN API error:', feeData.message)
+
+      // Fallback: return estimated fee
+      const estimatedFee = Math.max(20000, 20000 + Math.max(0, Math.ceil(weight / 1000) - 1) * 5000)
+
+      return res.json({
+        success: true,
+        data: {
+          total: estimatedFee,
+          service_fee: estimatedFee,
+          insurance_fee: 0,
+          cod_fee: 0,
+          pick_station_fee: 0,
+          pick_remote_areas_fee: 0,
+          deliver_remote_areas_fee: 0,
+          coupon_value: 0,
+          r2s_fee: 0,
+          return_again: 0,
+          document_return: 0,
+          double_check: 0,
+          cod_failed_fee: 0,
+          change_to_address_fee: 0,
+          change_return_address_fee: 0,
+          return: 0,
+        },
+        warning: feeData.message || 'GHN API error, using estimation',
       })
     }
   } catch (error) {
-    console.error('Calculate Fee Error:', error)
-    res.status(500).json({
-      success: false,
+    console.error('❌ Shipping fee calculation error:', error)
+
+    // Fallback: return default estimated fee
+    const estimatedFee = 50000
+    return res.json({
+      success: true,
+      data: {
+        total: estimatedFee,
+        service_fee: estimatedFee,
+        insurance_fee: 0,
+        cod_fee: 0,
+        pick_station_fee: 0,
+        pick_remote_areas_fee: 0,
+        deliver_remote_areas_fee: 0,
+        coupon_value: 0,
+        r2s_fee: 0,
+        return_again: 0,
+        document_return: 0,
+        double_check: 0,
+        cod_failed_fee: 0,
+        change_to_address_fee: 0,
+        change_return_address_fee: 0,
+        return: 0,
+      },
       error: error instanceof Error ? error.message : 'Unknown error',
     })
   }

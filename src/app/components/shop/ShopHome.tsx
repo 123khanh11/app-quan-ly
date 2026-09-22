@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Heart, ShoppingCart, Search } from 'lucide-react'
+import { Heart, ShoppingCart } from 'lucide-react'
 import { getProducts, Product } from '@/services/supabase'
 import { useCart } from '@/app/context/CartContext'
 import { useFavorites } from '@/app/context/FavoritesContext'
@@ -28,6 +28,8 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
       try {
         setLoading(true)
         const data = await getProducts()
+        console.log('Loaded products:', data)
+        console.log('Total products:', data.length)
         setProducts(data)
         setFilteredProducts(data)
       } catch (error) {
@@ -78,6 +80,9 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
     navigate(`/products/${product.id}`)
   }
 
+  // If no products are filtered, show all products
+  const displayProducts = filteredProducts.length > 0 ? filteredProducts : products
+
   return (
     <div className="min-h-screen bg-background w-full">
       <div className="w-full max-w-6xl mx-auto px-2 md:px-4 py-8">
@@ -98,16 +103,6 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
               </button>
             </div>
           )}
-          <div className="flex items-center border border-border rounded-lg overflow-hidden bg-card">
-            <Search size={20} className="ml-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm sản phẩm..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-4 py-3 outline-none bg-transparent text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
         </div>
 
         {/* Products Grid */}
@@ -115,7 +110,7 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
           <div className="text-center py-12">
             <p className="text-muted-foreground">⏳ Đang tải sản phẩm...</p>
           </div>
-        ) : filteredProducts.length === 0 ? (
+        ) : displayProducts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">Không tìm thấy sản phẩm</p>
           </div>
@@ -124,12 +119,12 @@ export function ShopHome({ selectedCategoryId, selectedCategoryName, onClearCate
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 <span className="w-1 h-8 bg-primary rounded-full" />
-                Sản Phẩm ({filteredProducts.length})
+                Sản Phẩm ({displayProducts.length})
               </h2>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
-              {filteredProducts.map((product) => (
+              {displayProducts.map((product) => (
                 <div
                   key={product.id}
                   className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group"

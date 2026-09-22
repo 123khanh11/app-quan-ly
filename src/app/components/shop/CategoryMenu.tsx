@@ -64,9 +64,9 @@ export function CategoryMenu({ onSelectCategory }: CategoryMenuProps) {
             )}
           </button>
 
-          {/* Dropdown - Subcategories - FULL WIDTH */}
-          {parent.children && parent.children.length > 0 && (
-            <div className="absolute left-0 top-full mt-2 bg-blue-900 border border-blue-700 rounded-md shadow-lg z-50 min-w-max opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+          {/* Dropdown - Subcategories */}
+          {(expandedId === parent.id || (typeof window !== 'undefined' && window.innerWidth >= 768)) && parent.children && parent.children.length > 0 && (
+            <div className="absolute left-0 top-full mt-2 bg-blue-900 border border-blue-700 rounded-md shadow-lg z-50 min-w-max opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto md:opacity-100 md:pointer-events-auto">
               {parent.children.map(child => (
                 <button
                   key={child.id}
