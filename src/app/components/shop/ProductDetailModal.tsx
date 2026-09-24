@@ -13,6 +13,7 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedVariant, setSelectedVariant] = useState<typeof product extends ProductDetail ? ProductDetail['variants'][0] | null : null>(null)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [liked, setLiked] = useState(false)
   const { addToCart } = useCart()
@@ -102,11 +103,41 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
             {/* Main Image */}
             <div className="bg-muted rounded-lg overflow-hidden aspect-square">
               <img
-                src={selectedVariant?.variant_image || product.product_image}
+                src={
+                  product.product_images && product.product_images.length > 0
+                    ? product.product_images[selectedImageIndex]?.image_url
+                    : selectedVariant?.variant_image || product.product_image
+                }
                 alt={product.product_name}
                 className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
               />
             </div>
+
+            {/* Product Images Gallery */}
+            {product.product_images && product.product_images.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-foreground">Ảnh sản phẩm ({product.product_images.length})</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {product.product_images.map((img, idx) => (
+                    <button
+                      key={img.id}
+                      onClick={() => setSelectedImageIndex(idx)}
+                      className={`aspect-square rounded-lg border-2 overflow-hidden transition-all ${
+                        selectedImageIndex === idx
+                          ? 'border-primary ring-2 ring-primary ring-offset-1'
+                          : 'border-border hover:border-primary'
+                      }`}
+                    >
+                      <img
+                        src={img.image_url}
+                        alt={`Product ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Variant Images Gallery */}
             {product.variants.length > 1 && (

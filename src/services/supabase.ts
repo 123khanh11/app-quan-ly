@@ -251,6 +251,12 @@ export async function getProductImages(productId: string): Promise<any[]> {
 }
 
 // Get product details with variants
+export interface ProductImage {
+  id: string
+  image_url: string
+  is_main: boolean
+}
+
 export interface ProductDetail {
   product_id: string
   product_name: string
@@ -260,6 +266,7 @@ export interface ProductDetail {
   category_id: string
   category_name: string
   product_image: string
+  product_images: ProductImage[]
   variants: Array<{
     variant_id: string
     color: string
@@ -293,6 +300,11 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
         sku,
         barcode,
         image_url
+      ),
+      product_images(
+        id,
+        image_url,
+        is_main
       )
     `)
     .eq('id', productId)
@@ -312,6 +324,11 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
     category_id: data.category_id,
     category_name: data.categories?.name || '',
     product_image: data.image_url,
+    product_images: (data.product_images || []).map((img: any) => ({
+      id: img.id,
+      image_url: img.image_url,
+      is_main: img.is_main || false,
+    })),
     variants: (data.product_variants || []).map((v: any) => ({
       variant_id: v.id,
       color: v.color,
