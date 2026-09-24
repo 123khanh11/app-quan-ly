@@ -99,34 +99,50 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Images */}
           <div className="flex flex-col gap-4">
+            {/* Main Image */}
             <div className="bg-muted rounded-lg overflow-hidden aspect-square">
               <img
                 src={selectedVariant?.variant_image || product.product_image}
                 alt={product.product_name}
-                className="w-full h-full object-cover hover:scale-110 transition-transform"
+                className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
               />
             </div>
 
-            {/* Variant Images */}
+            {/* Variant Images Gallery */}
             {product.variants.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {product.variants.map((variant) => (
-                  <button
-                    key={variant.variant_id}
-                    onClick={() => setSelectedVariant(variant)}
-                    className={`w-16 h-16 rounded-lg border-2 flex-shrink-0 overflow-hidden transition-all ${
-                      selectedVariant?.variant_id === variant.variant_id
-                        ? 'border-primary'
-                        : 'border-border hover:border-primary'
-                    }`}
-                  >
-                    <img
-                      src={variant.variant_image || product.product_image}
-                      alt={`${variant.color} - ${variant.size}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-foreground">Các biến thể</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {product.variants.map((variant) => (
+                    <button
+                      key={variant.variant_id}
+                      onClick={() => setSelectedVariant(variant)}
+                      className={`aspect-square rounded-lg border-2 overflow-hidden transition-all ${
+                        selectedVariant?.variant_id === variant.variant_id
+                          ? 'border-primary ring-2 ring-primary ring-offset-1'
+                          : 'border-border hover:border-primary'
+                      }`}
+                      title={`${variant.color || ''} ${variant.size || ''}`}
+                    >
+                      <img
+                        src={variant.variant_image || product.product_image}
+                        alt={`${variant.color} - ${variant.size}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Variant Details */}
+                {product.variants.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground p-3 bg-muted rounded-lg">
+                    {product.variants.slice(0, 4).map((variant) => (
+                      <div key={variant.variant_id} className="truncate">
+                        <span className="font-medium">{variant.color || 'N/A'}</span> • <span>{variant.size || 'N/A'}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
