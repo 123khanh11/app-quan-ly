@@ -177,11 +177,12 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
 
               {/* Product Info */}
               <div className="space-y-6">
+                {/* Title & Description */}
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground mb-2">
+                  <h1 className="text-3xl font-bold text-foreground mb-3">
                     {product.product_name}
                   </h1>
-                  <p className="text-muted-foreground text-lg">
+                  <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
                     {product.description}
                   </p>
                 </div>
@@ -292,18 +293,6 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                 </button>
               </div>
             </div>
-
-            {/* Product Description */}
-            {product?.description && (
-              <div className="border-t border-border pt-6 mt-6">
-                <h2 className="text-2xl font-bold text-foreground mb-4">Mô Tả Sản Phẩm</h2>
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {product.description}
-                  </p>
-                </div>
-              </div>
-            )}
 
             {/* Similar Products */}
             {similarProducts.length > 0 && (
