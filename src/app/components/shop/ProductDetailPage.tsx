@@ -117,15 +117,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Back Button */}
         <button
-          onClick={() => {
-            // Try to go back in history first
-            if (window.history.length > 1) {
-              window.history.back()
-            } else {
-              // Fallback to home page
-              navigate('/')
-            }
-          }}
+          onClick={() => navigate('/')}
           className="flex items-center gap-2 text-primary hover:text-orange-600 mb-6 transition-colors"
         >
           <ChevronLeft size={20} />
@@ -140,16 +132,10 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
           <div className="text-center py-12">
             <p className="text-red-500 mb-4">❌ {error}</p>
             <button
-              onClick={() => {
-                if (window.history.length > 1) {
-                  window.history.back()
-                } else {
-                  navigate('/')
-                }
-              }}
+              onClick={() => navigate('/')}
               className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-orange-600"
             >
-              ← Quay lại
+              ← Quay lại trang chủ
             </button>
           </div>
         ) : product ? (
