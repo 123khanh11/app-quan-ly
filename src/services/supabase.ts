@@ -257,6 +257,13 @@ export interface ProductImage {
   is_main: boolean
 }
 
+export interface VariantImage {
+  id: string
+  image_url: string
+  is_main: boolean
+  display_order: number
+}
+
 export interface ProductDetail {
   product_id: string
   product_name: string
@@ -276,6 +283,7 @@ export interface ProductDetail {
     sku: string
     barcode: string
     variant_image: string
+    images: VariantImage[]
   }>
 }
 
@@ -299,7 +307,13 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
         price,
         sku,
         barcode,
-        image_url
+        image_url,
+        variant_images(
+          id,
+          image_url,
+          is_main,
+          display_order
+        )
       ),
       product_images(
         id,
@@ -338,6 +352,14 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       sku: v.sku,
       barcode: v.barcode,
       variant_image: v.image_url,
+      images: (v.variant_images || [])
+        .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
+        .map((img: any) => ({
+          id: img.id,
+          image_url: img.image_url,
+          is_main: img.is_main || false,
+          display_order: img.display_order || 0,
+        })),
     })),
   }
 }

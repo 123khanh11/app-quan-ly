@@ -18,6 +18,13 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
   const [liked, setLiked] = useState(false)
   const { addToCart } = useCart()
 
+  // Get current display images - either variant images or product images
+  const displayImages = selectedVariant?.images && selectedVariant.images.length > 0 
+    ? selectedVariant.images 
+    : product?.product_images && product.product_images.length > 0 
+      ? product.product_images 
+      : []
+
   useEffect(() => {
     const loadProduct = async () => {
       try {
@@ -104,8 +111,8 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
             <div className="bg-muted rounded-lg overflow-hidden aspect-square">
               <img
                 src={
-                  product.product_images && product.product_images.length > 0
-                    ? product.product_images[selectedImageIndex]?.image_url
+                  displayImages && displayImages.length > 0
+                    ? displayImages[selectedImageIndex]?.image_url
                     : selectedVariant?.variant_image || product.product_image
                 }
                 alt={product.product_name}
@@ -113,12 +120,16 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
               />
             </div>
 
-            {/* Product Images Gallery */}
-            {product.product_images && product.product_images.length > 0 && (
+            {/* Images Gallery */}
+            {displayImages && displayImages.length > 0 && (
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-foreground">Ảnh sản phẩm ({product.product_images.length})</p>
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-medium text-foreground">
+                    {selectedVariant ? `Ảnh ${selectedVariant.color} - ${selectedVariant.size}` : 'Ảnh sản phẩm'} ({displayImages.length})
+                  </p>
+                </div>
                 <div className="grid grid-cols-4 gap-2">
-                  {product.product_images.map((img, idx) => (
+                  {displayImages.map((img, idx) => (
                     <button
                       key={img.id}
                       onClick={() => setSelectedImageIndex(idx)}
@@ -130,7 +141,7 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
                     >
                       <img
                         src={img.image_url}
-                        alt={`Product ${idx + 1}`}
+                        alt={`Image ${idx + 1}`}
                         className="w-full h-full object-cover"
                       />
                     </button>
@@ -147,8 +158,11 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
                   {product.variants.map((variant) => (
                     <button
                       key={variant.variant_id}
-                      onClick={() => setSelectedVariant(variant)}
-                      className={`aspect-square rounded-lg border-2 overflow-hidden transition-all ${
+                      onClick={() => {
+                        setSelectedVariant(variant)
+                        setSelectedImageIndex(0)
+                      }}
+                      className={`aspect-square rounded-lg border-2 overflow-hidden transition-all relative ${
                         selectedVariant?.variant_id === variant.variant_id
                           ? 'border-primary ring-2 ring-primary ring-offset-1'
                           : 'border-border hover:border-primary'
@@ -160,6 +174,11 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
                         alt={`${variant.color} - ${variant.size}`}
                         className="w-full h-full object-cover"
                       />
+                      {variant.images && variant.images.length > 1 && (
+                        <div className="absolute top-1 right-1 bg-primary text-white text-xs px-1.5 py-0.5 rounded-full">
+                          {variant.images.length}
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
