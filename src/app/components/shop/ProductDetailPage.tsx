@@ -57,9 +57,11 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
           throw new Error('Product not found')
         }
         
+        console.log('Loaded product:', productData) // DEBUG
         setProduct(productData)
         if (productData.variants.length > 0) {
           setSelectedVariant(productData.variants[0])
+          console.log('Selected variant:', productData.variants[0]) // DEBUG
         }
 
         // Load similar products (same category)
@@ -182,9 +184,11 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                   <h1 className="text-3xl font-bold text-foreground mb-3">
                     {product.product_name}
                   </h1>
-                  <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {selectedVariant?.description || product.description}
-                  </p>
+                  {(selectedVariant?.description || product.description) && (
+                    <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {selectedVariant?.description || product.description}
+                    </p>
+                  )}
                 </div>
 
                 {/* Price */}
