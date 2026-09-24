@@ -2,5 +2,23 @@
   "env": {
     "GHN_FROM_DISTRICT_ID": "1976",
     "GHN_FROM_WARD_CODE": "141005"
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/products/:id",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cart",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/favorites",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/order/:id",
+      "destination": "/index.html"
+    }
+  ]
 }
