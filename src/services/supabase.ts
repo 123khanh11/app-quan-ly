@@ -330,7 +330,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       for (const variant of data.product_variants || []) {
         const { data: varImgData } = await supabase
           .from('variant_images')
-          .select('id, image_url, is_main, display_order')
+          .select('id, image_url, display_order')
           .eq('variant_id', variant.id)
           .order('display_order', { ascending: true })
 
@@ -340,7 +340,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
             varImgData.map((img: any) => ({
               id: img.id,
               image_url: img.image_url,
-              is_main: img.is_main || false,
+              is_main: varImgData.indexOf(img) === 0, // First image is main
               display_order: img.display_order || 0,
             }))
           )
