@@ -295,6 +295,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       id,
       name,
       description,
+      discount_description,
       sale_price,
       original_price,
       category_id,
@@ -323,11 +324,14 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
   
   if (!data) return null
 
+  // Use discount_description if available, otherwise use description
+  const displayDescription = data.discount_description || data.description
+
   // Transform data
   return {
     product_id: data.id,
     product_name: data.name,
-    description: data.description,
+    description: displayDescription,
     product_price: data.sale_price,
     original_price: data.original_price,
     category_id: data.category_id,
@@ -347,7 +351,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       sku: v.sku,
       barcode: v.barcode,
       variant_image: v.image_url,
-      description: data.description, // Use product description for all variants
+      description: displayDescription, // Use product discount_description for all variants
       images: [], // Temporarily empty until variant_images table is created in Supabase
     })),
   }
