@@ -310,13 +310,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
         price,
         sku,
         barcode,
-        image_url,
-        variant_images(
-          id,
-          image_url,
-          is_main,
-          display_order
-        )
+        image_url
       ),
       product_images(
         id,
@@ -334,38 +328,26 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
   // Use discount_description if available, otherwise use description
   const displayDescription = data.discount_description || data.description
 
-  // Collect all variant images from all variants
-  const allVariantImagesSet = new Map<string, any>()
-  const variants = (data.product_variants || []).map((v: any) => {
-    const variantImages = (v.variant_images || [])
-      .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
-      .map((img: any) => ({
-        id: img.id,
-        image_url: img.image_url,
-        is_main: img.is_main || false,
-        display_order: img.display_order || 0,
-      }))
-    
-    // Add to all variant images collection
-    variantImages.forEach((img: any) => {
-      allVariantImagesSet.set(img.id, img)
-    })
-
-    return {
-      variant_id: v.id,
-      color: v.color,
-      size: v.size,
-      stock: v.stock,
-      variant_price: v.price,
-      sku: v.sku,
-      barcode: v.barcode,
-      variant_image: v.image_url,
-      description: displayDescription,
-      images: variantImages,
-    }
-  })
-
   // Transform data
+  const variants = (data.product_variants || []).map((v: any) => ({
+    variant_id: v.id,
+    color: v.color,
+    size: v.size,
+    stock: v.stock,
+    variant_price: v.price,
+    sku: v.sku,
+    barcode: v.barcode,
+    variant_image: v.image_url,
+    description: displayDescription,
+    images: [], // Will be populated from variant_images table after it's created
+  }))
+
+  const productImages = (data.product_images || []).map((img: any) => ({
+    id: img.id,
+    image_url: img.image_url,
+    is_main: img.is_main || false,
+  }))
+
   return {
     product_id: data.id,
     product_name: data.name,
@@ -375,12 +357,8 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
     category_id: data.category_id,
     category_name: data.categories?.name || '',
     product_image: data.image_url,
-    product_images: (data.product_images || []).map((img: any) => ({
-      id: img.id,
-      image_url: img.image_url,
-      is_main: img.is_main || false,
-    })),
-    allVariantImages: Array.from(allVariantImagesSet.values()),
+    product_images: productImages,
+    allVariantImages: productImages, // Use product images for now as fallback
     variants,
   }
 }
