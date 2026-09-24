@@ -283,6 +283,7 @@ export interface ProductDetail {
     sku: string
     barcode: string
     variant_image: string
+    description: string
     images: VariantImage[]
   }>
 }
@@ -346,6 +347,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       sku: v.sku,
       barcode: v.barcode,
       variant_image: v.image_url,
+      description: data.description, // Use product description for all variants
       images: [], // Temporarily empty until variant_images table is created in Supabase
     })),
   }

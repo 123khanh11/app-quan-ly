@@ -183,7 +183,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                     {product.product_name}
                   </h1>
                   <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {product.description}
+                    {selectedVariant?.description || product.description}
                   </p>
                 </div>
 

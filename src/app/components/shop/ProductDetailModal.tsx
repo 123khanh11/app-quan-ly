@@ -253,6 +253,15 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
               <div>
                 <h3 className="font-semibold text-foreground mb-2">Lựa chọn</h3>
 
+                {/* Product Description from Variant */}
+                {selectedVariant.description && (
+                  <div className="mb-3 p-3 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {selectedVariant.description}
+                    </p>
+                  </div>
+                )}
+
                 {/* Color */}
                 {selectedVariant.color && (
                   <div className="mb-3">
