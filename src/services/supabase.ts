@@ -311,7 +311,6 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
         variant_images(
           id,
           image_url,
-          is_main,
           display_order
         )
       ),
@@ -357,7 +356,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
         .map((img: any) => ({
           id: img.id,
           image_url: img.image_url,
-          is_main: img.is_main || false,
+          is_main: false,
           display_order: img.display_order || 0,
         })),
     })),
