@@ -307,12 +307,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
         price,
         sku,
         barcode,
-        image_url,
-        variant_images(
-          id,
-          image_url,
-          display_order
-        )
+        image_url
       ),
       product_images(
         id,
@@ -351,14 +346,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       sku: v.sku,
       barcode: v.barcode,
       variant_image: v.image_url,
-      images: (v.variant_images || [])
-        .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
-        .map((img: any) => ({
-          id: img.id,
-          image_url: img.image_url,
-          is_main: false,
-          display_order: img.display_order || 0,
-        })),
+      images: [], // Temporarily empty until variant_images table is created in Supabase
     })),
   }
 }
