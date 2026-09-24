@@ -290,76 +290,148 @@ export interface ProductDetail {
 }
 
 export async function getProductDetails(productId: string): Promise<ProductDetail | null> {
-  const { data, error } = await supabase
-    .from('products')
-    .select(`
-      id,
-      name,
-      description,
-      discount_description,
-      sale_price,
-      original_price,
-      category_id,
-      image_url,
-      categories(name),
-      product_variants(
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
         id,
-        color,
-        size,
-        stock,
-        price,
-        sku,
-        barcode,
-        image_url
-      ),
-      product_images(
-        id,
+        name,
+        description,
+        discount_description,
+        sale_price,
+        original_price,
+        category_id,
         image_url,
-        is_main
-      )
-    `)
-    .eq('id', productId)
-    .single()
+        categories(name),
+        product_variants(
+          id,
+          color,
+          size,
+          stock,
+          price,
+          sku,
+          barcode,
+          image_url
+        )
+      `)
+      .eq('id', productId)
+      .single()
 
-  if (error) throw new Error(error.message)
-  
-  if (!data) return null
+    if (error) throw new Error(error.message)
+    
+    if (!data) return null
 
-  // Use discount_description if available, otherwise use description
-  const displayDescription = data.discount_description || data.description
+    // Use discount_description if available, otherwise use description
+    const displayDescription = data.discount_description || data.description
 
-  // Transform data
-  const variants = (data.product_variants || []).map((v: any) => ({
-    variant_id: v.id,
-    color: v.color,
-    size: v.size,
-    stock: v.stock,
-    variant_price: v.price,
-    sku: v.sku,
-    barcode: v.barcode,
-    variant_image: v.image_url,
-    description: displayDescription,
-    images: [], // Will be populated from variant_images table after it's created
-  }))
+    // Fetch product images separately (with error handling in case table doesn't exist)
+    let productImages: ProductImage[] = []
+    try {
+      const { data: imgData } = await supabase
+        .from('product_images')
+        .select('id, image_url, is_main')
+        .eq('product_id', productId)
+        .order('sort_order', { ascending: true })
 
-  const productImages = (data.product_images || []).map((img: any) => ({
-    id: img.id,
-    image_url: img.image_url,
-    is_main: img.is_main || false,
-  }))
+      if (imgData) {
+        productImages = imgData.map((img: any) => ({
+          id: img.id,
+          image_url: img.image_url,
+          is_main: img.is_main || false,
+        }))
+      }
+    } catch (imgError) {
+      console.warn('product_images table not available, skipping product images')
+    }
 
-  return {
-    product_id: data.id,
-    product_name: data.name,
-    description: displayDescription,
-    product_price: data.sale_price,
-    original_price: data.original_price,
-    category_id: data.category_id,
-    category_name: data.categories?.name || '',
-    product_image: data.image_url,
-    product_images: productImages,
-    allVariantImages: productImages, // Use product images for now as fallback
-    variants,
+    // Fetch variant images separately
+    let variantImagesMap = new Map<string, VariantImage[]>()
+    try {
+      for (const variant of data.product_variants || []) {
+        const { data: varImgData } = await supabase
+          .from('variant_images')
+          .select('id, image_url, is_main, display_order')
+          .eq('variant_id', variant.id)
+          .order('display_order', { ascending: true })
+
+        if (varImgData && varImgData.length > 0) {
+          variantImagesMap.set(
+            variant.id,
+            varImgData.map((img: any) => ({
+              id: img.id,
+              image_url: img.image_url,
+              is_main: img.is_main || false,
+              display_order: img.display_order || 0,
+            }))
+          )
+        }
+      }
+    } catch (varImgError) {
+      console.warn('variant_images table not available, will use variant single images')
+    }
+
+    // Collect all unique images from all variants as fallback
+    const allVariantImagesSet = new Map<string, ProductImage>()
+    
+    // Transform variants
+    const variants = (data.product_variants || []).map((v: any) => {
+      const variantImages = variantImagesMap.get(v.id) || []
+      
+      // If variant has no images from variant_images table, create one from variant_image field
+      if (variantImages.length === 0 && v.image_url) {
+        variantImages.push({
+          id: v.id,
+          image_url: v.image_url,
+          is_main: true,
+          display_order: 0,
+        })
+      }
+
+      // Add all variant images to the allVariantImages collection
+      variantImages.forEach((img: VariantImage) => {
+        allVariantImagesSet.set(img.id, {
+          id: img.id,
+          image_url: img.image_url,
+          is_main: img.is_main || false,
+        })
+      })
+
+      return {
+        variant_id: v.id,
+        color: v.color,
+        size: v.size,
+        stock: v.stock,
+        variant_price: v.price,
+        sku: v.sku,
+        barcode: v.barcode,
+        variant_image: v.image_url,
+        description: displayDescription,
+        images: variantImages,
+      }
+    })
+
+    // Build allVariantImages: combine product images and variant images
+    const allImages = [...productImages, ...Array.from(allVariantImagesSet.values())]
+    const uniqueImages = Array.from(
+      new Map(allImages.map(img => [img.id, img])).values()
+    )
+
+    return {
+      product_id: data.id,
+      product_name: data.name,
+      description: displayDescription,
+      product_price: data.sale_price,
+      original_price: data.original_price,
+      category_id: data.category_id,
+      category_name: data.categories?.name || '',
+      product_image: data.image_url,
+      product_images: productImages,
+      allVariantImages: uniqueImages.length > 0 ? uniqueImages : productImages,
+      variants,
+    }
+  } catch (err) {
+    console.error('Error in getProductDetails:', err)
+    throw err
   }
 }
 
