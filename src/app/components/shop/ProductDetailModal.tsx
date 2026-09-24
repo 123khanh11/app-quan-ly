@@ -18,10 +18,15 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
   const [liked, setLiked] = useState(false)
   const { addToCart } = useCart()
 
-  // Get current display images - either variant images or product images
+  // Get current display images:
+  // - If variant selected: show only that variant's images
+  // - If no variant selected: show all variant images (from all variants combined)
+  // - Fallback to product images
   const displayImages = selectedVariant?.images && selectedVariant.images.length > 0 
     ? selectedVariant.images 
-    : product?.product_images && product.product_images.length > 0 
+    : product?.allVariantImages && product.allVariantImages.length > 0
+      ? product.allVariantImages
+      : product?.product_images && product.product_images.length > 0 
       ? product.product_images 
       : []
 

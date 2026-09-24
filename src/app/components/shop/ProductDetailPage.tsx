@@ -34,10 +34,15 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
   const { addToCart } = useCart()
   const navigate = useNavigate()
 
-  // Get current display images - either variant images or product images
+  // Get current display images:
+  // - If variant selected: show only that variant's images
+  // - If no variant selected: show all variant images (from all variants combined)
+  // - Fallback to product images
   const displayImages = selectedVariant?.images && selectedVariant.images.length > 0 
     ? selectedVariant.images 
-    : product?.product_images && product.product_images.length > 0 
+    : product?.allVariantImages && product.allVariantImages.length > 0
+      ? product.allVariantImages
+      : product?.product_images && product.product_images.length > 0 
       ? product.product_images 
       : []
 
@@ -112,7 +117,15 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Back Button */}
         <button
-          onClick={onBack}
+          onClick={() => {
+            // Try to go back in history first
+            if (window.history.length > 1) {
+              window.history.back()
+            } else {
+              // Fallback to home page
+              navigate('/')
+            }
+          }}
           className="flex items-center gap-2 text-primary hover:text-orange-600 mb-6 transition-colors"
         >
           <ChevronLeft size={20} />
@@ -127,10 +140,16 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
           <div className="text-center py-12">
             <p className="text-red-500 mb-4">❌ {error}</p>
             <button
-              onClick={onBack}
+              onClick={() => {
+                if (window.history.length > 1) {
+                  window.history.back()
+                } else {
+                  navigate('/')
+                }
+              }}
               className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-orange-600"
             >
-              ← Quay lại trang chủ
+              ← Quay lại
             </button>
           </div>
         ) : product ? (
@@ -213,7 +232,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                             <button
                               key={color}
                               onClick={() => {
-                                const variant = product.variants.find(v => v.color === color && v.size === selectedVariant?.size)
+                                const variant = product.variants.find(v => v.color === color && (v.size === selectedVariant?.size || !selectedVariant?.size))
                                 if (variant) {
                                   setSelectedVariant(variant)
                                   setSelectedImageIndex(0)
@@ -241,7 +260,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                             <button
                               key={size}
                               onClick={() => {
-                                const variant = product.variants.find(v => v.size === size && v.color === selectedVariant?.color)
+                                const variant = product.variants.find(v => v.size === size && (v.color === selectedVariant?.color || !selectedVariant?.color))
                                 if (variant) {
                                   setSelectedVariant(variant)
                                   setSelectedImageIndex(0)

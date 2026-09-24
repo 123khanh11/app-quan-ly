@@ -274,6 +274,7 @@ export interface ProductDetail {
   category_name: string
   product_image: string
   product_images: ProductImage[]
+  allVariantImages: ProductImage[] // All images from all variants combined
   variants: Array<{
     variant_id: string
     color: string
@@ -309,7 +310,13 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
         price,
         sku,
         barcode,
-        image_url
+        image_url,
+        variant_images(
+          id,
+          image_url,
+          is_main,
+          display_order
+        )
       ),
       product_images(
         id,
@@ -327,6 +334,37 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
   // Use discount_description if available, otherwise use description
   const displayDescription = data.discount_description || data.description
 
+  // Collect all variant images from all variants
+  const allVariantImagesSet = new Map<string, any>()
+  const variants = (data.product_variants || []).map((v: any) => {
+    const variantImages = (v.variant_images || [])
+      .sort((a: any, b: any) => (a.display_order || 0) - (b.display_order || 0))
+      .map((img: any) => ({
+        id: img.id,
+        image_url: img.image_url,
+        is_main: img.is_main || false,
+        display_order: img.display_order || 0,
+      }))
+    
+    // Add to all variant images collection
+    variantImages.forEach((img: any) => {
+      allVariantImagesSet.set(img.id, img)
+    })
+
+    return {
+      variant_id: v.id,
+      color: v.color,
+      size: v.size,
+      stock: v.stock,
+      variant_price: v.price,
+      sku: v.sku,
+      barcode: v.barcode,
+      variant_image: v.image_url,
+      description: displayDescription,
+      images: variantImages,
+    }
+  })
+
   // Transform data
   return {
     product_id: data.id,
@@ -342,18 +380,8 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       image_url: img.image_url,
       is_main: img.is_main || false,
     })),
-    variants: (data.product_variants || []).map((v: any) => ({
-      variant_id: v.id,
-      color: v.color,
-      size: v.size,
-      stock: v.stock,
-      variant_price: v.price,
-      sku: v.sku,
-      barcode: v.barcode,
-      variant_image: v.image_url,
-      description: displayDescription, // Use product discount_description for all variants
-      images: [], // Temporarily empty until variant_images table is created in Supabase
-    })),
+    allVariantImages: Array.from(allVariantImagesSet.values()),
+    variants,
   }
 }
 
