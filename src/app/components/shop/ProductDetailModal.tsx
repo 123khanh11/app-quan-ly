@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, ShoppingCart, Heart } from 'lucide-react'
+import { X, ShoppingCart, Heart, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
 import { getProductDetails, ProductDetail } from '@/services/supabase'
 
@@ -107,8 +107,8 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Images */}
           <div className="flex flex-col gap-4">
-            {/* Main Image */}
-            <div className="bg-muted rounded-lg overflow-hidden aspect-square">
+            {/* Main Image with Navigation */}
+            <div className="bg-muted rounded-lg overflow-hidden aspect-square relative group">
               <img
                 src={
                   displayImages && displayImages.length > 0
@@ -118,6 +118,34 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
                 alt={product.product_name}
                 className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
               />
+              
+              {/* Navigation Buttons */}
+              {displayImages && displayImages.length > 1 && (
+                <>
+                  {/* Previous Button */}
+                  <button
+                    onClick={() => setSelectedImageIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1))}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                    title="Ảnh trước"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  
+                  {/* Next Button */}
+                  <button
+                    onClick={() => setSelectedImageIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                    title="Ảnh tiếp"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                  
+                  {/* Image Counter */}
+                  <div className="absolute bottom-3 right-3 bg-black/60 text-white px-2.5 py-1 rounded-full text-sm font-medium">
+                    {selectedImageIndex + 1} / {displayImages.length}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Images Gallery */}
