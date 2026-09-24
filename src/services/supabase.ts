@@ -324,27 +324,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
     // Use discount_description if available, otherwise use description
     const displayDescription = data.discount_description || data.description
 
-    // Fetch product images separately (with error handling in case table doesn't exist)
-    let productImages: ProductImage[] = []
-    try {
-      const { data: imgData } = await supabase
-        .from('product_images')
-        .select('id, image_url, is_main')
-        .eq('product_id', productId)
-        .order('sort_order', { ascending: true })
-
-      if (imgData) {
-        productImages = imgData.map((img: any) => ({
-          id: img.id,
-          image_url: img.image_url,
-          is_main: img.is_main || false,
-        }))
-      }
-    } catch (imgError) {
-      console.warn('product_images table not available, skipping product images')
-    }
-
-    // Fetch variant images separately
+    // Fetch variant images separately for each variant
     let variantImagesMap = new Map<string, VariantImage[]>()
     try {
       for (const variant of data.product_variants || []) {
@@ -367,29 +347,29 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
         }
       }
     } catch (varImgError) {
-      console.warn('variant_images table not available, will use variant single images')
+      console.warn('variant_images table not available or error fetching variant images', varImgError)
     }
 
-    // Collect all unique images from all variants as fallback
-    const allVariantImagesSet = new Map<string, ProductImage>()
+    // Collect all unique images from all variants for allVariantImages
+    const allVariantImagesMap = new Map<string, ProductImage>()
     
     // Transform variants
     const variants = (data.product_variants || []).map((v: any) => {
-      const variantImages = variantImagesMap.get(v.id) || []
+      let variantImages = variantImagesMap.get(v.id) || []
       
       // If variant has no images from variant_images table, create one from variant_image field
       if (variantImages.length === 0 && v.image_url) {
-        variantImages.push({
-          id: v.id,
+        variantImages = [{
+          id: `${v.id}-main`,
           image_url: v.image_url,
           is_main: true,
           display_order: 0,
-        })
+        }]
       }
 
       // Add all variant images to the allVariantImages collection
       variantImages.forEach((img: VariantImage) => {
-        allVariantImagesSet.set(img.id, {
+        allVariantImagesMap.set(img.id, {
           id: img.id,
           image_url: img.image_url,
           is_main: img.is_main || false,
@@ -410,11 +390,17 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       }
     })
 
-    // Build allVariantImages: combine product images and variant images
-    const allImages = [...productImages, ...Array.from(allVariantImagesSet.values())]
-    const uniqueImages = Array.from(
-      new Map(allImages.map(img => [img.id, img])).values()
-    )
+    // Product images fallback (in case we need product-level images later)
+    const productImages: ProductImage[] = []
+    if (data.image_url) {
+      productImages.push({
+        id: `${data.id}-main`,
+        image_url: data.image_url,
+        is_main: true,
+      })
+    }
+
+    const allVariantImages = Array.from(allVariantImagesMap.values())
 
     return {
       product_id: data.id,
@@ -426,7 +412,7 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
       category_name: data.categories?.name || '',
       product_image: data.image_url,
       product_images: productImages,
-      allVariantImages: uniqueImages.length > 0 ? uniqueImages : productImages,
+      allVariantImages: allVariantImages.length > 0 ? allVariantImages : productImages,
       variants,
     }
   } catch (err) {
