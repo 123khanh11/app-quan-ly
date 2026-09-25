@@ -13,6 +13,17 @@ export const trackPixelEvent = (eventName: string, data?: any) => {
         fbq('track', eventName, data || {})
         console.log(`✅ [Meta Pixel] fbq('track', '${eventName}', ...)`, data)
         
+        // Force immediate delivery
+        if ((window as any).fbq && typeof (window as any).fbq === 'function') {
+          try {
+            // Try to force delivery using internal fbq method
+            fbq('trackSingle', '1823205972392139', eventName, data || {})
+            console.log(`📤 [Meta Pixel] Forced single track for: ${eventName}`)
+          } catch (e) {
+            console.log(`📝 [Meta Pixel] Single track not available, using standard track`)
+          }
+        }
+        
         // Verify fbq.queue has the event
         if ((window as any)._fbq && (window as any)._fbq.queue) {
           console.log(`📊 [Meta Pixel] Queue length:`, (window as any)._fbq.queue.length)

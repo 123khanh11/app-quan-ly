@@ -24,6 +24,13 @@
         console.log('✅ Meta Pixel initialized on page load');
         console.log('🔗 Pixel ID: 1823205972392139');
         console.log('📍 Current URL:', window.location.href);
+        
+        // Expose fbq globally for manual testing
+        window.testPixelEvent = function(eventName, data) {
+          fbq('track', eventName, data || {});
+          console.log('📤 Test event sent:', eventName, data);
+        };
+        console.log('💡 Test: window.testPixelEvent("AddToCart", {value: 100, currency: "VND"})');
       </script>
       <!-- End Facebook Pixel Code -->
       
