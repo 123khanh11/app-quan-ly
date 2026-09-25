@@ -4,11 +4,28 @@
  */
 
 export const trackPixelEvent = (eventName: string, data?: any) => {
-  if (typeof window !== 'undefined' && (window as any).fbq) {
-    (window as any).fbq('track', eventName, data)
-    console.log(`[Facebook Pixel] Tracked event: ${eventName}`, data)
-  } else {
-    console.warn(`[Facebook Pixel] fbq not available or event not tracked: ${eventName}`)
+  try {
+    if (typeof window !== 'undefined') {
+      // Wait for fbq to be available
+      if ((window as any).fbq) {
+        (window as any).fbq('track', eventName, data || {})
+        console.log(`✅ [Meta Pixel] Event tracked: ${eventName}`, data)
+        return true
+      } else {
+        console.warn(`⚠️ [Meta Pixel] fbq not available yet for event: ${eventName}`)
+        // Retry after a short delay
+        setTimeout(() => {
+          if ((window as any).fbq) {
+            (window as any).fbq('track', eventName, data || {})
+            console.log(`✅ [Meta Pixel] Event tracked (retry): ${eventName}`, data)
+          }
+        }, 500)
+        return false
+      }
+    }
+  } catch (error) {
+    console.error(`❌ [Meta Pixel] Error tracking event: ${eventName}`, error)
+    return false
   }
 }
 
@@ -17,14 +34,15 @@ export const trackPixelEvent = (eventName: string, data?: any) => {
  * Used when customer submits checkout form
  */
 export const trackLead = (data?: any) => {
-  trackPixelEvent('Lead', data)
+  console.log('🔔 [Meta Pixel] Attempting to track Lead event...')
+  trackPixelEvent('Lead', data || {})
 }
 
 /**
  * Track AddToCart event
  */
 export const trackAddToCart = (data?: any) => {
-  trackPixelEvent('AddToCart', data)
+  trackPixelEvent('AddToCart', data || {})
 }
 
 /**
@@ -41,12 +59,12 @@ export const trackPurchase = (value: number, currency: string = 'VND') => {
  * Track InitiateCheckout event
  */
 export const trackInitiateCheckout = (data?: any) => {
-  trackPixelEvent('InitiateCheckout', data)
+  trackPixelEvent('InitiateCheckout', data || {})
 }
 
 /**
  * Track ViewContent event
  */
 export const trackViewContent = (data?: any) => {
-  trackPixelEvent('ViewContent', data)
+  trackPixelEvent('ViewContent', data || {})
 }
