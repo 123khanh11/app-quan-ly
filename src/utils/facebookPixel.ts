@@ -6,20 +6,29 @@
 export const trackPixelEvent = (eventName: string, data?: any) => {
   try {
     if (typeof window !== 'undefined') {
-      // Wait for fbq to be available
-      if ((window as any).fbq) {
-        (window as any).fbq('track', eventName, data || {})
-        console.log(`✅ [Meta Pixel] Event tracked: ${eventName}`, data)
+      // Check if fbq exists
+      const fbq = (window as any).fbq
+      if (fbq && typeof fbq === 'function') {
+        // Send to fbq
+        fbq('track', eventName, data || {})
+        console.log(`✅ [Meta Pixel] fbq('track', '${eventName}', ...)`, data)
+        
+        // Verify fbq.queue has the event
+        if ((window as any)._fbq && (window as any)._fbq.queue) {
+          console.log(`📊 [Meta Pixel] Queue length:`, (window as any)._fbq.queue.length)
+        }
+        
+        // Additional verification: check if fbq internals exist
+        console.log(`🔍 [Meta Pixel] fbq.loaded:`, fbq.loaded)
+        console.log(`🔍 [Meta Pixel] fbq.version:`, fbq.version)
+        
         return true
       } else {
-        console.warn(`⚠️ [Meta Pixel] fbq not available yet for event: ${eventName}`)
-        // Retry after a short delay
-        setTimeout(() => {
-          if ((window as any).fbq) {
-            (window as any).fbq('track', eventName, data || {})
-            console.log(`✅ [Meta Pixel] Event tracked (retry): ${eventName}`, data)
-          }
-        }, 500)
+        console.warn(`⚠️ [Meta Pixel] fbq function not available`)
+        // Check if window has _fbq (internal reference)
+        if ((window as any)._fbq) {
+          console.warn(`⚠️ [Meta Pixel] _fbq exists but fbq alias is missing`)
+        }
         return false
       }
     }
@@ -34,7 +43,7 @@ export const trackPixelEvent = (eventName: string, data?: any) => {
  * Used when customer submits checkout form
  */
 export const trackLead = (data?: any) => {
-  console.log('🔔 [Meta Pixel] Attempting to track Lead event...')
+  console.log('🔔 [Meta Pixel] Tracking Lead event with data:', data)
   trackPixelEvent('Lead', data || {})
 }
 
@@ -42,13 +51,25 @@ export const trackLead = (data?: any) => {
  * Track AddToCart event
  */
 export const trackAddToCart = (data?: any) => {
-  trackPixelEvent('AddToCart', data || {})
+  // Ensure we send proper parameters per Meta Pixel spec
+  const trackData = {
+    content_name: data?.content_name || 'Unknown Product',
+    content_type: data?.content_type || 'product',
+    content_ids: data?.content_ids || [],
+    value: data?.value || 0,
+    currency: data?.currency || 'VND',
+    quantity: data?.quantity || 1,
+  }
+  
+  console.log('🛒 [Meta Pixel] Tracking AddToCart with proper format:', trackData)
+  trackPixelEvent('AddToCart', trackData)
 }
 
 /**
  * Track Purchase event
  */
 export const trackPurchase = (value: number, currency: string = 'VND') => {
+  console.log(`💳 [Meta Pixel] Tracking Purchase event: ${value} ${currency}`)
   trackPixelEvent('Purchase', {
     value: value,
     currency: currency,
@@ -59,6 +80,7 @@ export const trackPurchase = (value: number, currency: string = 'VND') => {
  * Track InitiateCheckout event
  */
 export const trackInitiateCheckout = (data?: any) => {
+  console.log('💰 [Meta Pixel] Tracking InitiateCheckout event')
   trackPixelEvent('InitiateCheckout', data || {})
 }
 
@@ -66,5 +88,6 @@ export const trackInitiateCheckout = (data?: any) => {
  * Track ViewContent event
  */
 export const trackViewContent = (data?: any) => {
+  console.log('👁️ [Meta Pixel] Tracking ViewContent event')
   trackPixelEvent('ViewContent', data || {})
 }
