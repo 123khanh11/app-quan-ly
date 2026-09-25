@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { X, Copy, Check } from 'lucide-react'
+import { trackLead } from '@/utils/facebookPixel'
 
 interface PaymentModalProps {
   orderTotal: number
@@ -43,6 +44,12 @@ export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentM
   }
 
   const handleConfirm = () => {
+    // Track Lead event for Meta Pixel (Khách hàng tiềm năng)
+    trackLead({
+      value: orderTotal,
+      currency: 'VND',
+      payment_method: paymentMethod,
+    })
     onConfirmPayment(paymentMethod, transferContent, qrUrl)
   }
 
