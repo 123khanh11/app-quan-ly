@@ -5,6 +5,7 @@ import { supabase, getProductsByCategory, getProductDetails, ProductDetail } fro
 import { Copy, Check, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
 import { useNavigate } from 'react-router-dom'
+import { trackAddToCart } from '@/utils/facebookPixel'
 
 interface ProductVariant {
   id: string
@@ -107,6 +108,18 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
       color: selectedVariant.color || '',
       size: selectedVariant.size || '',
       sku: selectedVariant.sku,
+    })
+
+    // Track AddToCart event for Meta Pixel
+    trackAddToCart({
+      content_name: product.product_name,
+      content_type: 'product',
+      content_ids: [selectedVariant.variant_id],
+      value: (selectedVariant.variant_price || product.product_price) * quantity,
+      currency: 'VND',
+      quantity: quantity,
+      color: selectedVariant.color,
+      size: selectedVariant.size,
     })
 
     alert(`✅ Đã thêm "${product.product_name}" vào giỏ hàng`)
@@ -357,6 +370,17 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                               size: '',
                               sku: product.sku || '',
                             })
+                            
+                            // Track AddToCart event
+                            trackAddToCart({
+                              content_name: product.name,
+                              content_type: 'product',
+                              content_ids: [product.id],
+                              value: product.price,
+                              currency: 'VND',
+                              quantity: 1,
+                            })
+                            
                             alert(`✅ Đã thêm "${product.name}" vào giỏ hàng`)
                           }}
                           className="w-full bg-primary text-primary-foreground font-semibold py-2 rounded-md hover:bg-orange-600 transition-colors text-xs"

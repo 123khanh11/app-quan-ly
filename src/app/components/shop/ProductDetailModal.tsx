@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, ShoppingCart, Heart, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
 import { getProductDetails, ProductDetail } from '@/services/supabase'
+import { trackAddToCart } from '@/utils/facebookPixel'
 
 interface ProductDetailModalProps {
   productId: string
@@ -62,6 +63,18 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
       color: selectedVariant.color,
       size: selectedVariant.size,
       sku: selectedVariant.sku,
+    })
+
+    // Track AddToCart event
+    trackAddToCart({
+      content_name: product.product_name,
+      content_type: 'product',
+      content_ids: [selectedVariant.variant_id],
+      value: (selectedVariant.variant_price || product.product_price) * quantity,
+      currency: 'VND',
+      quantity: quantity,
+      color: selectedVariant.color,
+      size: selectedVariant.size,
     })
 
     alert('✅ Đã thêm vào giỏ hàng!')
