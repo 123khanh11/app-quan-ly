@@ -219,7 +219,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     setShowPaymentModal(true)
   }
 
-  const handlePaymentConfirm = async (paymentMethod: 'bank_transfer' | 'cod', transferContent: string, qrUrl: string) => {
+  const handlePaymentConfirm = async (paymentMethod: 'bank_transfer' | 'cod', transferContent: string, qrUrl: string, fbp?: string, fbc?: string) => {
     setShowPaymentModal(false)
     setLoading(true)
     setError(null)
@@ -274,6 +274,8 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
             customer_email: formData.email || null,
             customer_phone: formData.phone,
             note: formData.note,
+            fbp: fbp || null,
+            fbc: fbc || null,
           },
           items: orderItems,
         }),

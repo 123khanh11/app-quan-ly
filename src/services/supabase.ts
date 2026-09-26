@@ -49,6 +49,8 @@ export interface Order {
   order_status?: string
   shipping_address?: string
   note?: string
+  fbp?: string
+  fbc?: string
   created_at?: string
   [key: string]: any
 }
@@ -82,6 +84,8 @@ export async function createOrder(orderData: {
   customer_email?: string
   customer_phone?: string
   note?: string
+  fbp?: string
+  fbc?: string
 }): Promise<Order> {
   const { data, error } = await supabase
     .from('orders')
@@ -97,6 +101,8 @@ export async function createOrder(orderData: {
         customer_email: orderData.customer_email,
         customer_phone: orderData.customer_phone,
         note: orderData.note,
+        fbp: orderData.fbp,
+        fbc: orderData.fbc,
       },
     ])
     .select()

@@ -1,18 +1,30 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { X, Copy, Check } from 'lucide-react'
-import { trackLead } from '@/utils/facebookPixel'
+import { trackLead, getFbp, getFbc, waitForFbp } from '@/utils/facebookPixel'
 
 interface PaymentModalProps {
   orderTotal: number
   onClose: () => void
-  onConfirmPayment: (paymentMethod: 'bank_transfer' | 'cod', transferContent: string, qrUrl: string) => void
+  onConfirmPayment: (paymentMethod: 'bank_transfer' | 'cod', transferContent: string, qrUrl: string, fbp?: string, fbc?: string) => void
 }
 
 export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentModalProps) {
   const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'cod'>('cod')
   const [copied, setCopied] = useState(false)
+  const [fbp, setFbp] = useState<string>('')
+  const [fbc, setFbc] = useState<string>('')
+
+  // Get fbp + fbc on component mount
+  useEffect(() => {
+    const getFbpAndFbc = async () => {
+      const fbpValue = await waitForFbp(2000)
+      setFbp(fbpValue)
+      setFbc(getFbc())
+    }
+    getFbpAndFbc()
+  }, [])
 
   // Generate transfer content and QR when payment method is selected
   const { transferContent, qrUrl } = useMemo(() => {
@@ -49,8 +61,10 @@ export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentM
       value: orderTotal,
       currency: 'VND',
       payment_method: paymentMethod,
+      fbp,
+      fbc,
     })
-    onConfirmPayment(paymentMethod, transferContent, qrUrl)
+    onConfirmPayment(paymentMethod, transferContent, qrUrl, fbp, fbc)
   }
 
   return (
