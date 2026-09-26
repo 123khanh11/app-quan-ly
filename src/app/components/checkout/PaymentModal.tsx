@@ -19,9 +19,13 @@ export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentM
   // Get fbp + fbc on component mount
   useEffect(() => {
     const getFbpAndFbc = async () => {
+      console.log('📍 [Payment Modal] Attempting to get fbp + fbc...')
       const fbpValue = await waitForFbp(2000)
+      const fbcValue = getFbc()
       setFbp(fbpValue)
-      setFbc(getFbc())
+      setFbc(fbcValue)
+      console.log('📍 [Payment Modal] fbp:', fbpValue)
+      console.log('📍 [Payment Modal] fbc:', fbcValue)
     }
     getFbpAndFbc()
   }, [])
@@ -56,6 +60,7 @@ export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentM
   }
 
   const handleConfirm = async () => {
+    console.log('🔔 [Payment Modal] Confirming payment with:', { fbp, fbc, paymentMethod })
     // Track Lead event for Meta Pixel (Khách hàng tiềm năng)
     await trackLead({
       value: orderTotal,
@@ -64,6 +69,7 @@ export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentM
       fbp,
       fbc,
     })
+    console.log('🔔 [Payment Modal] Calling onConfirmPayment with:', { fbp, fbc })
     onConfirmPayment(paymentMethod, transferContent, qrUrl, fbp, fbc)
   }
 

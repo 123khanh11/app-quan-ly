@@ -220,6 +220,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   }
 
   const handlePaymentConfirm = async (paymentMethod: 'bank_transfer' | 'cod', transferContent: string, qrUrl: string, fbp?: string, fbc?: string) => {
+    console.log('💳 [CheckoutForm] handlePaymentConfirm called with:', { fbp, fbc, paymentMethod })
     setShowPaymentModal(false)
     setLoading(true)
     setError(null)
@@ -258,27 +259,31 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         throw new Error('No valid products selected')
       }
 
+      const orderPayload = {
+        order: {
+          user_id: userId,
+          total: totalWithShipping,
+          shipping_fee: shippingFee,
+          payment_method: paymentMethod,
+          payment_status: paymentMethod === 'bank_transfer' ? 'pending' : 'cod',
+          order_status: 'pending',
+          shipping_address: fullAddress,
+          customer_name: formData.customerName,
+          customer_email: formData.email || null,
+          customer_phone: formData.phone,
+          note: formData.note,
+          fbp: fbp || null,
+          fbc: fbc || null,
+        },
+        items: orderItems,
+      }
+
+      console.log('💳 [CheckoutForm] Sending order payload:', JSON.stringify(orderPayload.order, null, 2))
+
       const orderResponse = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          order: {
-            user_id: userId,
-            total: totalWithShipping,
-            shipping_fee: shippingFee,
-            payment_method: paymentMethod,
-            payment_status: paymentMethod === 'bank_transfer' ? 'pending' : 'cod',
-            order_status: 'pending',
-            shipping_address: fullAddress,
-            customer_name: formData.customerName,
-            customer_email: formData.email || null,
-            customer_phone: formData.phone,
-            note: formData.note,
-            fbp: fbp || null,
-            fbc: fbc || null,
-          },
-          items: orderItems,
-        }),
+        body: JSON.stringify(orderPayload),
       })
 
       const orderResult = await orderResponse.json()
