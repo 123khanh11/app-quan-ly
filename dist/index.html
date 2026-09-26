@@ -22,6 +22,15 @@
         fbq('init', '1823205972392139');
         fbq('track', 'PageView');
         console.log('✅ Meta Pixel initialized on page load');
+        console.log('🔗 Pixel ID: 1823205972392139');
+        console.log('📍 Current URL:', window.location.href);
+        
+        // Expose fbq globally for manual testing
+        window.testPixelEvent = function(eventName, data) {
+          fbq('track', eventName, data || {});
+          console.log('📤 Test event sent:', eventName, data);
+        };
+        console.log('💡 Test: window.testPixelEvent("AddToCart", {value: 100, currency: "VND"})');
       </script>
       <!-- End Facebook Pixel Code -->
       
@@ -41,7 +50,7 @@
         }
       </style>
       
-      <script type="module" crossorigin src="/assets/index-oHZJ4lmE.js"></script>
+      <script type="module" crossorigin src="/assets/index-Cgxz2fOF.js"></script>
       <link rel="stylesheet" crossorigin href="/assets/index-DTtdxbI6.css">
     </head>
 

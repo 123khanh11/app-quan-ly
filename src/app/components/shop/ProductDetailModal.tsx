@@ -50,7 +50,7 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
     loadProduct()
   }, [productId])
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product || !selectedVariant) return
 
     addToCart({
@@ -66,7 +66,7 @@ export function ProductDetailModal({ productId, onClose }: ProductDetailModalPro
     })
 
     // Track AddToCart event
-    trackAddToCart({
+    await trackAddToCart({
       content_name: product.product_name,
       content_type: 'product',
       content_ids: [selectedVariant.variant_id],

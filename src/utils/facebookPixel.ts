@@ -4,6 +4,34 @@
  */
 
 /**
+ * Wait for fbp cookie to be created by Meta Pixel
+ * Max wait time: 3 seconds
+ */
+export const waitForFbp = async (maxWait: number = 3000): Promise<string> => {
+  if (typeof window === 'undefined') return ''
+  
+  const startTime = Date.now()
+  
+  while (Date.now() - startTime < maxWait) {
+    const fbpCookie = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('_fbp='))
+      ?.split('=')[1]
+    
+    if (fbpCookie) {
+      console.log('✅ [Meta Pixel] fbp cookie found after', Date.now() - startTime, 'ms')
+      return fbpCookie
+    }
+    
+    // Wait 100ms before checking again
+    await new Promise(resolve => setTimeout(resolve, 100))
+  }
+  
+  console.warn('⏱️ [Meta Pixel] fbp cookie not found after', maxWait, 'ms')
+  return ''
+}
+
+/**
  * Get fbp (Facebook Pixel ID) cookie value
  * fbp is used to identify unique users
  */
@@ -15,7 +43,12 @@ export const getFbp = (): string => {
     .find(row => row.startsWith('_fbp='))
     ?.split('=')[1]
   
-  console.log('🍪 [Meta Pixel] fbp cookie:', fbpCookie)
+  if (fbpCookie) {
+    console.log('🍪 [Meta Pixel] fbp cookie found:', fbpCookie)
+  } else {
+    console.log('⚠️ [Meta Pixel] fbp cookie NOT found - Meta Pixel may not have initialized yet')
+  }
+  
   return fbpCookie || ''
 }
 
@@ -116,13 +149,17 @@ export const trackPixelEvent = (eventName: string, data?: any) => {
 }
 
 /**
- * Track Lead event (Khách hàng tiềm năng) with fbp + fbc
+ * Track Lead event (Khách hàng tiềm năng) with fbp + fbc (async)
  * Used when customer submits checkout form
+ * Automatically waits for fbp cookie to be available
  */
-export const trackLead = (data?: any) => {
+export const trackLead = async (data?: any) => {
+  // Wait for fbp to be available (max 2 seconds)
+  const fbp = await waitForFbp(2000)
+  
   const leadData = {
     ...data,
-    fbp: getFbp(),
+    fbp: fbp,
     fbc: getFbc(),
   }
   
@@ -135,9 +172,13 @@ export const trackLead = (data?: any) => {
 }
 
 /**
- * Track AddToCart event with fbp + fbc
+ * Track AddToCart event with fbp + fbc (async)
+ * Automatically waits for fbp cookie to be available
  */
-export const trackAddToCart = (data?: any) => {
+export const trackAddToCart = async (data?: any) => {
+  // Wait for fbp to be available (max 2 seconds)
+  const fbp = await waitForFbp(2000)
+  
   // Ensure we send proper parameters per Meta Pixel spec
   const trackData = {
     content_name: data?.content_name || 'Unknown Product',
@@ -146,7 +187,7 @@ export const trackAddToCart = (data?: any) => {
     value: data?.value || 0,
     currency: data?.currency || 'VND',
     quantity: data?.quantity || 1,
-    fbp: getFbp(),
+    fbp: fbp,
     fbc: getFbc(),
   }
   

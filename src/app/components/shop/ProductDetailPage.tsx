@@ -92,7 +92,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product || !selectedVariant) {
       alert('Vui lòng chọn một variant')
       return
@@ -111,7 +111,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
     })
 
     // Track AddToCart event for Meta Pixel
-    trackAddToCart({
+    await trackAddToCart({
       content_name: product.product_name,
       content_type: 'product',
       content_ids: [selectedVariant.variant_id],
@@ -357,7 +357,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
 
                         {/* Add to Cart Button */}
                         <button
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation()
                             addToCart({
                               product_id: product.id,
@@ -372,7 +372,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                             })
                             
                             // Track AddToCart event
-                            trackAddToCart({
+                            await trackAddToCart({
                               content_name: product.name,
                               content_type: 'product',
                               content_ids: [product.id],

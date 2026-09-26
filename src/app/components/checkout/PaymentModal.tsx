@@ -43,9 +43,9 @@ export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentM
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     // Track Lead event for Meta Pixel (Khách hàng tiềm năng)
-    trackLead({
+    await trackLead({
       value: orderTotal,
       currency: 'VND',
       payment_method: paymentMethod,
