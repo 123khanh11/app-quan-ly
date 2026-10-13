@@ -1,6 +1,6 @@
 # 🛒 E-Commerce Website Interface
 
-Full-stack e-commerce platform with GHN shipping integration.
+Full-stack e-commerce platform with GHN shipping integration and Meta Pixel tracking.
 
 **Status:** ✅ **PRODUCTION READY**
 
@@ -8,13 +8,15 @@ Full-stack e-commerce platform with GHN shipping integration.
 
 ## 🎯 Features
 
-- ✅ Product catalog with Figma integration
+- ✅ Product catalog with variant management
+- ✅ Variant image gallery
 - ✅ Shopping cart management
 - ✅ Checkout with address selection
 - ✅ **GHN Shipping Integration** (63 provinces, 722 districts, 11,980 wards)
 - ✅ Real-time shipping fee calculation
-- ✅ Auto shipping address system
-- ✅ Order management interface
+- ✅ **Meta Pixel Tracking** (AddToCart, Lead events)
+- ✅ fbp + fbc tracking for conversion attribution
+- ✅ Order management with Meta Pixel data
 - ✅ PostgreSQL database with RLS
 - ✅ Supabase backend
 
@@ -23,42 +25,82 @@ Full-stack e-commerce platform with GHN shipping integration.
 ## 🚀 Quick Start
 
 ### Development
+
 ```bash
 # Install dependencies
 npm i
 
 # Start dev server
 npm run dev
+
 # → http://localhost:3000
 ```
 
 ### Production
+
 ```bash
 # Deploy to Vercel
-vercel deploy --prod
+git push origin master
 
 # Frontend URL: https://e-commerce-website-interface.vercel.app
 ```
 
 ---
 
-## 📚 Documentation
+## 📍 Shop Location
 
-**Start Here:**
-- 📄 [`TODO_COMPLETE_TASK7.md`](./TODO_COMPLETE_TASK7.md) - Complete auto shipping address system (15 min)
-- 📄 [`FINAL_SUMMARY.md`](./FINAL_SUMMARY.md) - Project completion status
-- 📄 [`SYSTEM_OVERVIEW.md`](./SYSTEM_OVERVIEW.md) - Full architecture & technical details
+**Current Shop Address:**
+- **Province:** Sơn La (Province ID: 266)
+- **District:** Huyện Mộc Châu (District ID: 1976)
+- **Ward:** Ward Code: 141005
+- **Shop ID:** 5430969
+- **GHN Token:** 653bfc7b-8381-11f1-a65e-a68e06d4dd1e
 
-**Integration Guides:**
-- 📄 [`CONNECT_APP_GET_ADDRESS.md`](./CONNECT_APP_GET_ADDRESS.md) - Management app integration
-- 📄 [`PARSE_ADDRESS_GUIDE.md`](./PARSE_ADDRESS_GUIDE.md) - How to parse shipping addresses
-- 📄 [`ORDER_MANAGEMENT_INTEGRATION.md`](./ORDER_MANAGEMENT_INTEGRATION.md) - Order data structure
+---
 
-**Setup & Configuration:**
-- 📄 [`RUN_AUTO_SHIPPING_TRIGGER.md`](./RUN_AUTO_SHIPPING_TRIGGER.md) - Run SQL trigger in Supabase
-- 📄 [`DATABASE_SETUP.md`](./DATABASE_SETUP.md) - Database configuration
-- 📄 [`GHN_API_SETUP.md`](./GHN_API_SETUP.md) - GHN API credentials
-- 📄 [`SHIPPING_CALCULATION.md`](./SHIPPING_CALCULATION.md) - Shipping fee logic
+## 📊 Meta Pixel Tracking
+
+### Implemented Events
+
+#### 1. **AddToCart Event**
+- **Trigger:** When user clicks "Thêm Vào Giỏ"
+- **Data Sent:**
+  - `content_name`: Product name
+  - `content_type`: "product"
+  - `content_ids`: Product/variant ID
+  - `value`: Price in VND
+  - `currency`: "VND"
+  - `quantity`: Items added
+  - `color`: Selected color
+  - `size`: Selected size
+  - `fbp`: Facebook Pixel ID (auto-tracked)
+  - `fbc`: Facebook Click ID (from fbclid URL param)
+
+#### 2. **Lead Event**
+- **Trigger:** When user confirms checkout ("Xác Nhận Đặt Đơn Hàng")
+- **Data Sent:**
+  - `value`: Order total in VND
+  - `currency`: "VND"
+  - `payment_method`: "bank_transfer" or "cod"
+  - `fbp`: Facebook Pixel ID
+  - `fbc`: Facebook Click ID
+
+### fbp + fbc in Orders
+
+fbp and fbc are now saved in the `orders` table for conversion tracking:
+
+```sql
+ALTER TABLE orders
+ADD COLUMN fbp VARCHAR(255) DEFAULT NULL,
+ADD COLUMN fbc VARCHAR(255) DEFAULT NULL;
+```
+
+**Data Flow:**
+1. User visits from Facebook ads → `fbclid` captured in URL
+2. Meta Pixel creates `_fbp` cookie on first visit
+3. When user adds product → fbp + fbc tracked with AddToCart event
+4. When user confirms order → fbp + fbc saved to database + Lead event sent
+5. Order data includes fbp + fbc for sending to external systems
 
 ---
 
@@ -66,20 +108,18 @@ vercel deploy --prod
 
 ### Frontend
 - React 18
-- Next.js 14
 - TypeScript
 - Tailwind CSS
-- shadcn/ui components
+- Vite bundler
 
 ### Backend & Database
 - Supabase (PostgreSQL)
 - Row Level Security (RLS)
-- PostgreSQL Triggers
 - Real-time subscriptions
 
 ### APIs
-- GHN Shipping API
-- Vercel Serverless Functions
+- **GHN Shipping API** - Shipping calculation
+- **Meta Pixel API** - Conversion tracking
 
 ### Deployment
 - Vercel (Frontend)
@@ -87,30 +127,127 @@ vercel deploy --prod
 
 ---
 
-## 📊 Database Schema
+## 📚 Project Structure
 
-### Core Tables
 ```
-products (10+ items)
-orders
-order_items
-addresses (optional)
+src/
+├── app/
+│   ├── components/
+│   │   ├── shop/               # Product & checkout components
+│   │   ├── checkout/           # Checkout flow components
+│   │   └── layout/             # Header, footer
+│   ├── context/                # React context (Cart, Favorites)
+│   └── App.tsx                 # Main app component
+├── services/
+│   ├── supabase.ts             # Supabase client & queries
+│   ├── ghn-api-client.ts       # GHN API calls
+│   └── shipping-calculator.ts  # Shipping fee logic
+├── utils/
+│   └── facebookPixel.ts        # Meta Pixel tracking
+├── hooks/
+│   └── useShippingFee.ts       # Shipping fee hook
+└── styles/                     # Tailwind CSS config
 
-GHN Location Data:
-├── ghn_provinces (63)
-├── ghn_districts (722)
-└── ghn_wards (11,980)
+scripts/
+├── add-fbp-fbc-to-orders.sql   # Migration for fbp + fbc columns
+├── create-*.sql                # Database table creation
+└── seed-*.sql                  # GHN data seeding
 
-GHN Services:
-├── ghn_services
-└── ghn_service_types
+api/
+├── orders.mjs                  # Order creation API
+├── payment-transfers.mjs       # Payment tracking API
+└── ghn-*.mjs                   # GHN location data APIs
 ```
 
-### Key Features
-- ✅ Row Level Security (RLS) enabled
-- ✅ Foreign key constraints
-- ✅ Indexed columns for performance
-- ✅ PostgreSQL triggers for automation
+---
+
+## 🔧 Key Services
+
+### Meta Pixel Service (`src/utils/facebookPixel.ts`)
+
+```typescript
+// Get fbp cookie (created by Meta Pixel)
+getFbp(): string
+
+// Wait for fbp cookie with timeout
+waitForFbp(timeout: number): Promise<string>
+
+// Get fbc from URL parameter or storage
+getFbc(): string
+
+// Track AddToCart event with fbp + fbc
+trackAddToCart(data: {
+  content_name: string
+  content_type: string
+  content_ids: string[]
+  value: number
+  currency: string
+  quantity: number
+  fbp?: string
+  fbc?: string
+}): Promise<void>
+
+// Track Lead event (on checkout confirm)
+trackLead(data: {
+  value: number
+  currency: string
+  payment_method: string
+  fbp?: string
+  fbc?: string
+}): Promise<void>
+```
+
+### Order Service
+
+- `createOrder()` - Create order with fbp + fbc
+- `getOrderById()` - Retrieve order details
+- `updateOrderStatus()` - Update order status
+
+### GHN Service
+
+- `getDistricts()` - Get districts by province
+- `getWards()` - Get wards by district
+- `calculateShippingFee()` - Get shipping cost
+
+---
+
+## 📋 Setup Checklist
+
+### 1. Database Migration
+
+Run this SQL in Supabase to add fbp + fbc columns:
+
+```sql
+-- Add fbp and fbc columns for Meta Pixel tracking
+ALTER TABLE orders
+ADD COLUMN fbp VARCHAR(255) DEFAULT NULL,
+ADD COLUMN fbc VARCHAR(255) DEFAULT NULL;
+
+-- Add indexes for performance
+CREATE INDEX idx_orders_fbp ON orders(fbp);
+CREATE INDEX idx_orders_fbc ON orders(fbc);
+```
+
+### 2. Environment Variables
+
+```bash
+# GHN API
+GHN_API_URL="https://online-gateway.ghn.vn/shiip/public-api/v2"
+GHN_FROM_DISTRICT_ID="1976"
+GHN_FROM_WARD_CODE="141005"
+GHN_SHOP_ID="5430969"
+GHN_TOKEN="653bfc7b-8381-11f1-a65e-a68e06d4dd1e"
+
+# Supabase
+VITE_SUPABASE_URL="https://edtxexnhpbipcecceoop.supabase.co"
+VITE_SUPABASE_ANON_KEY="sb_publishable_iWrqwcmaNjqUYjC5ndYd2A_xOkv0Tz7"
+```
+
+### 3. Meta Pixel Setup
+
+- Pixel ID: `1823205972392139`
+- Whitelisted domains: `e-commerce-website-interface.vercel.app`, `app-ql-v2.vercel.app`
+- Events tracked: AddToCart, Lead
 
 ---
 
@@ -118,189 +255,170 @@ GHN Services:
 
 ```
 1. Browse products
-   ↓
-2. Add to cart
-   ↓
-3. Click "Thanh Toán" (Checkout)
-   ↓
-4. Select address:
-   - Province (Tỉnh/Thành phố)
-   - District (Quận/Huyện)
-   - Ward (Xã/Phường)
-   - Address details (Số nhà, tên đường)
-   ↓
-5. Shipping fee calculated automatically
-   - Service: GHN Express
-   - From: Hà Đông, Hà Nội
-   - To: Selected location
-   ↓
-6. Place order
-   ↓
-7. Order saved with auto shipping_address
-   ↓
-8. Confirmation message with order ID
+
+2. Click product → See variants + images
+
+3. Select color/size/quantity
+
+4. Click "Thêm Vào Giỏ" 
+   → AddToCart event tracked with fbp + fbc
+
+5. Go to checkout → Select address
+
+6. Click "Xác Nhận Đặt Đơn Hàng"
+   → Lead event tracked with fbp + fbc
+   → Order created with fbp + fbc in database
+
+7. Order confirmation displayed
 ```
+
+---
+
+## 📊 Database Schema
+
+### Orders Table
+
+```sql
+CREATE TABLE orders (
+  id uuid PRIMARY KEY,
+  user_id uuid,
+  total numeric NOT NULL,
+  shipping_fee numeric,
+  payment_method text,
+  payment_status text,
+  order_status text,
+  shipping_address text,
+  customer_name text,
+  customer_email text,
+  customer_phone text,
+  note text,
+  fbp varchar(255),          -- Meta Pixel ID
+  fbc varchar(255),          -- Facebook Click ID
+  created_at timestamp,
+  updated_at timestamp
+);
+```
+
+### GHN Data Tables
+
+- `ghn_provinces` (63 records)
+- `ghn_districts` (722 records)
+- `ghn_wards` (11,980 records)
+- `ghn_services` - Service types
+- `ghn_service_types` - Available services
 
 ---
 
 ## 🔌 GHN API Configuration
 
-**Credentials:**
-- Token: `653bfc7b-8381-11f1-a65e-a68e06d4dd1e`
-- Shop ID: `6557702`
-- Base URL: `https://online-gateway.ghn.vn/shiip/public-api`
+**Credentials (in `.env.local`):**
+- Shop ID: 5430969
+- Token: 653bfc7b-8381-11f1-a65e-a68e06d4dd1e
+- API URL: https://online-gateway.ghn.vn/shiip/public-api/v2
 
 **Shop Location:**
-- District: Hà Đông (ID: 1455)
-- Ward: Phường Dương Nội (Code: 21617)
-- Province: Hà Nội (ID: 201)
-
-**Service Type:**
-- ID: 2
-- Name: Chuyển phát nhanh hôm nay (Express)
-
-**Default Shipping:**
-- Weight: 500g/item, minimum 1kg
-- Dimensions: 20x20x20cm/item
-
----
-
-## 🔧 Key Services
-
-### OrderService (`src/services/orderService.ts`)
-```typescript
-createOrder(params)           // Create order + auto fetch address
-getOrderById(id)              // Get order details
-getUserOrders(userId)         // Get user's orders
-updateOrderStatus(id, status) // Update order status
-deleteOrder(id)               // Delete order
-parseShippingAddress(address) // Parse address into components
-```
-
-### GHN Service (`src/services/ghn-db.ts`)
-```typescript
-getDistricts(provinceId)      // Get districts from Supabase
-getWards(districtId)          // Get wards from Supabase
-calculateShippingFee(params)  // Calculate fee from GHN API
-getServices(params)           // Get available services
-```
-
----
-
-## ✨ Recent Updates (Task 7)
-
-### ✅ Auto Shipping Address System
-- **SQL Trigger**: `trigger_auto_shipping_address` on orders table
-- **Function**: `auto_shipping_address()` auto-fetches address from addresses table
-- **Service**: OrderService with CRUD operations
-- **Status**: Ready to use (SQL trigger pending execution)
-
-### 📄 New Documentation
-- `RUN_AUTO_SHIPPING_TRIGGER.md` - Step-by-step SQL trigger guide
-- `SYSTEM_OVERVIEW.md` - Complete system architecture
-- `FINAL_SUMMARY.md` - Project completion status
-- `TODO_COMPLETE_TASK7.md` - Quick completion checklist
+- Province: Sơn La (ID: 266)
+- District: Huyện Mộc Châu (ID: 1976)
+- Ward: 141005
 
 ---
 
 ## 🚀 Deployment
 
-### Frontend
-```
-URL: https://e-commerce-website-interface.vercel.app
-Platform: Vercel
-Status: ✅ Live
-Deploy: vercel deploy --prod
+### Frontend (Vercel)
+```bash
+# Deploy
+git push origin master
+
+# URL: https://e-commerce-website-interface.vercel.app
+# Status: Auto-deployed on push
 ```
 
-### Management App
+### Database (Supabase)
 ```
-URL: https://appmanagement-six.vercel.app
-Platform: Vercel
-Status: ✅ Live
-Deploy: vercel deploy --prod
-```
-
-### Database
-```
-Platform: Supabase
-Status: ✅ Configured
 URL: https://edtxexnhpbipcecceoop.supabase.co
+Status: ✅ Production
 ```
 
 ---
 
-## 📋 Next Steps (15 Minutes)
+## 🧪 Testing Meta Pixel
 
-1. **Run SQL Trigger** (5 min)
-   - Go to Supabase SQL Editor
-   - Run `AUTO_SHIPPING_ADDRESS_TRIGGER.sql`
-   - Verify trigger created
+### Test AddToCart Tracking
 
-2. **Test Checkout** (5 min)
-   - Visit frontend URL
-   - Add product & checkout
-   - Verify shipping_address in Supabase
+1. Visit site: https://e-commerce-website-interface.vercel.app
+2. Open DevTools (F12) → Console
+3. Add product to cart
+4. See logs:
+   ```
+   🛒 [Meta Pixel] Tracking AddToCart with fbp + fbc: { fbp: "fb.1.xxx", fbc: "fb.1.xxx", ... }
+   ✅ [Meta Pixel] fbq('track', 'AddToCart', ...) {...}
+   ```
 
-3. **Verify** (5 min)
-   - Check orders table
-   - Confirm shipping_address field populated
+### Test Lead Tracking
 
-**See:** [`TODO_COMPLETE_TASK7.md`](./TODO_COMPLETE_TASK7.md) for detailed instructions.
+1. Go to checkout
+2. Click "Xác Nhận Đặt Đơn Hàng"
+3. See logs:
+   ```
+   🔔 [Meta Pixel] Tracking Lead event with fbp + fbc: { fbp: "fb.1.xxx", fbc: "fb.1.xxx", value: ... }
+   ✅ [Meta Pixel] fbq('track', 'Lead', ...) {...}
+   ```
 
----
+### Verify Order Data
 
-## 📊 Project Metrics
-
-### Code
-- **Frontend**: ~3000 lines (React + Next.js)
-- **Backend**: ~200 lines (Node.js + Supabase)
-- **Services**: ~500 lines (GHN API + OrderService)
-- **Database**: 12 tables, 11,980+ records
-
-### Deployment
-- **Build**: 0 errors, 1650 modules
-- **Performance**: <100ms page load
-- **Database**: Real-time subscriptions enabled
+1. Go to Supabase Dashboard
+2. Open `orders` table
+3. Check new order has fbp + fbc values:
+   - fbp: `fb.1.1234567890.9876543210`
+   - fbc: `fb.1.1234567890.abcdefghij`
 
 ---
 
-## 🆘 Support
+## 📞 Troubleshooting
 
-### Common Issues
+### fbp not captured?
 
-**Q: Orders don't have shipping_address?**
-- A: SQL trigger hasn't been run yet
-- Solution: See `RUN_AUTO_SHIPPING_TRIGGER.md`
+**Issue:** fbp showing NULL in database
+**Solution:**
+- Wait for Meta Pixel script to initialize (2 seconds)
+- Check DevTools → Application → Cookies for `_fbp`
+- Verify Meta Pixel script loaded in index.html
 
-**Q: Shipping fee not calculated?**
-- A: Check GHN API token in `.env.local`
-- Solution: Verify token validity
+### Lead event not appearing in Meta Events Manager?
 
-**Q: Districts not loading?**
-- A: GHN data not synced
-- Solution: Run `node scripts/sync-ghn-data.js`
+**Issue:** Test Events dashboard shows nothing
+**Solution:**
+- Domain must be whitelisted in Meta Events Manager
+- Check: Events Manager → Settings → Connected Domains
+- Both domains should be listed:
+  - `e-commerce-website-interface.vercel.app`
+  - `app-ql-v2.vercel.app`
+- Wait 24-48 hours for events to appear in Overview tab
 
-**Q: Trigger error?**
-- A: Check Supabase SQL Editor for error message
-- Solution: See `RUN_AUTO_SHIPPING_TRIGGER.md` troubleshooting
+### Orders table doesn't have fbp/fbc columns?
+
+**Issue:** Columns not in database
+**Solution:**
+- Run SQL migration: `scripts/add-fbp-fbc-to-orders.sql`
+- Go to Supabase → SQL Editor → Run migration
 
 ---
 
-## 📞 Contact
+## 📝 Recent Changes
 
-For issues or questions:
-1. Check documentation files
-2. Review error messages
-3. Contact project maintainer
+### Meta Pixel Integration
+- ✅ Added fbp + fbc tracking to AddToCart event
+- ✅ Added fbp + fbc tracking to Lead event
+- ✅ Save fbp + fbc in orders table
+- ✅ Async/await fbp initialization (2 second timeout)
+- ✅ Debug logging for tracking flow
 
----
-
-## 📝 Original Figma Design
-
-- Design: https://www.figma.com/design/rMQmwiS4vGviM5I4kvAjjE/E-commerce-website-interface
-- Components: Fully replicated
-- Responsive: Mobile, tablet, desktop
+### Code Cleanup
+- ✅ Removed 18 debug documentation files
+- ✅ Removed 12 unused scripts
+- ✅ Removed unused service files
+- ✅ Project is now clean and production-ready
 
 ---
 
@@ -312,4 +430,4 @@ This project is part of a private e-commerce initiative.
 
 **Status: ✅ Production Ready**
 
-Last Updated: July 21, 2026
+Last Updated: October 13, 2026
