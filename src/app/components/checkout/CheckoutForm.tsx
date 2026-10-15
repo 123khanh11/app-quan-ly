@@ -166,22 +166,47 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       onLoadingChange?.(true)
 
+      // Tính tổng weight + dimensions từ tất cả item trong giỏ
       let totalWeight = 0
+      let totalLength = 0
+      let totalWidth = 0
+      let totalHeight = 0
+      let itemCount = 0
+
       cartItems.forEach((item) => {
         if (selectedItems.has(`${item.product_id}-${item.color}-${item.size}`)) {
-          totalWeight += (item.weight || 500) * item.quantity
+          const itemQuantity = item.quantity || 1
+          const itemWeight = (item.weight || 500) * itemQuantity // gram
+          const itemLength = item.length || 20 // cm
+          const itemWidth = item.width || 20 // cm
+          const itemHeight = item.height || 20 // cm
+
+          totalWeight += itemWeight
+          // Tính tổng dimensions (cộng dồn chiều dài, rộng)
+          totalLength += itemLength * itemQuantity
+          totalWidth += Math.max(totalWidth, itemWidth) // Lấy chiều rộng lớn nhất
+          totalHeight += Math.max(totalHeight, itemHeight) // Lấy chiều cao lớn nhất
+          itemCount++
+
+          console.log(`📦 Item: ${item.name} - Weight: ${itemWeight}g, L:${itemLength}cm, W:${itemWidth}cm, H:${itemHeight}cm`)
         }
       })
 
-      console.log('📦 Tính phí ship - Tổng khối lượng:', totalWeight, 'gram, Số item:', selectedItems.size)
+      // Đảm bảo kích thước tối thiểu
+      totalWeight = Math.max(totalWeight, 200)
+      totalLength = Math.max(totalLength, 10)
+      totalWidth = Math.max(totalWidth, 10)
+      totalHeight = Math.max(totalHeight, 10)
+
+      console.log(`📊 Tổng cộng - Khối lượng: ${totalWeight}g, L:${totalLength}cm, W:${totalWidth}cm, H:${totalHeight}cm, Số item: ${itemCount}`)
 
       const result = await calculateFee({
         to_district_id: formData.districtId,
         to_ward_code: formData.wardCode,
-        weight: Math.max(totalWeight, 200),
-        length: 20,
-        width: 20,
-        height: 20,
+        weight: totalWeight,
+        length: totalLength,
+        width: totalWidth,
+        height: totalHeight,
       })
 
       if (result.success && result.data) {
