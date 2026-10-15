@@ -65,44 +65,36 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
     }
   }
 
-  const handleLogout = async () => {
+  const handleSwitchAccount = async () => {
     try {
-      setLoggingOut(true)
-      console.log('🔄 Starting logout...')
+      console.log('🔄 Switching to different Google account...')
       
-      // Save cart and favorites before clearing storage
-      const cartBackup = localStorage.getItem('shopping_cart')
-      const favoritesBackup = localStorage.getItem('favorites')
-      
+      // Sign out current user
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.error('❌ Supabase signOut error:', error)
+        console.error('❌ Sign out error:', error)
       } else {
-        console.log('✅ Supabase signed out successfully')
+        console.log('✅ Signed out successfully')
       }
       
-      // Clear auth-related storage only
+      // Clear auth tokens only (keep cart)
       localStorage.removeItem('supabase.auth.token')
       localStorage.removeItem('sb-token')
       sessionStorage.clear()
       
-      // Restore cart and favorites
-      if (cartBackup) localStorage.setItem('shopping_cart', cartBackup)
-      if (favoritesBackup) localStorage.setItem('favorites', favoritesBackup)
+      console.log('✅ Ready to login with different account')
       
-      console.log('✅ Auth cleared, cart & favorites preserved')
-      
+      // Show login form
       onLogout?.()
       onClose()
       
+      // Refresh to clear state
       setTimeout(() => {
         window.location.href = '/'
       }, 100)
     } catch (err) {
-      console.error('❌ Logout error:', err)
+      console.error('❌ Switch account error:', err)
       window.location.href = '/'
-    } finally {
-      setLoggingOut(false)
     }
   }
 
@@ -164,6 +156,25 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
                 <>
                   <LogOut size={20} />
                   Đăng Xuất
+                </>
+              )}
+            </button>
+
+            {/* Switch Account Button */}
+            <button
+              onClick={handleSwitchAccount}
+              disabled={loggingOut}
+              className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loggingOut ? (
+                <>
+                  <Loader size={20} className="animate-spin" />
+                  Đang chuyển...
+                </>
+              ) : (
+                <>
+                  <Chrome size={20} />
+                  Dùng Tài Khoản Khác
                 </>
               )}
             </button>

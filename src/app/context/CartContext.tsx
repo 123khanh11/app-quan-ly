@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { supabase } from '@/services/supabase'
 
 export interface CartItem {
   id?: string
@@ -25,53 +26,160 @@ interface CartContextType {
   clearCart: () => void
   cartTotal: number
   cartCount: number
+  isLoading: boolean
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
-  // Load cart from localStorage on mount
+  // Load cart from database when user logs in
   useEffect(() => {
-    const savedCart = localStorage.getItem('shopping_cart')
-    if (savedCart) {
+    const checkAuthAndLoadCart = async () => {
       try {
-        setCartItems(JSON.parse(savedCart))
-      } catch (e) {
-        console.error('Failed to load cart from localStorage:', e)
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        
+        if (user) {
+          setCurrentUserId(user.id)
+          // Load from database
+          await loadCartFromDatabase(user.id)
+        } else {
+          setCurrentUserId(null)
+          // Load from localStorage for guest users
+          loadCartFromLocalStorage()
+        }
+      } catch (err) {
+        console.error('Failed to check auth:', err)
+        loadCartFromLocalStorage()
+      } finally {
+        setIsLoading(false)
       }
+    }
+
+    checkAuthAndLoadCart()
+
+    // Listen to auth changes
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          setCurrentUserId(session.user.id)
+          loadCartFromDatabase(session.user.id)
+        } else {
+          setCurrentUserId(null)
+          // Clear cart when logging out
+          setCartItems([])
+        }
+      }
+    )
+
+    return () => {
+      subscription?.subscription.unsubscribe()
     }
   }, [])
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('shopping_cart', JSON.stringify(cartItems))
-  }, [cartItems])
+  // Load cart from localStorage
+  const loadCartFromLocalStorage = () => {
+    try {
+      const savedCart = localStorage.getItem('shopping_cart')
+      if (savedCart) {
+        setCartItems(JSON.parse(savedCart))
+      } else {
+        setCartItems([])
+      }
+    } catch (err) {
+      console.error('Failed to load cart from localStorage:', err)
+      setCartItems([])
+    }
+  }
+
+  // Load cart from database
+  const loadCartFromDatabase = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_carts')
+        .select('cart_data')
+        .eq('user_id', userId)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No cart exists yet, create empty one
+          await createEmptyCart(userId)
+          setCartItems([])
+        } else {
+          console.error('Failed to load cart:', error)
+          setCartItems([])
+        }
+      } else if (data?.cart_data) {
+        setCartItems(data.cart_data)
+      } else {
+        setCartItems([])
+      }
+    } catch (err) {
+      console.error('Failed to load cart from database:', err)
+      setCartItems([])
+    }
+  }
+
+  // Create empty cart for new user
+  const createEmptyCart = async (userId: string) => {
+    try {
+      await supabase
+        .from('user_carts')
+        .insert([{ user_id: userId, cart_data: [] }])
+    } catch (err) {
+      console.warn('Failed to create cart:', err)
+    }
+  }
+
+  // Save cart to database (if logged in) and localStorage (always)
+  const saveCart = async (items: CartItem[]) => {
+    // Always save to localStorage for backup
+    localStorage.setItem('shopping_cart', JSON.stringify(items))
+
+    // Save to database if logged in
+    if (currentUserId) {
+      try {
+        await supabase
+          .from('user_carts')
+          .upsert(
+            { user_id: currentUserId, cart_data: items },
+            { onConflict: 'user_id' }
+          )
+      } catch (err) {
+        console.error('Failed to save cart to database:', err)
+      }
+    }
+  }
 
   const addToCart = (item: CartItem) => {
     setCartItems((prevItems) => {
-      // Tìm item với cùng product_id, color, size
       const existingItem = prevItems.find(
         (i) =>
           i.product_id === item.product_id &&
           i.color === item.color &&
           i.size === item.size
       )
-      if (existingItem) {
-        return prevItems.map((i) =>
-          i.product_id === item.product_id && i.color === item.color && i.size === item.size
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i
-        )
-      }
-      return [...prevItems, item]
+      
+      const newItems = existingItem
+        ? prevItems.map((i) =>
+            i.product_id === item.product_id && i.color === item.color && i.size === item.size
+              ? { ...i, quantity: i.quantity + item.quantity }
+              : i
+          )
+        : [...prevItems, item]
+      
+      saveCart(newItems)
+      return newItems
     })
   }
 
   const removeFromCart = (productId: string, color?: string, size?: string) => {
-    setCartItems((prevItems) =>
-      prevItems.filter(
+    setCartItems((prevItems) => {
+      const newItems = prevItems.filter(
         (i) =>
           !(
             i.product_id === productId &&
@@ -79,7 +187,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             i.size === size
           )
       )
-    )
+      saveCart(newItems)
+      return newItems
+    })
   }
 
   const updateQuantity = (productId: string, quantity: number, color?: string, size?: string) => {
@@ -87,17 +197,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeFromCart(productId, color, size)
       return
     }
-    setCartItems((prevItems) =>
-      prevItems.map((i) =>
+    setCartItems((prevItems) => {
+      const newItems = prevItems.map((i) =>
         i.product_id === productId && i.color === color && i.size === size
           ? { ...i, quantity }
           : i
       )
-    )
+      saveCart(newItems)
+      return newItems
+    })
   }
 
   const clearCart = () => {
-    setCartItems([])
+    const newItems: CartItem[] = []
+    saveCart(newItems)
+    setCartItems(newItems)
   }
 
   const cartTotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
@@ -113,6 +227,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         cartTotal,
         cartCount,
+        isLoading,
       }}
     >
       {children}
