@@ -9,7 +9,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' connect.facebook.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' supabase.co *.supabase.co accounts.google.com googleapis.com; frame-src 'self' supabase.co accounts.google.com vi.wps.com; frame-ancestors 'self' supabase.co accounts.google.com vi.wps.com; font-src 'self' data: fonts.gstatic.com; base-uri 'self'; form-action 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' connect.facebook.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' supabase.co *.supabase.co accounts.google.com googleapis.com www.facebook.com; frame-src 'self' supabase.co accounts.google.com vi.wps.com; frame-ancestors 'self' supabase.co accounts.google.com vi.wps.com; font-src 'self' data: fonts.gstatic.com; base-uri 'self'; form-action 'self';"
         }
       ]
     }
