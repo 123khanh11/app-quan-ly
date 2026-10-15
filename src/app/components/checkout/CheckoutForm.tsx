@@ -184,8 +184,8 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           totalWeight += itemWeight
           // Tính tổng dimensions (cộng dồn chiều dài, rộng)
           totalLength += itemLength * itemQuantity
-          totalWidth += Math.max(totalWidth, itemWidth) // Lấy chiều rộng lớn nhất
-          totalHeight += Math.max(totalHeight, itemHeight) // Lấy chiều cao lớn nhất
+          totalWidth = Math.max(totalWidth, itemWidth) // Lấy chiều rộng lớn nhất
+          totalHeight = Math.max(totalHeight, itemHeight) // Lấy chiều cao lớn nhất
           itemCount++
 
           console.log(`📦 Item: ${item.name} - Weight: ${itemWeight}g, L:${itemLength}cm, W:${itemWidth}cm, H:${itemHeight}cm`)
@@ -199,6 +199,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       totalHeight = Math.max(totalHeight, 10)
 
       console.log(`📊 Tổng cộng - Khối lượng: ${totalWeight}g, L:${totalLength}cm, W:${totalWidth}cm, H:${totalHeight}cm, Số item: ${itemCount}`)
+      console.log(`📍 Giao đến - District: ${formData.districtId}, Ward: ${formData.wardCode}`)
 
       const result = await calculateFee({
         to_district_id: formData.districtId,
@@ -209,12 +210,18 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         height: totalHeight,
       })
 
+      console.log('📤 API Response:', result)
+
       if (result.success && result.data) {
-        console.log('✅ Phí ship cập nhật:', result.data.total, 'VNĐ')
+        console.log(`✅ Phí ship từ API: ${result.data.total}đ`)
+        console.log(`   - Phí cơ bản: ${result.data.service_fee}đ`)
+        console.log(`   - Phí bảo hiểm: ${result.data.insurance_fee}đ`)
+        console.log(`   - Phí COD: ${result.data.cod_fee}đ`)
+        console.log(`   - Phí khu vực xa (giao): ${result.data.deliver_remote_areas_fee}đ`)
         setShippingFee(result.data.total || DEFAULT_SHIPPING_FEE)
         onShippingFeeChange?.(result.data.total || DEFAULT_SHIPPING_FEE)
       } else {
-        console.log('⚠️ Lỗi tính phí ship, dùng mặc định:', DEFAULT_SHIPPING_FEE)
+        console.log(`⚠️ Lỗi tính phí ship: ${result.error}, dùng mặc định: ${DEFAULT_SHIPPING_FEE}`)
         setShippingFee(DEFAULT_SHIPPING_FEE)
         onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
       }
