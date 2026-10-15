@@ -159,8 +159,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     const calculateShipping = async () => {
       if (!formData.districtId || !formData.wardCode) {
         setShippingFee(DEFAULT_SHIPPING_FEE)
+        onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
+        onLoadingChange?.(false)
         return
       }
+
+      onLoadingChange?.(true)
 
       let totalWeight = 0
       cartItems.forEach((item) => {
@@ -168,6 +172,8 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           totalWeight += (item.weight || 500) * item.quantity
         }
       })
+
+      console.log('📦 Tính phí ship - Tổng khối lượng:', totalWeight, 'gram, Số item:', selectedItems.size)
 
       const result = await calculateFee({
         to_district_id: formData.districtId,
@@ -179,14 +185,20 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       })
 
       if (result.success && result.data) {
+        console.log('✅ Phí ship cập nhật:', result.data.total, 'VNĐ')
         setShippingFee(result.data.total || DEFAULT_SHIPPING_FEE)
+        onShippingFeeChange?.(result.data.total || DEFAULT_SHIPPING_FEE)
       } else {
+        console.log('⚠️ Lỗi tính phí ship, dùng mặc định:', DEFAULT_SHIPPING_FEE)
         setShippingFee(DEFAULT_SHIPPING_FEE)
+        onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
       }
+      
+      onLoadingChange?.(false)
     }
 
     calculateShipping()
-  }, [formData.districtId, formData.wardCode, cartItems, selectedItems, calculateFee])
+  }, [formData.districtId, formData.wardCode, cartItems, selectedItems, calculateFee, onShippingFeeChange, onLoadingChange])
 
   const handleToggleItem = (itemKey: string) => {
     const updated = new Set(selectedItems)

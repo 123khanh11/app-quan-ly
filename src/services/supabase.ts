@@ -336,7 +336,11 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
           price,
           sku,
           barcode,
-          image_url
+          image_url,
+          weight_kg,
+          length_cm,
+          width_cm,
+          height_cm
         )
       `)
       .eq('id', productId)
@@ -412,6 +416,10 @@ export async function getProductDetails(productId: string): Promise<ProductDetai
         variant_image: v.image_url,
         description: displayDescription,
         images: variantImages,
+        weight_kg: v.weight_kg,
+        length_cm: v.length_cm,
+        width_cm: v.width_cm,
+        height_cm: v.height_cm,
       }
     })
 

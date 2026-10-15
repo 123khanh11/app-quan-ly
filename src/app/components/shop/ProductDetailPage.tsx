@@ -108,6 +108,10 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
       color: selectedVariant.color || '',
       size: selectedVariant.size || '',
       sku: selectedVariant.sku,
+      weight: selectedVariant.weight_kg ? selectedVariant.weight_kg * 1000 : 500, // Convert kg to gram
+      length: selectedVariant.length_cm || 20,
+      width: selectedVariant.width_cm || 20,
+      height: selectedVariant.height_cm || 20,
     })
 
     // Track AddToCart event for Meta Pixel
