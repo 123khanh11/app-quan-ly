@@ -109,6 +109,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           // No cart exists yet, create empty one
           await createEmptyCart(userId)
           setCartItems([])
+        } else if (error.code === 'PGRST205') {
+          // Table doesn't exist yet - migration not run
+          console.warn('⚠️  user_carts table not created yet. Using localStorage only.')
+          loadCartFromLocalStorage()
         } else {
           console.error('Failed to load cart:', error)
           setCartItems([])
@@ -120,7 +124,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       console.error('Failed to load cart from database:', err)
-      setCartItems([])
+      // Fall back to localStorage on any error
+      loadCartFromLocalStorage()
     }
   }
 
@@ -131,7 +136,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         .from('user_carts')
         .insert([{ user_id: userId, cart_data: [] }])
     } catch (err) {
-      console.warn('Failed to create cart:', err)
+      if (err instanceof Error && err.message.includes('user_carts')) {
+        console.warn('⚠️  user_carts table not created. Migration needed.')
+      } else {
+        console.warn('Failed to create cart:', err)
+      }
     }
   }
 
@@ -150,7 +159,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             { onConflict: 'user_id' }
           )
       } catch (err) {
-        console.error('Failed to save cart to database:', err)
+        // Silently fail if table doesn't exist - just use localStorage
+        if (err instanceof Error && err.message.includes('user_carts')) {
+          console.warn('⚠️  Database sync disabled. Using localStorage only.')
+        } else {
+          console.error('Failed to save cart to database:', err)
+        }
       }
     }
   }
