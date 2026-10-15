@@ -14,6 +14,8 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
   const [error, setError] = useState<string | null>(null)
   const [loggingOut, setLoggingOut] = useState(false)
 
+  const [isLoggingOutForSwitch, setIsLoggingOutForSwitch] = useState(false)
+
   // Handle OAuth callback
   useEffect(() => {
     const handleAuthChange = async () => {
@@ -67,6 +69,7 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
 
   const handleSwitchAccount = async () => {
     try {
+      setIsLoggingOutForSwitch(true)
       console.log('🔄 Switching to different Google account...')
       
       // Sign out current user
@@ -83,18 +86,17 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
       sessionStorage.clear()
       
       console.log('✅ Ready to login with different account')
+      console.log('⏳ Show login form in modal')
       
-      // Show login form
+      // Call parent's logout handler to update user state
       onLogout?.()
-      onClose()
       
-      // Refresh to clear state
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 100)
+      // Keep modal open for new login - DON'T close
+      // User will see login form and can login with different account
+      setIsLoggingOutForSwitch(false)
     } catch (err) {
       console.error('❌ Switch account error:', err)
-      window.location.href = '/'
+      setIsLoggingOutForSwitch(false)
     }
   }
 
@@ -202,10 +204,10 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
             {/* Switch Account Button */}
             <button
               onClick={handleSwitchAccount}
-              disabled={loggingOut}
+              disabled={isLoggingOutForSwitch}
               className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loggingOut ? (
+              {isLoggingOutForSwitch ? (
                 <>
                   <Loader size={20} className="animate-spin" />
                   Đang chuyển...
