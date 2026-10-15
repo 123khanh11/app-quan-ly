@@ -94,6 +94,9 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
       // Keep modal open for new login - DON'T close
       // User will see login form and can login with different account
       setIsLoggingOutForSwitch(false)
+      
+      // Force a small delay to ensure state updates complete
+      await new Promise(resolve => setTimeout(resolve, 50))
     } catch (err) {
       console.error('❌ Switch account error:', err)
       setIsLoggingOutForSwitch(false)
@@ -150,12 +153,19 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
           <div className="flex justify-between items-center p-6 border-b">
             <h2 className="text-xl font-bold">Tài Khoản</h2>
             <button
-              onClick={() => {
-                console.log('🔄 Close button clicked')
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                console.log('🔄 Close button clicked (account menu)', { bubbles: e.bubbles, cancelable: e.cancelable })
                 onClose()
               }}
-              className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded p-1 transition-colors flex-shrink-0 ml-auto"
+              onMouseDown={(e) => {
+                e.preventDefault()
+                console.log('🖱️ Close button mouseDown (account menu)')
+              }}
+              className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded p-1 transition-colors flex-shrink-0 ml-auto pointer-events-auto"
               type="button"
+              aria-label="Close account menu"
             >
               <X size={24} />
             </button>
@@ -241,12 +251,19 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold">Đăng Nhập</h2>
           <button
-            onClick={() => {
-              console.log('🔄 Close button clicked')
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('🔄 Close button clicked (login form)', { bubbles: e.bubbles, cancelable: e.cancelable })
               onClose()
             }}
-            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded p-1 transition-colors"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              console.log('🖱️ Close button mouseDown (login form)')
+            }}
+            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded p-1 transition-colors pointer-events-auto"
             type="button"
+            aria-label="Close login modal"
           >
             <X size={24} />
           </button>
