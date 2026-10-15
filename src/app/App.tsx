@@ -73,9 +73,40 @@ function AppContent() {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsProfileOpen(false);
+    try {
+      console.log('🔄 Starting logout...');
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('❌ Supabase signOut error:', error);
+      } else {
+        console.log('✅ Supabase signed out successfully');
+      }
+      
+      // Clear local state
+      setUser(null);
+      setIsProfileOpen(false);
+      
+      // Clear all storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      console.log('✅ Local state & storage cleared');
+      
+      // Navigate to home
+      navigate('/');
+      
+      // Force reload to ensure clean state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Force reload even on error
+      window.location.href = '/';
+    }
   };
 
   const handleViewOrder = (orderId: string) => {
