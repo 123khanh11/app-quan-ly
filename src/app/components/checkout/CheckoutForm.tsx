@@ -188,7 +188,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           totalHeight = Math.max(totalHeight, itemHeight) // Lấy chiều cao lớn nhất
           itemCount++
 
-          console.log(`📦 Item: ${item.name} - Weight: ${itemWeight}g, L:${itemLength}cm, W:${itemWidth}cm, H:${itemHeight}cm, Qty:${itemQuantity}`)
+          console.log(`📦 Item: ${item.name}`)
+          console.log(`   - Qty: ${itemQuantity}`)
+          console.log(`   - Weight from cart: ${item.weight}g (raw)`)
+          console.log(`   - Calculated weight: ${itemWeight}g`)
+          console.log(`   - Dimensions: L:${itemLength}cm, W:${itemWidth}cm, H:${itemHeight}cm`)
+          console.log(`   - Full item object:`, JSON.stringify(item))
         }
       })
 

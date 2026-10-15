@@ -181,7 +181,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const newItems = existingItem
         ? prevItems.map((i) =>
             i.product_id === item.product_id && i.color === item.color && i.size === item.size
-              ? { ...i, quantity: i.quantity + item.quantity }
+              ? { 
+                  ...i, 
+                  quantity: i.quantity + item.quantity,
+                  // ← IMPORTANT: Keep weight, length, width, height from new item
+                  weight: item.weight ?? i.weight,
+                  length: item.length ?? i.length,
+                  width: item.width ?? i.width,
+                  height: item.height ?? i.height,
+                }
               : i
           )
         : [...prevItems, item]
