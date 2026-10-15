@@ -76,6 +76,10 @@ function AppContent() {
     try {
       console.log('🔄 Starting logout...');
       
+      // Save cart before clearing storage
+      const cartBackup = localStorage.getItem('shopping_cart');
+      const favoritesBackup = localStorage.getItem('favorites');
+      
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) {
@@ -84,27 +88,26 @@ function AppContent() {
         console.log('✅ Supabase signed out successfully');
       }
       
+      // Clear auth-related storage only, NOT cart/favorites
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('sb-token');
+      sessionStorage.clear();
+      
+      // Restore cart and favorites
+      if (cartBackup) localStorage.setItem('shopping_cart', cartBackup);
+      if (favoritesBackup) localStorage.setItem('favorites', favoritesBackup);
+      
       // Clear local state
       setUser(null);
       setIsProfileOpen(false);
       
-      // Clear all storage
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      console.log('✅ Local state & storage cleared');
+      console.log('✅ Auth cleared, cart & favorites preserved');
       
       // Navigate to home
       navigate('/');
       
-      // Force reload to ensure clean state
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
-      
     } catch (error) {
       console.error('❌ Logout error:', error);
-      // Force reload even on error
       window.location.href = '/';
     }
   };

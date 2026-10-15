@@ -70,6 +70,10 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
       setLoggingOut(true)
       console.log('🔄 Starting logout...')
       
+      // Save cart and favorites before clearing storage
+      const cartBackup = localStorage.getItem('shopping_cart')
+      const favoritesBackup = localStorage.getItem('favorites')
+      
       const { error } = await supabase.auth.signOut()
       if (error) {
         console.error('❌ Supabase signOut error:', error)
@@ -77,9 +81,16 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
         console.log('✅ Supabase signed out successfully')
       }
       
-      localStorage.clear()
+      // Clear auth-related storage only
+      localStorage.removeItem('supabase.auth.token')
+      localStorage.removeItem('sb-token')
       sessionStorage.clear()
-      console.log('✅ Local state & storage cleared')
+      
+      // Restore cart and favorites
+      if (cartBackup) localStorage.setItem('shopping_cart', cartBackup)
+      if (favoritesBackup) localStorage.setItem('favorites', favoritesBackup)
+      
+      console.log('✅ Auth cleared, cart & favorites preserved')
       
       onLogout?.()
       onClose()
