@@ -144,14 +144,15 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
   // Show account menu if user is logged in
   if (user) {
     return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="bg-white rounded-lg shadow-lg max-w-md w-full" onClick={(e) => e.stopPropagation()}>
           {/* Header */}
           <div className="flex justify-between items-center p-6 border-b">
             <h2 className="text-xl font-bold">Tài Khoản</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded p-1 transition-colors flex-shrink-0"
+              aria-label="Close"
             >
               <X size={24} />
             </button>
@@ -231,14 +232,15 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
 
   // Show login form if user is not logged in
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-lg max-w-md w-full relative z-51" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-bold">Đăng Nhập</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded p-1 transition-colors"
+            aria-label="Close"
           >
             <X size={24} />
           </button>
