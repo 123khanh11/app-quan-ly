@@ -98,7 +98,46 @@ export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps)
     }
   }
 
-  if (!isOpen) return null
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true)
+      console.log('🔄 Starting logout...')
+      
+      // Save cart and favorites before clearing storage
+      const cartBackup = localStorage.getItem('shopping_cart')
+      const favoritesBackup = localStorage.getItem('favorites')
+      
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('❌ Supabase signOut error:', error)
+      } else {
+        console.log('✅ Supabase signed out successfully')
+      }
+      
+      // Clear auth-related storage only
+      localStorage.removeItem('supabase.auth.token')
+      localStorage.removeItem('sb-token')
+      sessionStorage.clear()
+      
+      // Restore cart and favorites
+      if (cartBackup) localStorage.setItem('shopping_cart', cartBackup)
+      if (favoritesBackup) localStorage.setItem('favorites', favoritesBackup)
+      
+      console.log('✅ Auth cleared, cart & favorites preserved')
+      
+      onLogout?.()
+      onClose()
+      
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 100)
+    } catch (err) {
+      console.error('❌ Logout error:', err)
+      window.location.href = '/'
+    } finally {
+      setLoggingOut(false)
+    }
+  }
 
   // Show account menu if user is logged in
   if (user) {
