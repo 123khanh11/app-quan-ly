@@ -155,13 +155,25 @@ export async function getOrderDetails(orderId: string): Promise<{
   order: Order
   items: OrderItem[]
 }> {
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    throw new Error('User not authenticated')
+  }
+
   const { data: orderData, error: orderError } = await supabase
     .from('orders')
     .select('*')
     .eq('id', orderId)
+    .eq('user_id', user.id)  // ← Filter by user ownership
     .single()
 
-  if (orderError) throw new Error(orderError.message)
+  if (orderError) {
+    if (orderError.code === 'PGRST116') {
+      throw new Error('Đơn hàng không tồn tại hoặc không phải của bạn')
+    }
+    throw new Error(orderError.message)
+  }
 
   const { data: itemsData, error: itemsError } = await supabase
     .from('order_items')
@@ -177,9 +189,16 @@ export async function getOrderDetails(orderId: string): Promise<{
 }
 
 export async function getAllOrders(): Promise<Array<Order & { items: OrderItem[] }>> {
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    throw new Error('User not authenticated')
+  }
+
   const { data: ordersData, error: ordersError } = await supabase
     .from('orders')
     .select('*')
+    .eq('user_id', user.id)  // ← Filter by user ownership
     .order('created_at', { ascending: false })
 
   if (ordersError) throw new Error(ordersError.message)

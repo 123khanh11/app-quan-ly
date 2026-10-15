@@ -27,8 +27,15 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
         setOrder(order)
         setItems(items)
       } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Không thể tải đơn hàng'
         console.error('Failed to load order:', err)
-        setError(err instanceof Error ? err.message : 'Không thể tải đơn hàng')
+        
+        // Check if it's an auth error
+        if (errorMessage.includes('not authenticated') || errorMessage.includes('không phải của bạn')) {
+          setError('Vui lòng đăng nhập để xem đơn hàng của bạn')
+        } else {
+          setError(errorMessage)
+        }
       } finally {
         setLoading(false)
       }
