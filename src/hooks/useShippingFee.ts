@@ -3,10 +3,10 @@ import { useState, useCallback } from 'react'
 export interface ShippingFeeParams {
   to_district_id: number
   to_ward_code: string
-  weight?: number // gram, default: 1000
-  length?: number // cm, default: 20
-  width?: number // cm, default: 20
-  height?: number // cm, default: 20
+  weight?: number // grams (g) - default: 1000
+  length?: number // centimeters (cm) - default: 20
+  width?: number // centimeters (cm) - default: 20
+  height?: number // centimeters (cm) - default: 20
   service_id?: number
   insurance_value?: number
   cod_value?: number

@@ -69,9 +69,10 @@ async function handler(req, res) {
     }
 
     console.log('📦 Calculating GHN shipping fee...')
+    console.log('From:', GHN_FROM_DISTRICT_ID, GHN_FROM_WARD_CODE)
     console.log('To:', to_district_id, to_ward_code)
     console.log('Weight:', weight_gram, 'gram')
-    console.log('Dimensions:', `${length_cm}x${width_cm}x${height_cm}cm`)
+    console.log('Dimensions:', `${length_cm}cm x ${width_cm}cm x ${height_cm}cm`)
 
     // Determine service type by weight
     let finalServiceType = 2  // Default: under 20kg
@@ -90,15 +91,16 @@ async function handler(req, res) {
     }
 
     // Call GHN API
+    // Units: weight in grams (g), length/width/height in centimeters (cm)
     const payload = {
       from_district_id: parseInt(GHN_FROM_DISTRICT_ID),
       from_ward_code: GHN_FROM_WARD_CODE,
       to_district_id: to_district_id,
       to_ward_code: to_ward_code,
-      weight: weight_gram,
-      length: length_cm,
-      width: width_cm,
-      height: height_cm,
+      weight: weight_gram,        // grams (g)
+      length: length_cm,          // centimeters (cm)
+      width: width_cm,            // centimeters (cm)
+      height: height_cm,          // centimeters (cm)
       service_type_id: finalServiceType,
       cod_value: cod_value,
       insurance_value: insurance_value,
