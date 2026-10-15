@@ -176,10 +176,10 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       cartItems.forEach((item) => {
         if (selectedItems.has(`${item.product_id}-${item.color}-${item.size}`)) {
           const itemQuantity = item.quantity || 1
-          const itemWeight = (item.weight || 500) * itemQuantity // gram
-          const itemLength = item.length || 20 // cm
-          const itemWidth = item.width || 20 // cm
-          const itemHeight = item.height || 20 // cm
+          const itemWeight = ((item.weight ?? 500) || 500) * itemQuantity // gram
+          const itemLength = (item.length ?? 20) || 20 // cm
+          const itemWidth = (item.width ?? 20) || 20 // cm
+          const itemHeight = (item.height ?? 20) || 20 // cm
 
           totalWeight += itemWeight
           // Tính tổng dimensions (cộng dồn chiều dài, rộng)
@@ -188,7 +188,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           totalHeight = Math.max(totalHeight, itemHeight) // Lấy chiều cao lớn nhất
           itemCount++
 
-          console.log(`📦 Item: ${item.name} - Weight: ${itemWeight}g, L:${itemLength}cm, W:${itemWidth}cm, H:${itemHeight}cm`)
+          console.log(`📦 Item: ${item.name} - Weight: ${itemWeight}g, L:${itemLength}cm, W:${itemWidth}cm, H:${itemHeight}cm, Qty:${itemQuantity}`)
         }
       })
 
