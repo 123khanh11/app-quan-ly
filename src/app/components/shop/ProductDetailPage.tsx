@@ -98,6 +98,19 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
       return
     }
 
+    const weightInGrams = (selectedVariant.weight_kg ?? 0.5) * 1000
+    
+    console.log('🛒 [AddToCart] Selected variant:', {
+      variant_id: selectedVariant.variant_id,
+      product_name: product.product_name,
+      weight_kg_raw: selectedVariant.weight_kg,
+      weight_grams: weightInGrams,
+      length_cm: selectedVariant.length_cm,
+      width_cm: selectedVariant.width_cm,
+      height_cm: selectedVariant.height_cm,
+      quantity,
+    })
+
     addToCart({
       product_id: product.product_id,
       variant_id: selectedVariant.variant_id,
@@ -108,7 +121,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
       color: selectedVariant.color || '',
       size: selectedVariant.size || '',
       sku: selectedVariant.sku,
-      weight: (selectedVariant.weight_kg ?? 0.5) * 1000, // Convert kg to gram (default 0.5kg = 500g)
+      weight: weightInGrams, // Convert kg to gram (default 0.5kg = 500g)
       length: selectedVariant.length_cm ?? 20,
       width: selectedVariant.width_cm ?? 20,
       height: selectedVariant.height_cm ?? 20,

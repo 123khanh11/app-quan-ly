@@ -188,10 +188,13 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           totalHeight = Math.max(totalHeight, itemHeight) // Lấy chiều cao lớn nhất
           itemCount++
 
-          console.log(`📦 Item: ${item.name}`)
-          console.log(`   - Qty: ${itemQuantity}`)
-          console.log(`   - Weight from cart: ${item.weight}g (raw)`)
-          console.log(`   - Calculated weight: ${itemWeight}g`)
+          console.log(`📦 [CheckoutForm] Item: ${item.name}`)
+          console.log(`   - Product ID: ${item.product_id}`)
+          console.log(`   - Variant ID: ${item.variant_id}`)
+          console.log(`   - Quantity: ${itemQuantity}`)
+          console.log(`   - Weight (from cart): ${item.weight}g`)
+          console.log(`   - Weight (after default): ${item.weight ?? 500}g`)
+          console.log(`   - Total weight this item: ${itemWeight}g`)
           console.log(`   - Dimensions: L:${itemLength}cm, W:${itemWidth}cm, H:${itemHeight}cm`)
           console.log(`   - Full item object:`, JSON.stringify(item))
         }
@@ -205,6 +208,10 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       console.log(`📊 Tổng cộng - Khối lượng: ${totalWeight}g, L:${totalLength}cm, W:${totalWidth}cm, H:${totalHeight}cm, Số item: ${itemCount}`)
       console.log(`📍 Giao đến - District: ${formData.districtId}, Ward: ${formData.wardCode}`)
+      
+      // Determine which service type will be used
+      let serviceType = totalWeight >= 20000 ? 5 : 2
+      console.log(`🔧 Service Type: ${serviceType} (${totalWeight >= 20000 ? 'Heavy (>= 20kg)' : 'Standard (< 20kg)'})`)
 
       const result = await calculateFee({
         to_district_id: formData.districtId,

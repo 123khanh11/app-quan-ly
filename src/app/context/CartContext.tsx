@@ -194,6 +194,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           )
         : [...prevItems, item]
       
+      // Log the cart item for debugging
+      if (existingItem) {
+        console.log(`🛒 [CartContext] Merged duplicate item:`, {
+          product_id: item.product_id,
+          old_quantity: existingItem.quantity,
+          new_quantity: existingItem.quantity + item.quantity,
+          old_weight: existingItem.weight,
+          new_weight: item.weight ?? existingItem.weight,
+          preserved: item.weight === undefined
+        })
+      } else {
+        console.log(`🛒 [CartContext] Added new item:`, {
+          product_id: item.product_id,
+          name: item.name,
+          weight: item.weight,
+          length: item.length,
+          width: item.width,
+          height: item.height,
+        })
+      }
+      
       saveCart(newItems)
       return newItems
     })

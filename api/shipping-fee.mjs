@@ -29,7 +29,7 @@ async function handler(req, res) {
   }
 
   try {
-    const {
+    let {
       to_district_id,
       to_ward_code,
       weight_gram = 1000,
@@ -49,31 +49,59 @@ async function handler(req, res) {
       })
     }
 
+    // Convert to numbers and validate
+    weight_gram = Math.max(parseInt(weight_gram) || 1000, 200)
+    length_cm = Math.max(parseInt(length_cm) || 20, 10)
+    width_cm = Math.max(parseInt(width_cm) || 20, 10)
+    height_cm = Math.max(parseInt(height_cm) || 20, 10)
+    cod_value = Math.max(parseInt(cod_value) || 0, 0)
+    insurance_value = Math.max(parseInt(insurance_value) || 0, 0)
+    to_district_id = parseInt(to_district_id)
+    to_ward_code = String(to_ward_code).trim()
+
+    // Validate weight is valid number
+    if (isNaN(weight_gram) || weight_gram <= 0 || weight_gram > 20000) {
+      console.error('❌ Invalid weight:', weight_gram)
+      return res.status(400).json({
+        success: false,
+        error: `Invalid weight: ${weight_gram}g (must be 200-20000g)`
+      })
+    }
+
     console.log('📦 Calculating GHN shipping fee...')
     console.log('To:', to_district_id, to_ward_code)
     console.log('Weight:', weight_gram, 'gram')
+    console.log('Dimensions:', `${length_cm}x${width_cm}x${height_cm}cm`)
 
-    // Determine service type by weight if not specified
-    let finalServiceType = service_type_id || 2
+    // Determine service type by weight
+    let finalServiceType = 2  // Default: under 20kg
+    
     if (weight_gram >= 20000) {
-      finalServiceType = 5 // 20kg or more
-    } else if (!service_type_id) {
-      finalServiceType = 2 // under 20kg
+      finalServiceType = 5  // Heavy/Bulk: 20kg or more
+      console.log('📦 Heavy package (>= 20kg) - Using service_type_id: 5')
+    } else {
+      console.log('📦 Standard package (< 20kg) - Using service_type_id: 2')
+    }
+    
+    // Override if explicitly specified
+    if (service_type_id) {
+      finalServiceType = service_type_id
+      console.log(`📦 Service type override: ${finalServiceType}`)
     }
 
     // Call GHN API
     const payload = {
       from_district_id: parseInt(GHN_FROM_DISTRICT_ID),
       from_ward_code: GHN_FROM_WARD_CODE,
-      to_district_id,
-      to_ward_code,
-      weight: Math.max(weight_gram, 200),
-      length: Math.max(length_cm, 10),
-      width: Math.max(width_cm, 10),
-      height: Math.max(height_cm, 10),
+      to_district_id: to_district_id,
+      to_ward_code: to_ward_code,
+      weight: weight_gram,
+      length: length_cm,
+      width: width_cm,
+      height: height_cm,
       service_type_id: finalServiceType,
-      cod_value: Math.max(cod_value, 0),
-      insurance_value: Math.max(insurance_value, 0),
+      cod_value: cod_value,
+      insurance_value: insurance_value,
     }
 
     console.log('📤 Calling GHN API with:', payload)
