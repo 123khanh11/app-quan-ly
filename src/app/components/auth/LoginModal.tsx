@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react'
-import { X, Chrome, Loader, LogOut, User } from 'lucide-react'
+import { X, Chrome, Loader, LogOut, User, Plus } from 'lucide-react'
 import { supabase } from '@/services/supabase'
 
 interface LoginFormProps {
   onClose: () => void
+}
+
+interface AccountChooserProps {
+  onClose: () => void
+  onAddAccount: () => void
+  onSelectAccount: (email: string) => void
 }
 
 interface AccountMenuProps {
@@ -110,10 +116,114 @@ function LoginForm({ onClose }: LoginFormProps) {
   )
 }
 
+// Account Chooser - shows saved Google accounts
+function AccountChooser({ onClose, onAddAccount, onSelectAccount }: AccountChooserProps) {
+  const [savedAccounts, setSavedAccounts] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    // Get saved accounts from localStorage
+    const accounts = localStorage.getItem('saved_google_accounts')
+    if (accounts) {
+      try {
+        setSavedAccounts(JSON.parse(accounts))
+        console.log('📧 Saved Google accounts:', JSON.parse(accounts))
+      } catch (err) {
+        console.error('Error parsing saved accounts:', err)
+      }
+    }
+  }, [])
+
+  const handleSelectAccount = async (email: string) => {
+    try {
+      setLoading(true)
+      console.log(`🔄 Signing in with ${email}...`)
+      
+      // Sign in with Google (will show account chooser or login directly)
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      })
+
+      if (error) {
+        console.error('Sign in error:', error)
+      }
+      // Modal will close automatically on successful auth
+    } catch (err) {
+      console.error('Error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 pointer-events-auto">
+      <div className="bg-white rounded-lg shadow-lg max-w-md w-full pointer-events-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b pointer-events-auto">
+          <h2 className="text-xl font-bold">Chọn Tài Khoản</h2>
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('❌ Close button clicked (account chooser)')
+              onClose()
+            }}
+            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded p-1 transition-colors pointer-events-auto flex-shrink-0"
+            type="button"
+            aria-label="Close account chooser"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-3">
+          {/* Saved Accounts */}
+          {savedAccounts.length > 0 && (
+            <>
+              <p className="text-sm text-gray-600 mb-3">Chọn tài khoản của bạn</p>
+              {savedAccounts.map((email) => (
+                <button
+                  key={email}
+                  onClick={() => handleSelectAccount(email)}
+                  disabled={loading}
+                  className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white flex-shrink-0">
+                    <User size={20} />
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{email}</p>
+                  </div>
+                </button>
+              ))}
+              <div className="border-t pt-3 mt-3" />
+            </>
+          )}
+
+          {/* Add New Account */}
+          <button
+            onClick={onAddAccount}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            <Plus size={20} className="text-gray-600" />
+            <span className="font-semibold text-gray-700">Sử dụng tài khoản khác</span>
+          </button>
+
+          <p className="text-center text-xs text-gray-500 mt-4">
+            Bạn sẽ được chuyển đến Google để chọn hoặc tạo tài khoản
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Separate component for account menu
 function AccountMenu({ user, onClose, onLogout }: AccountMenuProps) {
   const [loggingOut, setLoggingOut] = useState(false)
-  const [isLoggingOutForSwitch, setIsLoggingOutForSwitch] = useState(false)
+  const [showAccountChooser, setShowAccountChooser] = useState(false)
 
   const handleLogout = async () => {
     try {
@@ -158,8 +268,7 @@ function AccountMenu({ user, onClose, onLogout }: AccountMenuProps) {
 
   const handleSwitchAccount = async () => {
     try {
-      setIsLoggingOutForSwitch(true)
-      console.log('🔄 Switching to different Google account...')
+      console.log('🔄 Preparing to switch account...')
       
       // Sign out current user
       const { error } = await supabase.auth.signOut()
@@ -174,17 +283,50 @@ function AccountMenu({ user, onClose, onLogout }: AccountMenuProps) {
       localStorage.removeItem('sb-token')
       sessionStorage.clear()
       
-      console.log('✅ Ready to login with different account')
+      console.log('✅ Auth cleared')
+      
+      // Save current email to localStorage for account chooser
+      if (user?.email) {
+        const savedAccounts = localStorage.getItem('saved_google_accounts')
+        let accounts: string[] = []
+        
+        if (savedAccounts) {
+          accounts = JSON.parse(savedAccounts)
+        }
+        
+        // Add current email if not already in list
+        if (!accounts.includes(user.email)) {
+          accounts.push(user.email)
+        }
+        
+        localStorage.setItem('saved_google_accounts', JSON.stringify(accounts))
+        console.log('💾 Saved account:', user.email)
+      }
       
       // Call parent's logout handler to update user state
       onLogout?.()
       
-      // Keep modal open for new login - DON'T close
-      setIsLoggingOutForSwitch(false)
+      // Show account chooser
+      setShowAccountChooser(true)
     } catch (err) {
       console.error('❌ Switch account error:', err)
-      setIsLoggingOutForSwitch(false)
     }
+  }
+
+  // If showing account chooser, return that instead
+  if (showAccountChooser) {
+    return (
+      <AccountChooser 
+        onClose={onClose}
+        onAddAccount={() => {
+          // Just proceed with Google OAuth, it will show account chooser
+          console.log('🔄 Opening Google account chooser...')
+        }}
+        onSelectAccount={() => {
+          // Will be handled by auth state change listener
+        }}
+      />
+    )
   }
 
   return (
@@ -255,20 +397,13 @@ function AccountMenu({ user, onClose, onLogout }: AccountMenuProps) {
           {/* Switch Account Button */}
           <button
             onClick={handleSwitchAccount}
-            disabled={isLoggingOutForSwitch}
+            disabled={loggingOut}
             className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoggingOutForSwitch ? (
-              <>
-                <Loader size={20} className="animate-spin" />
-                Đang chuyển...
-              </>
-            ) : (
-              <>
-                <Chrome size={20} />
-                Dùng Tài Khoản Khác
-              </>
-            )}
+            <>
+              <Chrome size={20} />
+              Dùng Tài Khoản Khác
+            </>
           </button>
 
           <p className="text-center text-xs text-gray-500">
