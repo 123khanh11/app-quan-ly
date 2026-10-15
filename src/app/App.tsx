@@ -173,7 +173,12 @@ function AppContent() {
       </div>
 
       {/* ── LOGIN MODAL ── */}
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      <LoginModal 
+        isOpen={isLoginOpen} 
+        onClose={() => setIsLoginOpen(false)}
+        user={user}
+        onLogout={handleLogout}
+      />
     </>
   );
 }

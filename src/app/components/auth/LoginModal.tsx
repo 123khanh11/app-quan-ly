@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react'
-import { X, Chrome, Loader } from 'lucide-react'
+import { X, Chrome, Loader, LogOut, User } from 'lucide-react'
 import { supabase } from '@/services/supabase'
 
 interface LoginModalProps {
   isOpen: boolean
   onClose: () => void
+  user?: any
+  onLogout?: () => void
 }
 
-export function LoginModal({ isOpen, onClose }: LoginModalProps) {
+export function LoginModal({ isOpen, onClose, user, onLogout }: LoginModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   // Handle OAuth callback
   useEffect(() => {
     const handleAuthChange = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
+      if (session && !user) {
         // User logged in successfully
         onClose()
       }
@@ -34,7 +37,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     return () => {
       subscription?.subscription.unsubscribe()
     }
-  }, [onClose])
+  }, [onClose, user])
 
   const handleGoogleLogin = async () => {
     try {
@@ -62,8 +65,108 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true)
+      console.log('🔄 Starting logout...')
+      
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error('❌ Supabase signOut error:', error)
+      } else {
+        console.log('✅ Supabase signed out successfully')
+      }
+      
+      localStorage.clear()
+      sessionStorage.clear()
+      console.log('✅ Local state & storage cleared')
+      
+      onLogout?.()
+      onClose()
+      
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 100)
+    } catch (err) {
+      console.error('❌ Logout error:', err)
+      window.location.href = '/'
+    } finally {
+      setLoggingOut(false)
+    }
+  }
+
   if (!isOpen) return null
 
+  // Show account menu if user is logged in
+  if (user) {
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
+          {/* Header */}
+          <div className="flex justify-between items-center p-6 border-b">
+            <h2 className="text-xl font-bold">Tài Khoản</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="p-6 space-y-4">
+            {/* User Info */}
+            <div className="flex items-center gap-3 pb-4 border-b">
+              {user.user_metadata?.avatar_url ? (
+                <img 
+                  src={user.user_metadata.avatar_url} 
+                  alt="Avatar" 
+                  className="w-12 h-12 rounded-full"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                  <User size={24} />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 truncate">
+                  {user.user_metadata?.full_name || 'Người dùng'}
+                </p>
+                <p className="text-sm text-gray-500 truncate">
+                  {user.email}
+                </p>
+              </div>
+            </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loggingOut ? (
+                <>
+                  <Loader size={20} className="animate-spin" />
+                  Đang đăng xuất...
+                </>
+              ) : (
+                <>
+                  <LogOut size={20} />
+                  Đăng Xuất
+                </>
+              )}
+            </button>
+
+            <p className="text-center text-xs text-gray-500">
+              Bạn đang đăng nhập bằng Google
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show login form if user is not logged in
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
