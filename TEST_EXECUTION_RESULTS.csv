@@ -1,0 +1,42 @@
+Chức Năng,Test Case ID,Tên Test Case,Điều Kiện Tiên Quyết,Ngày Thực Thi,Người Thực Thi,Kết Quả,Status,Ghi Chú / Bug ID
+F05,TC-API-002,GET /api/ghn-provinces,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,63 provinces tải đầy đủ
+F05,TC-API-003,GET /api/ghn-districts?province_id=1,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách quận/huyện tải đúng
+F05,TC-API-004,GET /api/ghn-wards?district_id=1,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách xã/phường tải đúng
+F06,TC-API-001,GET /api/health,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,Vercel server chạy ổn định
+F06,TC-F06-005,POST /api/shipping-fee (Valid Data),Server chạy + dữ liệu hợp lệ,17/10/2026,AI Agent,✅ PASS,Thực Thi,"Status 200, phí = 46000đ"
+F06,TC-F06-006,POST /api/shipping-fee (Weight < 200g),Server chạy + weight < 200g,17/10/2026,AI Agent,❌ FAIL,Thực Thi,API chấp nhận weight < 200g (should reject) - BUG-001
+F06,TC-F06-003,Weight Calculation (1kg minimum),Server chạy + 1000g,17/10/2026,AI Agent,✅ PASS,Thực Thi,"Weight 1000g = 2 × 500g (min threshold) ✅"
+F06,TC-F06-004,Default Dimensions (20×20×20 cm),Server chạy + dimensions,17/10/2026,AI Agent,✅ PASS,Thực Thi,Default dimensions chấp nhận + tính toán đúng
+F06,TC-ServiceType-Light,Light Package < 20kg → service_type_id=2,Server chạy + 5kg,17/10/2026,AI Agent,✅ PASS,Thực Thi,Light package (5kg) xử lý đúng
+F06,TC-ServiceType-Heavy,Heavy Package >= 20kg → service_type_id=5,Server chạy + 25kg,17/10/2026,AI Agent,✅ PASS,Thực Thi,Heavy package (25kg) xử lý đúng
+F06,TC-ServiceType-Boundary,Boundary Package = 20kg → service_type_id=5,Server chạy + 20kg,17/10/2026,AI Agent,✅ PASS,Thực Thi,Boundary case (20kg) xử lý đúng - không có edge case bug
+F01,TC-F01-001,Hiển thị danh sách sản phẩm,Website mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Hiển thị ≥ 4 sản phẩm; responsive layout; tải < 2s
+F01,TC-F01-006,Responsive Mobile (390×844),Website mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,2 cột sản phẩm trên mobile ✅
+F01,TC-F01-007,Responsive Tablet (768×1024),Website mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,3 cột sản phẩm trên tablet ✅
+F01,TC-F01-008,Responsive Desktop (1440×900),Website mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,4 cột sản phẩm trên desktop ✅
+F02,TC-F02-001,Hiển thị chi tiết sản phẩm,Trang chi tiết mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Tên + mô tả + giá + ảnh tải từ DB ✅
+F02,TC-F02-003,Cập nhật gallery theo biến thể,Trang chi tiết mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Gallery ảnh cập nhật theo biến thể được chọn ✅
+F02,TC-F02-008,Meta Pixel AddToCart event,Meta Pixel Helper cài,17/10/2026,AI Agent,✅ PASS,Thực Thi,Event AddToCart ghi nhận + dữ liệu đúng ✅
+F03,TC-F03-001,Hiển thị trang giỏ hàng,Có ≥ 1 sản phẩm trong giỏ,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách sản phẩm + ảnh + tên + giá + số lượng ✅
+F03,TC-F03-002,Tăng số lượng sản phẩm,Trang giỏ hàng mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Số lượng tăng + tổng tiền cập nhật real-time ✅
+F03,TC-F03-003,Giảm số lượng sản phẩm,Trang giỏ hàng mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Số lượng giảm + tổng tiền cập nhật ✅
+F03,TC-F03-008,Giỏ hàng lưu sau reload,Có sản phẩm trong giỏ,17/10/2026,AI Agent,✅ PASS,Thực Thi,Giỏ vẫn còn sản phẩm sau F5 (localStorage) ✅
+F05,TC-F05-001,Form checkout + validation,Giỏ hàng có sản phẩm,17/10/2026,AI Agent,✅ PASS,Thực Thi,Form đầy đủ + validation bắt buộc ✅
+F05,TC-F05-005,Dropdown Tỉnh (63 provinces),Form checkout mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,63 tỉnh tải đúng từ Supabase ✅
+F05,TC-F05-006,Cascading Dropdown Huyện,Tỉnh được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách quận/huyện tải theo tỉnh ✅
+F05,TC-F05-007,Cascading Dropdown Xã,Quận/Huyện được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách xã/phường tải theo quận ✅
+F06,TC-F06-001,Hiển thị phí vận chuyển,Địa chỉ đầy đủ được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Phí ship hiển thị > 0 ✅
+F06,TC-F06-002,Cập nhật tổng tiền (tiền hàng + phí),Form checkout,17/10/2026,AI Agent,✅ PASS,Thực Thi,Tổng tiền = tiền hàng + phí ship ✅
+F07,TC-F07-001,Modal thanh toán hiển thị,Form checkout hoàn thành,17/10/2026,AI Agent,✅ PASS,Thực Thi,Hiển thị 2 phương thức (COD / Chuyển khoản) ✅
+F07,TC-F07-002,Chọn COD,Modal thanh toán mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,COD được chọn + xác nhận đúng ✅
+F07,TC-F07-003,Chọn Chuyển khoản,Modal thanh toán mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,QR code + số tài khoản + nội dung chuyển hiển thị ✅
+F07,TC-F07-004,Sao chép số tài khoản,Chuyển khoản được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Số tài khoản copy vào clipboard ✅
+F07,TC-F07-005,Sao chép nội dung chuyển khoản,Chuyển khoản được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Nội dung chuyển copy vào clipboard ✅
+F07,TC-F07-006,QR code từ VietQR,Chuyển khoản được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,QR code tạo từ VietQR + hiển thị đúng ✅
+F08,TC-F08-009,Meta Pixel Lead event,Đơn hàng được tạo,17/10/2026,AI Agent,✅ PASS,Thực Thi,Lead event ghi nhận + value/currency/payment_method đúng ✅
+F10,TC-F10-001,Nút Đăng Nhập mở LoginModal,Website mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,LoginModal xuất hiện ✅
+F10,TC-F10-002,OAuth Google qua Supabase,LoginModal mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Google login flow hoạt động ✅
+F10,TC-F10-003,Phiên làm việc được lưu,Đăng nhập thành công,17/10/2026,AI Agent,✅ PASS,Thực Thi,Session persisted sau reload (F5) ✅
+F10,TC-F10-004,Header hiển thị tên user,Đã đăng nhập,17/10/2026,AI Agent,✅ PASS,Thực Thi,Tên + email hiển thị trên header ✅
+F10,TC-F10-005,Chức năng đăng xuất,Đã đăng nhập,17/10/2026,AI Agent,✅ PASS,Thực Thi,Session xóa + giỏ hàng & yêu thích giữ lại ✅
+F10,TC-F10-006,Truy cập "Đơn Hàng" khi chưa đăng nhập,Chưa login,17/10/2026,AI Agent,✅ PASS,Thực Thi,Redirect tới login page ✅
