@@ -7,7 +7,7 @@
  */
 
 const GHN_API_URL = 'https://online-gateway.ghn.vn/shiip/public-api/v2'
-const GHN_TOKEN = process.env.GHN_TOKEN || '653bfc7b-8381-11f1-a65e-a68e06d4dd1e'
+const GHN_TOKEN = process.env.GHN_TOKEN || 'a2bb6329-1eda-4bb3-9282-01a8a011c1c8'
 const GHN_SHOP_ID = process.env.GHN_SHOP_ID || '5430969'
 
 async function handler(req, res) {
