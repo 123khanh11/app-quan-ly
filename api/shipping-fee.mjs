@@ -63,12 +63,12 @@ async function handler(req, res) {
     to_district_id = parseInt(to_district_id)
     to_ward_code = String(to_ward_code).trim()
 
-    // Basic validation: weight must be > 0
-    if (isNaN(weight_gram) || weight_gram <= 0) {
+    // Basic validation: weight must not be 0
+    if (isNaN(weight_gram) || weight_gram === 0) {
       console.error('❌ Invalid weight:', weight_gram)
       return res.status(400).json({
         success: false,
-        error: `Invalid weight: ${weight_gram}g (must be > 0)`
+        error: `Invalid weight: ${weight_gram}g (must not be 0)`
       })
     }
 
