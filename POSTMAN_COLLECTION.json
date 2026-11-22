@@ -1,0 +1,188 @@
+{
+  "info": {
+    "_postman_id": "ecommerce-shipping-api",
+    "name": "E-Commerce Shipping API",
+    "description": "Test GHN Shipping APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "API Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Calculate Shipping Fee (Valid)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"to_district_id\": 1915,\n  \"to_ward_code\": \"1B2101\",\n  \"weight_gram\": 5000,\n  \"length_cm\": 20,\n  \"width_cm\": 20,\n  \"height_cm\": 20\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/shipping-fee",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "shipping-fee"
+          ]
+        }
+      },
+      "description": "Test POST /api/shipping-fee with valid data"
+    },
+    {
+      "name": "Calculate Shipping Fee (Weight < 200g - Should Error)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"to_district_id\": 1915,\n  \"to_ward_code\": \"1B2101\",\n  \"weight_gram\": 100,\n  \"length_cm\": 20,\n  \"width_cm\": 20,\n  \"height_cm\": 20\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/shipping-fee",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "shipping-fee"
+          ]
+        }
+      },
+      "description": "Test weight validation - should return 400 error"
+    },
+    {
+      "name": "Calculate Shipping Fee (Missing Parameters)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"weight_gram\": 5000\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/shipping-fee",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "shipping-fee"
+          ]
+        }
+      },
+      "description": "Test missing required parameters - should return 400 error"
+    },
+    {
+      "name": "Get Shipping Order Fee (Valid Order Code)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/shipping-order-fee?order_code=LAD8VT",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "shipping-order-fee"
+          ],
+          "query": [
+            {
+              "key": "order_code",
+              "value": "LAD8VT"
+            }
+          ]
+        }
+      },
+      "description": "Test GET /api/shipping-order-fee with valid order code"
+    },
+    {
+      "name": "Get Shipping Order Fee (Missing order_code)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/shipping-order-fee",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "shipping-order-fee"
+          ]
+        }
+      },
+      "description": "Test missing order_code parameter - should return 400 error"
+    },
+    {
+      "name": "Get Shipping Order Fee (Invalid Order Code)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/shipping-order-fee?order_code=INVALID999",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "shipping-order-fee"
+          ],
+          "query": [
+            {
+              "key": "order_code",
+              "value": "INVALID999"
+            }
+          ]
+        }
+      },
+      "description": "Test with non-existent order code - should return 404 error"
+    }
+  ]
+}
