@@ -63,21 +63,12 @@ async function handler(req, res) {
     to_district_id = parseInt(to_district_id)
     to_ward_code = String(to_ward_code).trim()
 
-    // Validation: weight must be > 0 and <= 30000g (30kg) for GHN
-    // GHN supports max 30kg per package
+    // Basic validation: weight must be > 0
     if (isNaN(weight_gram) || weight_gram <= 0) {
       console.error('❌ Invalid weight:', weight_gram)
       return res.status(400).json({
         success: false,
         error: `Invalid weight: ${weight_gram}g (must be > 0)`
-      })
-    }
-
-    if (weight_gram > 30000) {
-      console.error('❌ Weight exceeds GHN limit:', weight_gram)
-      return res.status(400).json({
-        success: false,
-        error: `Weight exceeds GHN limit: ${weight_gram}g (max 30000g / 30kg)`
       })
     }
 
