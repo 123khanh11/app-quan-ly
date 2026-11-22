@@ -6,6 +6,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "api": "tsx api-server.ts",
+    "api:dev": "tsx --watch api-server.ts",
     "server": "tsx server.ts",
     "server:dev": "tsx --watch server.ts"
   },
