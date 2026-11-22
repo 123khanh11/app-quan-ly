@@ -78,7 +78,9 @@ async function handler(req, res) {
     console.log('Weight:', weight_gram, 'gram')
     console.log('Dimensions:', `${length_cm}cm x ${width_cm}cm x ${height_cm}cm`)
 
-    // Determine service type by weight
+    // Determine service type by weight (GHN requirement)
+    // service_type_id = 2: weight < 20kg (20000g)
+    // service_type_id = 5: weight >= 20kg (20000g)
     let finalServiceType = 2  // Default: under 20kg
     
     if (weight_gram >= 20000) {
