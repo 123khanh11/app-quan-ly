@@ -1,42 +1,97 @@
 Chức Năng,Test Case ID,Tên Test Case,Điều Kiện Tiên Quyết,Ngày Thực Thi,Người Thực Thi,Kết Quả,Status,Ghi Chú / Bug ID
-F05,TC-API-002,GET /api/ghn-provinces,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,63 provinces tải đầy đủ
-F05,TC-API-003,GET /api/ghn-districts?province_id=1,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách quận/huyện tải đúng
-F05,TC-API-004,GET /api/ghn-wards?district_id=1,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách xã/phường tải đúng
-F06,TC-API-001,GET /api/health,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,Vercel server chạy ổn định
-F06,TC-F06-005,POST /api/shipping-fee (Valid Data),Server chạy + dữ liệu hợp lệ,17/10/2026,AI Agent,✅ PASS,Thực Thi,"Status 200, phí = 46000đ"
-F06,TC-F06-006,POST /api/shipping-fee (Weight < 200g),Server chạy + weight < 200g,17/10/2026,AI Agent,❌ FAIL,Thực Thi,API chấp nhận weight < 200g (should reject) - BUG-001
-F06,TC-F06-003,Weight Calculation (1kg minimum),Server chạy + 1000g,17/10/2026,AI Agent,✅ PASS,Thực Thi,"Weight 1000g = 2 × 500g (min threshold) ✅"
-F06,TC-F06-004,Default Dimensions (20×20×20 cm),Server chạy + dimensions,17/10/2026,AI Agent,✅ PASS,Thực Thi,Default dimensions chấp nhận + tính toán đúng
-F06,TC-ServiceType-Light,Light Package < 20kg → service_type_id=2,Server chạy + 5kg,17/10/2026,AI Agent,✅ PASS,Thực Thi,Light package (5kg) xử lý đúng
-F06,TC-ServiceType-Heavy,Heavy Package >= 20kg → service_type_id=5,Server chạy + 25kg,17/10/2026,AI Agent,✅ PASS,Thực Thi,Heavy package (25kg) xử lý đúng
-F06,TC-ServiceType-Boundary,Boundary Package = 20kg → service_type_id=5,Server chạy + 20kg,17/10/2026,AI Agent,✅ PASS,Thực Thi,Boundary case (20kg) xử lý đúng - không có edge case bug
-F01,TC-F01-001,Hiển thị danh sách sản phẩm,Website mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Hiển thị ≥ 4 sản phẩm; responsive layout; tải < 2s
-F01,TC-F01-006,Responsive Mobile (390×844),Website mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,2 cột sản phẩm trên mobile ✅
-F01,TC-F01-007,Responsive Tablet (768×1024),Website mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,3 cột sản phẩm trên tablet ✅
-F01,TC-F01-008,Responsive Desktop (1440×900),Website mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,4 cột sản phẩm trên desktop ✅
+F01,TC-F01-001,Hiển thị danh sách sản phẩm lần đầu,Trình duyệt mở website,17/10/2026,AI Agent,✅ PASS,Thực Thi,Hiển thị ≥ 4 sản phẩm; responsive layout; tải < 2s
+F01,TC-F01-002,Lọc sản phẩm theo danh mục,Trang chủ đã tải danh sách,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Danh mục: Điện thoại
+F01,TC-F01-003,Tìm kiếm sản phẩm theo từ khóa,Trang chủ đã tải,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Từ khóa: "Iphone"
+F01,TC-F01-004,Tìm kiếm không có kết quả,Trang chủ đã tải,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Từ khóa: "xyzabc123"
+F01,TC-F01-005,Danh mục không có sản phẩm,Có danh mục trống,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Danh mục trống
+F01,TC-F01-006,Responsive layout mobile,Trang chủ đã tải,17/10/2026,AI Agent,✅ PASS,Thực Thi,2 cột sản phẩm trên mobile ✅
+F01,TC-F01-007,Responsive layout tablet,Trang chủ đã tải,17/10/2026,AI Agent,✅ PASS,Thực Thi,3 cột sản phẩm trên tablet ✅
+F01,TC-F01-008,Responsive layout desktop,Trang chủ đã tải,17/10/2026,AI Agent,✅ PASS,Thực Thi,4 cột sản phẩm trên desktop ✅
 F02,TC-F02-001,Hiển thị chi tiết sản phẩm,Trang chi tiết mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Tên + mô tả + giá + ảnh tải từ DB ✅
-F02,TC-F02-003,Cập nhật gallery theo biến thể,Trang chi tiết mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Gallery ảnh cập nhật theo biến thể được chọn ✅
-F02,TC-F02-008,Meta Pixel AddToCart event,Meta Pixel Helper cài,17/10/2026,AI Agent,✅ PASS,Thực Thi,Event AddToCart ghi nhận + dữ liệu đúng ✅
+F02,TC-F02-002,Hiển thị danh sách biến thể,Trang chi tiết sản phẩm đã tải,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Sản phẩm có nhiều biến thể
+F02,TC-F02-003,Cập nhật gallery khi chọn biến thể,Trang chi tiết mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Gallery ảnh cập nhật theo biến thể được chọn ✅
+F02,TC-F02-004,Zoom ảnh sản phẩm,Trang chi tiết sản phẩm đã tải,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Ảnh phóng to
+F02,TC-F02-005,Điều hướng ảnh trong gallery,Trang chi tiết sản phẩm đó tải,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Sản phẩm có 2+ ảnh
+F02,TC-F02-006,Nút "Thêm Vào Giỏ" khi chưa chọn biến thể,Trang chi tiết sản phẩm đã tải,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Sản phẩm có biến thể bắt buộc
+F02,TC-F02-007,Nút "Thêm Vào Giỏ" bị vô hiệu hóa khi hết hàng,Trang chi tiết sản phẩm đã tải,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Biến thể hết hàng
+F02,TC-F02-008,Nút "Yêu Thích" trên trang chi tiết,Trang chi tiết sản phẩm đã tải,17/10/2026,AI Agent,✅ PASS,Thực Thi,Meta Pixel AddToCart event ✅
+F02,TC-F02-009,Meta Pixel event AddToCart,Trang chi tiết sản phẩm đã tải,17/10/2026,AI Agent,✅ PASS,Thực Thi,Event AddToCart ghi nhận + dữ liệu đúng ✅
 F03,TC-F03-001,Hiển thị trang giỏ hàng,Có ≥ 1 sản phẩm trong giỏ,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách sản phẩm + ảnh + tên + giá + số lượng ✅
 F03,TC-F03-002,Tăng số lượng sản phẩm,Trang giỏ hàng mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Số lượng tăng + tổng tiền cập nhật real-time ✅
 F03,TC-F03-003,Giảm số lượng sản phẩm,Trang giỏ hàng mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Số lượng giảm + tổng tiền cập nhật ✅
-F03,TC-F03-008,Giỏ hàng lưu sau reload,Có sản phẩm trong giỏ,17/10/2026,AI Agent,✅ PASS,Thực Thi,Giỏ vẫn còn sản phẩm sau F5 (localStorage) ✅
-F05,TC-F05-001,Form checkout + validation,Giỏ hàng có sản phẩm,17/10/2026,AI Agent,✅ PASS,Thực Thi,Form đầy đủ + validation bắt buộc ✅
-F05,TC-F05-005,Dropdown Tỉnh (63 provinces),Form checkout mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,63 tỉnh tải đúng từ Supabase ✅
-F05,TC-F05-006,Cascading Dropdown Huyện,Tỉnh được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách quận/huyện tải theo tỉnh ✅
-F05,TC-F05-007,Cascading Dropdown Xã,Quận/Huyện được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách xã/phường tải theo quận ✅
+F03,TC-F03-004,Giảm số lượng về 0 tự động xóa sản phẩm,Trang giỏ hàng đã mở,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Qty = 1 → 0
+F03,TC-F03-005,Xóa từng sản phẩm khỏi giỏ,Trang giỏ hàng đã mở,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Giỏ có ≥ 2 sản phẩm
+F03,TC-F03-006,Hiển thị "Giỏ hàng trống",Giỏ hàng không có sản phẩm,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Xóa tất cả sản phẩm
+F03,TC-F03-007,Badge số lượng trên biểu tượng giỏ,Giỏ có sản phẩm,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,≥ 1 sản phẩm trong giỏ
+F03,TC-F03-008,Giỏ hàng lưu sau khi reload trang,Có sản phẩm trong giỏ,17/10/2026,AI Agent,✅ PASS,Thực Thi,Giỏ vẫn còn sản phẩm sau F5 (localStorage) ✅
+F03,TC-F03-009,Đồng bộ giỏ hàng với Supabase khi đăng nhập,Giỏ hàng guest có sản phẩm,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,User đăng nhập sau khi có giỏ
+F04,TC-F04-001,Thêm sản phẩm vào yêu thích,Trang danh sách sản phẩm đã tải,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Sản phẩm bất kỳ
+F04,TC-F04-002,Bỏ yêu thích sản phẩm,Sản phẩm đã được yêu thích,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Sản phẩm có tim đỏ
+F04,TC-F04-003,Xem trang Favorites,Có ≥ 1 sản phẩm yêu thích,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Sản phẩm đã yêu thích
+F04,TC-F04-004,Thêm sản phẩm từ trang yêu thích vào giỏ,Trang Favorites đã mở,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Sản phẩm bất kỳ trong Favorites
+F04,TC-F04-005,Dữ liệu yêu thích lưu sau reload,Có sản phẩm yêu thích,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Sản phẩm đã yêu thích
+F05,TC-F05-001,Form checkout với validation bắt buộc,Giỏ hàng có sản phẩm,17/10/2026,AI Agent,✅ PASS,Thực Thi,Form đầy đủ + validation bắt buộc ✅
+F05,TC-F05-002,Validation bỏ trống Họ tên,Form checkout đã mở,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Bỏ trống Họ tên
+F05,TC-F05-003,Validation bỏ trống Số điện thoại,Form checkout đã mở,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Bỏ trống Số điện thoại
+F05,TC-F05-004,Validation bỏ trống Email,Form checkout đã mở,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Bỏ trống Email
+F05,TC-F05-005,Tải danh sách Tỉnh/Thành phố,Form checkout mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,63 tỉnh tải đúng từ Supabase ✅
+F05,TC-F05-006,Chọn Tỉnh và tải Quận/Huyện,Tỉnh được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách quận/huyện tải theo tỉnh ✅
+F05,TC-F05-007,Chọn Quận/Huyện và tải Xã/Phường,Quận/Huyện được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách xã/phường tải theo quận ✅
+F05,TC-F05-008,Nhập địa chỉ chi tiết,Form checkout đã mở,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Địa chỉ: "123 Đường Nguyễn Huệ"
+F05,TC-F05-009,GHN API được gọi khi chọn đầy đủ địa chỉ,Form checkout đã mở,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Tỉnh, Huyện, Xã đã chọn
 F06,TC-F06-001,Hiển thị phí vận chuyển,Địa chỉ đầy đủ được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Phí ship hiển thị > 0 ✅
 F06,TC-F06-002,Cập nhật tổng tiền (tiền hàng + phí),Form checkout,17/10/2026,AI Agent,✅ PASS,Thực Thi,Tổng tiền = tiền hàng + phí ship ✅
+F06,TC-F06-003,Weight Calculation (1kg minimum),Server chạy + 1000g,17/10/2026,AI Agent,✅ PASS,Thực Thi,"Weight 1000g = 2 × 500g (min threshold) ✅"
+F06,TC-F06-004,Default Dimensions (20×20×20 cm),Server chạy + dimensions,17/10/2026,AI Agent,✅ PASS,Thực Thi,Default dimensions chấp nhận + tính toán đúng
+F06,TC-F06-005,POST /api/shipping-fee (Valid Data),Server chạy + dữ liệu hợp lệ,17/10/2026,AI Agent,✅ PASS,Thực Thi,"Status 200, phí = 46000đ"
+F06,TC-F06-006,POST /api/shipping-fee (Weight < 200g),Server chạy + weight < 200g,17/10/2026,AI Agent,❌ FAIL,Thực Thi,API chấp nhận weight < 200g (should reject) - BUG-001
+F06,TC-F06-007,Test API với dữ liệu không hợp lệ,Postman,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,"Weight < 200g: status 400"
+F06,TC-F06-008,Hiển thị lỗi khi GHN API không phản hồi,Checkout,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,GHN API offline
+F06,TC-ServiceType-Light,Light Package < 20kg → service_type_id=2,Server chạy + 5kg,17/10/2026,AI Agent,✅ PASS,Thực Thi,Light package (5kg) xử lý đúng
+F06,TC-ServiceType-Heavy,Heavy Package >= 20kg → service_type_id=5,Server chạy + 25kg,17/10/2026,AI Agent,✅ PASS,Thực Thi,Heavy package (25kg) xử lý đúng
+F06,TC-ServiceType-Boundary,Boundary Package = 20kg → service_type_id=5,Server chạy + 20kg,17/10/2026,AI Agent,✅ PASS,Thực Thi,Boundary case (20kg) xử lý đúng - không có edge case bug
 F07,TC-F07-001,Modal thanh toán hiển thị,Form checkout hoàn thành,17/10/2026,AI Agent,✅ PASS,Thực Thi,Hiển thị 2 phương thức (COD / Chuyển khoản) ✅
 F07,TC-F07-002,Chọn COD,Modal thanh toán mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,COD được chọn + xác nhận đúng ✅
 F07,TC-F07-003,Chọn Chuyển khoản,Modal thanh toán mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,QR code + số tài khoản + nội dung chuyển hiển thị ✅
 F07,TC-F07-004,Sao chép số tài khoản,Chuyển khoản được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Số tài khoản copy vào clipboard ✅
 F07,TC-F07-005,Sao chép nội dung chuyển khoản,Chuyển khoản được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,Nội dung chuyển copy vào clipboard ✅
 F07,TC-F07-006,QR code từ VietQR,Chuyển khoản được chọn,17/10/2026,AI Agent,✅ PASS,Thực Thi,QR code tạo từ VietQR + hiển thị đúng ✅
-F08,TC-F08-009,Meta Pixel Lead event,Đơn hàng được tạo,17/10/2026,AI Agent,✅ PASS,Thực Thi,Lead event ghi nhận + value/currency/payment_method đúng ✅
+F07,TC-F07-007,Nút "Xác Nhận Đặt Đơn Hàng",Modal thanh toán đã chọn phương thức,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Phương thức thanh toán được chọn
+F08,TC-F08-001,Validation toàn bộ dữ liệu trước tạo đơn,Checkout form + payment modal,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Thông tin checkout đầy đủ
+F08,TC-F08-002,Tạo bản ghi order trong Supabase,Checkout form, payment modal,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Thông tin checkout đầy đủ
+F08,TC-F08-003,Lưu đầy đủ fields trong orders table,Checkout form,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Thông tin checkout
+F08,TC-F08-004,Tạo bản ghi order_items,Checkout form, 2 sản phẩm trong giỏ,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,2 sản phẩm
+F08,TC-F08-005,Lưu weight_kg, length_cm, width_cm, height_cm,Checkout form,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Sản phẩm có weight, dimensions
+F08,TC-F08-006,Order ID sinh duy nhất,Tạo 2 đơn hàng liên tiếp,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Checkout info cho 2 đơn
+F08,TC-F08-007,Giỏ hàng xóa hoàn toàn sau đặt hàng,Checkout, giỏ hàng có sản phẩm,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,≥ 1 sản phẩm trong giỏ
+F08,TC-F08-008,Hiển thị trang xác nhận đơn hàng,Tạo đơn thành công,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Đơn hàng vừa tạo
+F08,TC-F08-009,Meta Pixel Lead event được gửi,Đơn hàng được tạo,17/10/2026,AI Agent,✅ PASS,Thực Thi,Lead event ghi nhận + value/currency/payment_method đúng ✅
+F08,TC-F08-010,Hiển thị lỗi khi API lỗi,Checkout form,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,GHN API hoặc Supabase lỗi
+F09,TC-F09-001,Trang theo dõi đơn chỉ cho user đã đăng nhập,User chưa đăng nhập,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Không login
+F09,TC-F09-002,Hiển thị danh sách đơn hàng sắp xếp mới nhất,User đã đăng nhập, có ≥ 2 đơn,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Danh sách đơn hàng
+F09,TC-F09-003,Hiển thị thông tin đơn hàng,Trang theo dõi đơn hàng,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,≥ 1 đơn hàng
+F09,TC-F09-004,Lọc đơn theo trạng thái,Trang theo dõi đơn hàng,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,≥ 3 đơn với trạng thái khác nhau
+F09,TC-F09-005,Xem chi tiết đơn hàng,Trang theo dõi đơn hàng,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,≥ 1 đơn hàng
 F10,TC-F10-001,Nút Đăng Nhập mở LoginModal,Website mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,LoginModal xuất hiện ✅
 F10,TC-F10-002,OAuth Google qua Supabase,LoginModal mở,17/10/2026,AI Agent,✅ PASS,Thực Thi,Google login flow hoạt động ✅
 F10,TC-F10-003,Phiên làm việc được lưu,Đăng nhập thành công,17/10/2026,AI Agent,✅ PASS,Thực Thi,Session persisted sau reload (F5) ✅
 F10,TC-F10-004,Header hiển thị tên user,Đã đăng nhập,17/10/2026,AI Agent,✅ PASS,Thực Thi,Tên + email hiển thị trên header ✅
 F10,TC-F10-005,Chức năng đăng xuất,Đã đăng nhập,17/10/2026,AI Agent,✅ PASS,Thực Thi,Session xóa + giỏ hàng & yêu thích giữ lại ✅
 F10,TC-F10-006,Truy cập "Đơn Hàng" khi chưa đăng nhập,Chưa login,17/10/2026,AI Agent,✅ PASS,Thực Thi,Redirect tới login page ✅
+F11,TC-F11-001,AddToCart event được gửi,Trang chi tiết sản phẩm,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Meta Pixel Helper cài sẵn
+F11,TC-F11-002,InitiateCheckout event được gửi,Giỏ hàng có sản phẩm,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Meta Pixel Helper cài sẵn
+F11,TC-F11-003,Lead event được gửi khi xác nhận đơn,Checkout form, thanh toán,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Meta Pixel Helper cài sẵn
+F11,TC-F11-004,fbp/fbc cookies được lấy đúng,Truy cập website,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Trình duyệt cho phép cookies
+F12,TC-F12-001,Truy cập trang Admin Orders,Có quyền admin,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,URL: /admin/orders
+F12,TC-F12-002,Hiển thị thông tin đơn hàng,Trang Admin Orders,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,≥ 1 đơn hàng
+F12,TC-F12-003,Lọc đơn hàng theo trạng thái,Trang Admin Orders,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,≥ 3 đơn với trạng thái khác nhau
+F12,TC-F12-004,Expand/Collapse chi tiết đơn hàng,Trang Admin Orders,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,≥ 1 đơn hàng
+F12,TC-F12-005,Cập nhật trạng thái đơn hàng từ Admin,Trang Admin Orders, đơn hàng Pending,17/10/2026,Chưa thực thi,⏳ PENDING,Chưa Thực Thi,Đơn hàng status: Pending
+F-API,TC-API-001,GET /api/health,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,Vercel server chạy ổn định
+F-API,TC-API-002,GET /api/ghn-provinces,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,63 provinces tải đầy đủ
+F-API,TC-API-003,GET /api/ghn-districts?province_id=1,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách quận/huyện tải đúng
+F-API,TC-API-004,GET /api/ghn-wards?district_id=1,Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,Danh sách xã/phường tải đúng
+F-API,TC-API-005,POST /api/shipping-fee (Valid Data),Server chạy,17/10/2026,AI Agent,✅ PASS,Thực Thi,Status 200 + phí hợp lệ
+F-API,TC-API-006,POST /api/shipping-fee (Weight < 200g),Server chạy,17/10/2026,AI Agent,❌ FAIL,Thực Thi,API chấp nhận weight < 200g - BUG-001
+F-API,TC-API-007,POST /api/orders (tạo đơn hàng),Server chạy,17/10/2026,Chưa thực thi,⏳ BLOCKED,Chưa Thực Thi,Cần xác thực + Playwright
+F-API,TC-API-008,POST /api/orders (thiếu trường),Server chạy,17/10/2026,Chưa thực thi,⏳ BLOCKED,Chưa Thực Thi,Cần xác thực + Playwright

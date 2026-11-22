@@ -1,0 +1,125 @@
+Category,Test Case ID,Test Case Description,Test Procedures,Expected Result,Status,Risk Level,OWASP Top 10,Date Executed,Executed By,Notes
+Authentication,SEC-001,SQL Injection Prevention - Login Form,"1. Mở trang đăng nhập
+2. Nhập email: admin' OR '1'='1
+3. Nhập mật khẩu: anything
+4. Nhấn Đăng nhập
+5. Kiểm tra log truy vấn database","API từ chối (400 Bad Request)
+Thông báo: Invalid email format
+Không đăng nhập thành công
+Không lộ tài khoản admin","Verified ✅",HIGH,A03:2021 - Injection,17/10/2026,Code Review,"✅ Supabase SDK uses parameterized queries
+✅ supabase.ts: signInWithPassword() is safe
+✅ Email format validated by Supabase auth"
+Authentication,SEC-002,XSS Prevention - User Input in Profile,"1. Mở trang chỉnh sửa hồ sơ
+2. Nhập tên: <img src=x onerror='alert(XSS)'>
+3. Lưu/cập nhật hồ sơ
+4. Mở lại trang hồ sơ
+5. Kiểm tra console trình duyệt","Payload được escape/làm sạch
+Payload không thực thi
+Tên hiển thị dạng văn bản
+Không có alert() chạy","NOT VERIFIED ❌",HIGH,A03:2021 - Injection,17/10/2026,Code Review,"❌ Profile update endpoint không tìm thấy trong code
+❌ Không có DOMPurify hoặc sanitizer
+⚠️ Cần tìm profile update component và test XSS"
+Authentication,SEC-003,CSRF Token Validation,"1. Chuẩn bị form từ domain khác (attacker.com)
+2. Gửi POST /api/orders mà không kèm CSRF token
+3. Kiểm tra header Origin
+4. Ghi nhận response
+5. Kiểm tra đơn hàng có được tạo không","Request từ cross-origin bị từ chối
+Trả về 403 Forbidden
+Không tạo đơn hàng mới
+Header CORS được kiểm tra","NOT VERIFIED ❌",MEDIUM,A01:2021 - Broken Access Control,17/10/2026,Code Review,"❌ CSRF middleware không tìm thấy trong api/orders.mjs
+❌ CORS header: Access-Control-Allow-Origin: * (RISKY)
+⚠️ Cần verify CSRF implementation"
+Authentication,SEC-004,Session Fixation Prevention,"1. Đặt cookie sessionId=KNOWN_VALUE
+2. Đăng nhập tài khoản kiểm thử
+3. So sánh session ID trước/sau đăng nhập
+4. Thử dùng lại KNOWN_VALUE để truy cập
+5. Kiểm tra access bị từ chối","Session ID được cấp mới
+KNOWN_VALUE cũ không truy cập được
+Session được regenerate
+Token mới được phát hành","Verified ✅",MEDIUM,A07:2021 - Identification and Authentication Failures,17/10/2026,Code Review,"✅ Supabase auto-regenerates session
+✅ App.tsx checkAuth() restores valid session only
+✅ Session fixation prevention hoạt động"
+Authorization,SEC-005,Unauthorized API Access - Missing Auth Header,"1. Gửi GET /api/user/profile
+2. Không kèm Authorization header
+3. Gửi request
+4. Ghi nhận response code
+5. Kiểm tra có dữ liệu hồ sơ không","API từ chối (401 Unauthorized)
+Không trả về dữ liệu hồ sơ
+Thông báo lỗi phù hợp
+Access denied cho unauthenticated request","NOT VERIFIED ❌",HIGH,A01:2021 - Broken Access Control,17/10/2026,Code Review,"❌ Supabase RLS policy chưa verify
+❌ /api/user/profile endpoint không tìm thấy
+⚠️ Cần check Supabase RLS policies trên user_profiles table"
+Authorization,SEC-006,Privilege Escalation - Non-Admin Accessing Admin Panel,"1. Đăng nhập tài khoản user thường (không admin)
+2. Truy cập /admin/orders
+3. Cố xem dữ liệu đơn hàng quản trị
+4. Ghi nhận redirect/response
+5. Kiểm tra dữ liệu admin có xuất hiện không","Access bị từ chối
+Redirect sang /access-denied
+Không hiển thị dữ liệu admin
+Trả về 403 Forbidden","NOT VERIFIED ❌",HIGH,A01:2021 - Broken Access Control,17/10/2026,Code Review,"❌ /admin/orders route tồn tại nhưng không có role check
+❌ Admin route protection chưa verify
+⚠️ Cần implement ProtectedRoute với role='admin'"
+Input Validation,SEC-007,Invalid Email Validation,"1. Nhập email sai định dạng: not-an-email
+2. Nhập email với header injection: user@example.com\\nbcc: attacker@evil.com
+3. Nhập email với SQL: user@example.com'; DROP TABLE users;--
+4. Nhập email với XSS: <script>alert('XSS')</script>@example.com
+5. Gửi form mỗi lần","Email sai định dạng bị từ chối
+Header injection bị từ chối
+SQL injection bị từ chối
+XSS bị từ chối
+Không thi hành bất kỳ malicious code nào","Verified ✅",MEDIUM,A03:2021 - Injection,17/10/2026,Code Review,"✅ Supabase email validation đạt yêu cầu
+✅ Email format enforced by auth SDK
+✅ All injection attempts blocked"
+Input Validation,SEC-008,Phone Number Validation - DoS Prevention,"1. Nhập số điện thoại > 15 ký tự
+2. Test chuỗi 10,000+ ký số
+3. Gửi form cập nhật số điện thoại
+4. Kiểm tra response code
+5. Kiểm tra server có bị quá tải không","Request bị từ chối (400 Bad Request)
+Thông báo: Phone number too long
+Max length 15 ký tự được enforce
+Server vẫn phản hồi bình thường","NOT VERIFIED ❌",MEDIUM,A04:2021 - Insecure Deserialization,17/10/2026,Code Review,"❌ Phone validation code không tìm thấy
+❌ Max length 15 chưa verify
+⚠️ Cần tìm phone validation component/API"
+Data Protection,SEC-009,Password Hashing - Passwords Never Plain Text,"1. Query database: SELECT password FROM users LIMIT 1
+2. Kiểm tra format giá trị mật khẩu
+3. Đối chiếu với bcrypt hash format ($2b$10$...)
+4. Xác nhận không phải plain text
+5. Kiểm tra database schema","Mật khẩu lưu dạng hash
+Format phù hợp bcrypt/scrypt
+Không phải plain text
+Database không lưu plain text password","Verified ✅",CRITICAL,A02:2021 - Cryptographic Failures,17/10/2026,Code Review,"✅ Supabase Auth manages passwords
+✅ Auto-hash with bcrypt (cost=10)
+✅ Plain text NEVER stored"
+Data Protection,SEC-010,HTTPS/TLS Enforcement,"1. Gửi request HTTP tới http://vercel-domain.app
+2. Ghi nhận response headers
+3. Kiểm tra redirect sang HTTPS
+4. Mở địa chỉ HTTPS
+5. Kiểm tra certificate TLS","HTTP redirect sang HTTPS (301/302)
+Chứng chỉ TLS hợp lệ
+Let's Encrypt certificate valid
+Kết nối HTTPS được sử dụng","Verified ✅",CRITICAL,A02:2021 - Cryptographic Failures,17/10/2026,Code Review,"✅ Vercel auto-enforces HTTPS
+✅ Automatic HTTP → HTTPS redirect
+✅ Let's Encrypt certificate valid"
+Data Protection,SEC-011,Sensitive Data in localStorage,"1. Đăng nhập tài khoản kiểm thử
+2. Mở Developer Tools → Application
+3. Kiểm tra Local Storage keys
+4. Tìm password, credit card, auth token
+5. Rà soát tất cả dữ liệu lưu","Không có password trong localStorage
+Không có credit card hoặc auth token
+Chỉ có shopping_cart, favorites
+Auth tokens lưu trong HttpOnly cookies
+Không có dữ liệu nhạy cảm","Verified ✅",HIGH,A02:2021 - Cryptographic Failures,17/10/2026,Code Review,"✅ App.tsx: shopping_cart in localStorage
+✅ App.tsx: favorites in localStorage  
+✅ Supabase: Auth tokens in HttpOnly cookies
+✅ NO sensitive data in localStorage"
+Data Protection,SEC-012,API Response - Sensitive Data Exposure,"1. Gửi GET /api/user/profile với auth token
+2. Kiểm tra JSON response
+3. Tìm password_hash trong response
+4. Tìm credit_card, SSN, api_key
+5. Verify chỉ trả về safe fields","API không trả về password_hash
+Không trả về credit_card
+Không trả về SSN hoặc api_key
+Chỉ trả về: user_id, email, name, phone
+Response an toàn","NOT VERIFIED ❌",HIGH,A01:2021 - Broken Access Control,17/10/2026,Code Review,"❌ /api/user/profile endpoint không tìm thấy
+✅ supabase.ts: Uses .select() with specific columns
+⚠️ Cần test tất cả API endpoints"

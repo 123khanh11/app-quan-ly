@@ -5,7 +5,7 @@
 
 ---
 
-## BUG-001: Weight Validation Not Strictly Enforced ⚠️ MEDIUM
+## BUG-001: Weight Validation Not Strictly Enforced ✅ FIXED
 
 ### Basic Information
 | Field | Value |
@@ -14,11 +14,13 @@
 | **Title** | Weight Validation Not Strictly Enforced |
 | **Severity** | MEDIUM |
 | **Priority** | HIGH |
-| **Status** | OPEN |
+| **Status** | FIXED ✅ |
 | **Component** | api/shipping-fee.mjs |
 | **Test Case** | TC-F06-006 / TC-API-006 |
 | **Date Found** | 17/10/2026 |
+| **Date Fixed** | 17/10/2026 |
 | **Found By** | AI Test Agent |
+| **Fixed By** | AI Test Agent |
 
 ### Description
 The `/api/shipping-fee` endpoint accepts weight values below 200g (the documented minimum) instead of rejecting them. According to the API specification (FR6.2 from SRS), weight must be validated in the range 200-20000g.

@@ -49,8 +49,8 @@ async function handler(req, res) {
       })
     }
 
-    // Convert to numbers and validate
-    weight_gram = Math.max(parseInt(weight_gram) || 1000, 200)
+    // Convert to numbers
+    weight_gram = parseInt(weight_gram) || 1000
     length_cm = Math.max(parseInt(length_cm) || 20, 10)
     width_cm = Math.max(parseInt(width_cm) || 20, 10)
     height_cm = Math.max(parseInt(height_cm) || 20, 10)
@@ -59,12 +59,12 @@ async function handler(req, res) {
     to_district_id = parseInt(to_district_id)
     to_ward_code = String(to_ward_code).trim()
 
-    // Validate weight is valid number
-    if (isNaN(weight_gram) || weight_gram <= 0 || weight_gram > 20000) {
+    // Strict weight validation: must be between 200g and 20000g
+    if (isNaN(weight_gram) || weight_gram < 200 || weight_gram > 20000) {
       console.error('❌ Invalid weight:', weight_gram)
       return res.status(400).json({
         success: false,
-        error: `Invalid weight: ${weight_gram}g (must be 200-20000g)`
+        error: `Invalid weight: ${weight_gram}g (must be 200-20000g inclusive)`
       })
     }
 
