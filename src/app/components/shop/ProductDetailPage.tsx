@@ -6,6 +6,7 @@ import { Copy, Check, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-rea
 import { useCart } from '@/app/context/CartContext'
 import { useNavigate } from 'react-router-dom'
 import { trackAddToCart } from '@/utils/facebookPixel'
+import { VariantModal } from './VariantModal'
 
 interface ProductVariant {
   id: string
@@ -32,6 +33,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [similarProducts, setSimilarProducts] = useState<any[]>([])
+  const [selectedVariantForModal, setSelectedVariantForModal] = useState<ProductDetail['variants'][0] | null>(null)
   const { addToCart } = useCart()
   const navigate = useNavigate()
 
@@ -251,26 +253,29 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                     {product.variants.some(v => v.color) && (
                       <div>
                         <p className="text-sm font-semibold mb-2">Màu Sắc</p>
-                        <div className="flex flex-wrap gap-2">
-                          {[...new Set(product.variants.map(v => v.color).filter(Boolean))].map((color) => (
-                            <button
-                              key={color}
-                              onClick={() => {
-                                const variant = product.variants.find(v => v.color === color && (v.size === selectedVariant?.size || !selectedVariant?.size))
-                                if (variant) {
-                                  setSelectedVariant(variant)
-                                  setSelectedImageIndex(0)
-                                }
-                              }}
-                              className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                                selectedVariant?.color === color
-                                  ? 'border-primary bg-primary/10'
-                                  : 'border-border hover:border-primary'
-                              }`}
-                            >
-                              {color}
-                            </button>
-                          ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {[...new Set(product.variants.map(v => v.color).filter(Boolean))].map((color) => {
+                            const variant = product.variants.find(v => v.color === color && (v.size === selectedVariant?.size || !selectedVariant?.size))
+                            return (
+                              <button
+                                key={color}
+                                onClick={() => {
+                                  if (variant) {
+                                    setSelectedVariant(variant)
+                                    setSelectedImageIndex(0)
+                                    setSelectedVariantForModal(variant)
+                                  }
+                                }}
+                                className={`px-6 py-3 rounded-lg border-2 transition-colors font-semibold text-base ${
+                                  selectedVariant?.color === color
+                                    ? 'border-primary bg-primary/10'
+                                    : 'border-border hover:border-primary'
+                                }`}
+                              >
+                                {color}
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
                     )}
@@ -279,26 +284,29 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                     {product.variants.some(v => v.size) && (
                       <div>
                         <p className="text-sm font-semibold mb-2">Kích Thước</p>
-                        <div className="flex flex-wrap gap-2">
-                          {[...new Set(product.variants.map(v => v.size).filter(Boolean))].map((size) => (
-                            <button
-                              key={size}
-                              onClick={() => {
-                                const variant = product.variants.find(v => v.size === size && (v.color === selectedVariant?.color || !selectedVariant?.color))
-                                if (variant) {
-                                  setSelectedVariant(variant)
-                                  setSelectedImageIndex(0)
-                                }
-                              }}
-                              className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                                selectedVariant?.size === size
-                                  ? 'border-primary bg-primary/10'
-                                  : 'border-border hover:border-primary'
-                              }`}
-                            >
-                              {size}
-                            </button>
-                          ))}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {[...new Set(product.variants.map(v => v.size).filter(Boolean))].map((size) => {
+                            const variant = product.variants.find(v => v.size === size && (v.color === selectedVariant?.color || !selectedVariant?.color))
+                            return (
+                              <button
+                                key={size}
+                                onClick={() => {
+                                  if (variant) {
+                                    setSelectedVariant(variant)
+                                    setSelectedImageIndex(0)
+                                    setSelectedVariantForModal(variant)
+                                  }
+                                }}
+                                className={`px-6 py-3 rounded-lg border-2 transition-colors font-semibold text-base ${
+                                  selectedVariant?.size === size
+                                    ? 'border-primary bg-primary/10'
+                                    : 'border-border hover:border-primary'
+                                }`}
+                              >
+                                {size}
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
                     )}
@@ -421,6 +429,30 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
           </div>
         ) : null}
       </div>
+
+      {/* Variant Modal */}
+      <VariantModal
+        variant={selectedVariantForModal}
+        products={
+          selectedVariantForModal
+            ? product?.variants
+                .filter(
+                  v =>
+                    v.color === selectedVariantForModal.color &&
+                    v.size === selectedVariantForModal.size
+                )
+                .map(v => ({
+                  sku: v.sku,
+                  color: v.color,
+                  size: v.size,
+                  price: v.variant_price || product?.product_price || 0,
+                  stock: v.stock,
+                })) || []
+            : []
+        }
+        isOpen={!!selectedVariantForModal}
+        onClose={() => setSelectedVariantForModal(null)}
+      />
     </div>
   )
 }
