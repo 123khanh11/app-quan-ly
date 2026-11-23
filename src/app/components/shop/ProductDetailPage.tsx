@@ -358,11 +358,11 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                       <div>
                         <p className="text-sm font-semibold mb-2">Màu Sắc</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                          {[...new Set(product.variants.map(v => v.color).filter(Boolean))].map((color) => {
+                          {[...new Set(product.variants.map(v => v.color).filter(Boolean))].map((color, idx) => {
                             const variant = product.variants.find(v => v.color === color && (v.size === selectedVariant?.size || !selectedVariant?.size))
                             return (
                               <button
-                                key={color}
+                                key={`color-${color}-${idx}`}
                                 onClick={() => {
                                   if (variant) {
                                     setSelectedVariant(variant)
@@ -400,11 +400,11 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                       <div>
                         <p className="text-sm font-semibold mb-2">Kích Thước</p>
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                          {[...new Set(product.variants.map(v => v.size).filter(Boolean))].map((size) => {
+                          {[...new Set(product.variants.map(v => v.size).filter(Boolean))].map((size, idx) => {
                             const variant = product.variants.find(v => v.size === size && (v.color === selectedVariant?.color || !selectedVariant?.color))
                             return (
                               <button
-                                key={size}
+                                key={`size-${size}-${idx}`}
                                 onClick={() => {
                                   if (variant) {
                                     setSelectedVariant(variant)
