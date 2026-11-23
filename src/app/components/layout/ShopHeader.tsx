@@ -92,8 +92,8 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
     <div className="w-full">
       {/* Mobile: Header Row 1 - Logo + Hamburger + Icons */}
       <div className="flex bg-blue-950 text-white py-2 px-2 w-full md:hidden">
-        <div className="flex items-center justify-between gap-2">
-          {/* Logo - Mobile Small */}
+        <div className="flex items-center justify-between gap-2 w-full">
+          {/* Left: Logo */}
           <a href="/" className="flex items-center flex-shrink-0">
             {shopInfo?.logo_url ? (
               <img src={shopInfo.logo_url} alt={shopInfo?.shop_name} className="h-12 w-auto object-contain" />
@@ -104,21 +104,13 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
             )}
           </a>
 
-          {/* Hamburger Menu */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 hover:bg-blue-800 rounded transition-colors"
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-
-          {/* Icons - RIGHT (Mobile) */}
-          <div className="flex items-center gap-2">
+          {/* Center: Icons - Distributed Evenly */}
+          <div className="flex items-center justify-center flex-1 gap-6 px-2">
             {/* Favorites */}
             <button onClick={() => onNavigate?.('favorites')} className="relative flex flex-col items-center gap-0.5 hover:opacity-80 cursor-pointer">
-              <span className="text-lg">❤️</span>
+              <span className="text-2xl">❤️</span>
               {favorites.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                <span className="absolute -top-3 -right-3 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                   {favorites.length}
                 </span>
               )}
@@ -126,9 +118,9 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
 
             {/* Cart */}
             <button onClick={() => onNavigate?.('cart')} className="relative flex flex-col items-center gap-0.5 hover:opacity-80 cursor-pointer">
-              <span className="text-lg">🛒</span>
+              <span className="text-2xl">🛒</span>
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                <span className="absolute -top-3 -right-3 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                   {cartCount}
                 </span>
               )}
@@ -138,17 +130,25 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
             {user ? (
               <button onClick={() => onNavigate?.('account')} className="flex flex-col items-center gap-0.5 hover:opacity-80 cursor-pointer">
                 {user.user_metadata?.avatar_url ? (
-                  <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-6 h-6 rounded-full" />
+                  <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-7 h-7 rounded-full" />
                 ) : (
-                  <span className="text-lg">👤</span>
+                  <span className="text-2xl">👤</span>
                 )}
               </button>
             ) : (
               <button onClick={() => onNavigate?.('account')} className="flex flex-col items-center gap-0.5 hover:opacity-80 cursor-pointer">
-                <span className="text-lg">👤</span>
+                <span className="text-2xl">👤</span>
               </button>
             )}
           </div>
+
+          {/* Right: Hamburger Menu */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 hover:bg-blue-800 rounded transition-colors flex-shrink-0"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
 
