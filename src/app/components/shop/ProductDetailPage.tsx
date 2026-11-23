@@ -177,76 +177,179 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
           </div>
         ) : product ? (
           <div className="bg-card border border-border rounded-lg p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Product Image with Navigation */}
-              <div className="aspect-square bg-muted rounded-lg overflow-hidden flex items-center justify-center relative group">
-                <img
-                  src={
-                    displayImages && displayImages.length > 0
-                      ? displayImages[selectedImageIndex]?.image_url
-                      : selectedVariant?.variant_image || product.product_image
-                  }
-                  alt={product.product_name}
-                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                />
+            {/* 1. Product Title */}
+            <h1 className="text-3xl font-bold text-foreground">
+              {product.product_name}
+            </h1>
+
+            {/* 2. Mobile-only Price */}
+            <div className="border-t border-b border-border py-4 md:hidden">
+              <p className="text-sm text-muted-foreground mb-1">Giá</p>
+              <p className="text-4xl font-bold text-primary">
+                {(selectedVariant?.variant_price || product.product_price || 0).toLocaleString('vi-VN')}đ
+              </p>
+            </div>
+
+            {/* 3. Variants Selector - Mobile Primary (visible on mobile, hidden on desktop) */}
+            {product.variants.length > 0 && (
+              <div className="block md:hidden space-y-4 w-full overflow-visible">
+                <h3 className="font-bold text-foreground">Chọn Loại Sản Phẩm</h3>
+                <p className="text-xs text-muted-foreground">(Tổng {product.variants.length} variants)</p>
                 
-                {/* Navigation Buttons */}
-                {displayImages && displayImages.length > 1 && (
-                  <>
-                    {/* Previous Button */}
-                    <button
-                      onClick={() => setSelectedImageIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1))}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100"
-                      title="Ảnh trước"
-                    >
-                      <ChevronLeft size={24} />
-                    </button>
-                    
-                    {/* Next Button */}
-                    <button
-                      onClick={() => setSelectedImageIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1))}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100"
-                      title="Ảnh tiếp"
-                    >
-                      <ChevronRight size={24} />
-                    </button>
-                    
-                    {/* Image Counter */}
-                    <div className="absolute bottom-3 right-3 bg-black/60 text-white px-2.5 py-1 rounded-full text-sm font-medium">
-                      {selectedImageIndex + 1} / {displayImages.length}
+                {/* Color Variants */}
+                {product.variants.some(v => v.color) && (
+                  <div>
+                    <p className="text-sm font-semibold mb-2">Màu Sắc</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {[...new Set(product.variants.map(v => v.color).filter(Boolean))].map((color) => {
+                        const variant = product.variants.find(v => v.color === color && (v.size === selectedVariant?.size || !selectedVariant?.size))
+                        return (
+                          <button
+                            key={color}
+                            onClick={() => {
+                              if (variant) {
+                                setSelectedVariant(variant)
+                                setSelectedImageIndex(0)
+                              }
+                            }}
+                            className={`px-6 py-3 rounded-lg border-2 transition-colors font-semibold text-base ${
+                              selectedVariant?.color === color
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary'
+                            }`}
+                          >
+                            {color}
+                          </button>
+                        )
+                      })}
                     </div>
-                  </>
+                    {/* View All Colors Button */}
+                    <button
+                      onClick={() => {
+                        const firstColorVariant = product.variants.find(v => v.color)
+                        if (firstColorVariant) {
+                          setSelectedVariantForModal(firstColorVariant)
+                        }
+                      }}
+                      className="mt-2 text-sm text-primary hover:text-orange-600 font-semibold transition-colors"
+                    >
+                      Xem tất cả ›
+                    </button>
+                  </div>
+                )}
+
+                {/* Size Variants */}
+                {product.variants.some(v => v.size) && (
+                  <div>
+                    <p className="text-sm font-semibold mb-2">Kích Thước</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {[...new Set(product.variants.map(v => v.size).filter(Boolean))].map((size) => {
+                        const variant = product.variants.find(v => v.size === size && (v.color === selectedVariant?.color || !selectedVariant?.color))
+                        return (
+                          <button
+                            key={size}
+                            onClick={() => {
+                              if (variant) {
+                                setSelectedVariant(variant)
+                                setSelectedImageIndex(0)
+                              }
+                            }}
+                            className={`px-6 py-3 rounded-lg border-2 transition-colors font-semibold text-base ${
+                              selectedVariant?.size === size
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {/* View All Sizes Button */}
+                    <button
+                      onClick={() => {
+                        const firstSizeVariant = product.variants.find(v => v.size)
+                        if (firstSizeVariant) {
+                          setSelectedVariantForModal(firstSizeVariant)
+                        }
+                      }}
+                      className="mt-2 text-sm text-primary hover:text-orange-600 font-semibold transition-colors"
+                    >
+                      Xem tất cả ›
+                    </button>
+                  </div>
                 )}
               </div>
+            )}
 
-              {/* Product Info */}
-              <div className="space-y-6">
-                {/* Title & Description */}
-                <div>
-                  <h1 className="text-3xl font-bold text-foreground mb-3">
-                    {product.product_name}
-                  </h1>
-                  {(selectedVariant?.description || product.description) && (
-                    <div 
-                      className="text-base text-muted-foreground leading-relaxed prose prose-sm dark:prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{
-                        __html: selectedVariant?.description || product.description || ''
-                      }}
-                    />
+            {/* 4. Image + Desktop Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column: Product Image */}
+              <div>
+                <div className="aspect-square bg-muted rounded-lg overflow-hidden flex items-center justify-center relative group">
+                  <img
+                    src={
+                      displayImages && displayImages.length > 0
+                        ? displayImages[selectedImageIndex]?.image_url
+                        : selectedVariant?.variant_image || product.product_image
+                    }
+                    alt={product.product_name}
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                  />
+                  
+                  {/* Navigation Buttons */}
+                  {displayImages && displayImages.length > 1 && (
+                    <>
+                      {/* Previous Button */}
+                      <button
+                        onClick={() => setSelectedImageIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1))}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                        title="Ảnh trước"
+                      >
+                        <ChevronLeft size={24} />
+                      </button>
+                      
+                      {/* Next Button */}
+                      <button
+                        onClick={() => setSelectedImageIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                        title="Ảnh tiếp"
+                      >
+                        <ChevronRight size={24} />
+                      </button>
+                      
+                      {/* Image Counter */}
+                      <div className="absolute bottom-3 right-3 bg-black/60 text-white px-2.5 py-1 rounded-full text-sm font-medium">
+                        {selectedImageIndex + 1} / {displayImages.length}
+                      </div>
+                    </>
                   )}
                 </div>
+              </div>
 
-                {/* Price */}
-                <div className="border-t border-b border-border py-4">
+              {/* Right Column: Description, Desktop Price, Desktop Variants */}
+              <div className="space-y-6">
+                {/* Description */}
+                {(selectedVariant?.description || product.description) && (
+                  <div 
+                    className="text-base text-muted-foreground leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{
+                      __html: selectedVariant?.description || product.description || ''
+                    }}
+                  />
+                )}
+
+                {/* Desktop-only Price */}
+                <div className="border-t border-b border-border py-4 hidden md:block">
                   <p className="text-sm text-muted-foreground mb-1">Giá</p>
                   <p className="text-4xl font-bold text-primary">
                     {(selectedVariant?.variant_price || product.product_price || 0).toLocaleString('vi-VN')}đ
                   </p>
                 </div>
 
-                {/* Variants Selection */}
+                {/* Desktop-only Variants Selector */}
                 {product.variants.length > 0 && (
-                  <div className="space-y-4 w-full overflow-visible">
+                  <div className="hidden md:block space-y-4 w-full overflow-visible">
                     <h3 className="font-bold text-foreground">Chọn Loại Sản Phẩm</h3>
                     <p className="text-xs text-muted-foreground">(Tổng {product.variants.length} variants)</p>
                     
@@ -335,44 +438,53 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                     )}
                   </div>
                 )}
+              </div>
+            </div>
 
-                {/* Quantity */}
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold">Số Lượng</p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="px-3 py-2 border border-border rounded-lg hover:bg-muted"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-16 px-3 py-2 border border-border rounded-lg text-center"
-                    />
-                    <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="px-3 py-2 border border-border rounded-lg hover:bg-muted"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                {/* Add to Cart Button */}
+            {/* 5. Quantity Selector */}
+            <div className="space-y-2">
+              <p className="text-sm font-semibold">Số Lượng</p>
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={handleAddToCart}
-                  className="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="px-3 py-2 border border-border rounded-lg hover:bg-muted"
                 >
-                  <ShoppingCart size={20} />
-                  Thêm Vào Giỏ Hàng
+                  −
+                </button>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-16 px-3 py-2 border border-border rounded-lg text-center"
+                />
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="px-3 py-2 border border-border rounded-lg hover:bg-muted"
+                >
+                  +
                 </button>
               </div>
             </div>
 
-            {/* Similar Products */}
+            {/* 6. Add to Cart Button */}
+            <button
+              onClick={handleAddToCart}
+              className="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <ShoppingCart size={20} />
+              Thêm Vào Giỏ Hàng
+            </button>
+
+            {/* 7. Copy Link Button */}
+            <button
+              onClick={handleCopyLink}
+              className="w-full bg-muted text-foreground font-semibold py-3 rounded-lg hover:bg-muted/80 transition-colors flex items-center justify-center gap-2"
+            >
+              <Copy size={20} />
+              {copied ? 'Đã sao chép!' : 'Sao chép liên kết'}
+            </button>
+
+            {/* 8. Similar Products */}
             {similarProducts.length > 0 && (
               <div className="border-t border-border pt-6 mt-6">
                 <h2 className="text-2xl font-bold text-foreground mb-4">Sản Phẩm Tương Tự</h2>
