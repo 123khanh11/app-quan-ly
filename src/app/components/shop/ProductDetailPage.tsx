@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase, getProductsByCategory, getProductDetails, ProductDetail } from '@/services/supabase'
-import { Copy, Check, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
 import { useNavigate } from 'react-router-dom'
 import { trackAddToCart } from '@/utils/facebookPixel'
@@ -29,7 +29,6 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
   const [selectedVariant, setSelectedVariant] = useState<ProductDetail['variants'][0] | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
@@ -93,13 +92,6 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
     }
     loadProductData()
   }, [productId])
-
-  const handleCopyLink = () => {
-    const url = `${window.location.origin}/products/${productId}`
-    navigator.clipboard.writeText(url)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
 
   const handleAddToCart = async () => {
     if (!product || !selectedVariant) {
@@ -421,92 +413,7 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
               </div>
             )}
 
-            {/* 7. Copy Link Button */}
-            <button
-              onClick={handleCopyLink}
-              className="w-full bg-muted text-foreground font-semibold py-3 rounded-lg hover:bg-muted/80 transition-colors flex items-center justify-center gap-2"
-            >
-              <Copy size={20} />
-              {copied ? 'Đã sao chép!' : 'Sao chép liên kết'}
-            </button>
 
-            {/* 8. Similar Products */}
-            {similarProducts.length > 0 && (
-              <div className="border-t border-border pt-6 mt-6">
-                <h2 className="text-2xl font-bold text-foreground mb-4">Sản Phẩm Tương Tự</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
-                  {similarProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
-                      onClick={() => {
-                        console.log('Navigating to product:', product.id)
-                        navigate(`/products/${product.id}`)
-                      }}
-                    >
-                      {/* Product Image */}
-                      <div className="relative overflow-hidden aspect-[3/4] bg-muted">
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="p-3">
-                        <h3 className="font-semibold text-foreground line-clamp-2 mb-2 text-sm leading-snug">
-                          {product.name}
-                        </h3>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-                          {product.description}
-                        </p>
-
-                        {/* Price */}
-                        <div className="mb-3">
-                          <p className="text-lg font-bold text-primary">
-                            {(product.price || 0).toLocaleString('vi-VN')}đ
-                          </p>
-                        </div>
-
-                        {/* Add to Cart Button */}
-                        <button
-                          onClick={async (e) => {
-                            e.stopPropagation()
-                            addToCart({
-                              product_id: product.id,
-                              variant_id: product.id,
-                              name: product.name,
-                              price: product.price,
-                              quantity: 1,
-                              image_url: product.image_url,
-                              color: '',
-                              size: '',
-                              sku: product.sku || '',
-                            })
-                            
-                            // Track AddToCart event
-                            await trackAddToCart({
-                              content_name: product.name,
-                              content_type: 'product',
-                              content_ids: [product.id],
-                              value: product.price,
-                              currency: 'VND',
-                              quantity: 1,
-                            })
-                            
-                            alert(`✅ Đã thêm "${product.name}" vào giỏ hàng`)
-                          }}
-                          className="w-full bg-primary text-primary-foreground font-semibold py-2 rounded-md hover:bg-orange-600 transition-colors text-xs"
-                        >
-                          Thêm Vào Giỏ
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : null}
       </div>
