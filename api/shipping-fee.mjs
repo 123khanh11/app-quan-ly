@@ -53,22 +53,30 @@ async function handler(req, res) {
       })
     }
 
-    // Convert to numbers
-    weight_gram = parseInt(weight_gram) || 1000
-    length_cm = Math.max(parseInt(length_cm) || 20, 10)
-    width_cm = Math.max(parseInt(width_cm) || 20, 10)
-    height_cm = Math.max(parseInt(height_cm) || 20, 10)
-    cod_value = Math.max(parseInt(cod_value) || 0, 0)
-    insurance_value = Math.max(parseInt(insurance_value) || 0, 0)
+    // Convert to numbers (strict)
+    weight_gram = parseInt(weight_gram)
+    length_cm = parseInt(length_cm) || 20
+    width_cm = parseInt(width_cm) || 20
+    height_cm = parseInt(height_cm) || 20
+    cod_value = parseInt(cod_value) || 0
+    insurance_value = parseInt(insurance_value) || 0
     to_district_id = parseInt(to_district_id)
     to_ward_code = String(to_ward_code).trim()
 
-    // Basic validation: weight must not be 0
-    if (isNaN(weight_gram) || weight_gram === 0) {
+    // Validation per GHN spec
+    if (isNaN(weight_gram) || weight_gram <= 0) {
       console.error('❌ Invalid weight:', weight_gram)
       return res.status(400).json({
         success: false,
-        error: `Invalid weight: ${weight_gram}g (must not be 0)`
+        error: `Invalid weight: ${weight_gram}g (must be > 0)`
+      })
+    }
+
+    if (isNaN(to_district_id) || !to_ward_code) {
+      console.error('❌ Invalid destination')
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid to_district_id or to_ward_code'
       })
     }
 
@@ -78,22 +86,24 @@ async function handler(req, res) {
     console.log('Weight:', weight_gram, 'gram')
     console.log('Dimensions:', `${length_cm}cm x ${width_cm}cm x ${height_cm}cm`)
 
-    // Determine service type by weight (GHN requirement)
-    // service_type_id = 2: weight < 20kg (20000g)
-    // service_type_id = 5: weight >= 20kg (20000g)
-    let finalServiceType = 2  // Default: under 20kg
+    // Per GHN spec:
+    // service_type_id = 2: weight < 20kg (dưới 20kg)
+    // service_type_id = 5: weight >= 20kg (từ 20kg trở lên)
+    let finalServiceType = service_type_id
     
-    if (weight_gram >= 20000) {
-      finalServiceType = 5  // Heavy/Bulk: 20kg or more
-      console.log('📦 Heavy package (>= 20kg) - Using service_type_id: 5')
+    if (!finalServiceType) {
+      // Auto-detect if not provided
+      finalServiceType = (weight_gram >= 20000) ? 5 : 2
+      console.log(`📦 Auto-selected service_type: ${finalServiceType} (weight: ${weight_gram}g)`)
     } else {
-      console.log('📦 Standard package (< 20kg) - Using service_type_id: 2')
+      console.log(`📦 Using specified service_type: ${finalServiceType}`)
     }
-    
-    // Override if explicitly specified
-    if (service_type_id) {
-      finalServiceType = service_type_id
-      console.log(`📦 Service type override: ${finalServiceType}`)
+
+    if (![2, 5].includes(finalServiceType)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid service_type_id: ${finalServiceType}. Must be 2 or 5.`
+      })
     }
 
     // Call GHN API
