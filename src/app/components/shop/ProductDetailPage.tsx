@@ -246,8 +246,9 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
 
                 {/* Variants Selection */}
                 {product.variants.length > 0 && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 w-full overflow-visible">
                     <h3 className="font-bold text-foreground">Chọn Loại Sản Phẩm</h3>
+                    <p className="text-xs text-muted-foreground">(Tổng {product.variants.length} variants)</p>
                     
                     {/* Color Variants */}
                     {product.variants.some(v => v.color) && (
