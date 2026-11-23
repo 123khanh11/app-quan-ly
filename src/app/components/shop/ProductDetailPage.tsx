@@ -192,8 +192,8 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
 
             {/* 3. Variants Selector - Mobile Primary (visible on mobile, hidden on desktop) */}
             {product.variants.length > 0 && (
-              <div className="block md:hidden space-y-4 w-full overflow-visible">
-                <h3 className="font-bold text-foreground">Chọn Loại Sản Phẩm</h3>
+              <div className="w-full space-y-4 overflow-auto">
+                <h3 className="font-bold text-foreground text-lg">Chọn Loại Sản Phẩm</h3>
                 <p className="text-xs text-muted-foreground">(Tổng {product.variants.length} variants)</p>
                 
                 {/* Color Variants */}
