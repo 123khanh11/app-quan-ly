@@ -220,9 +220,12 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                     {product.product_name}
                   </h1>
                   {(selectedVariant?.description || product.description) && (
-                    <p className="text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                      {selectedVariant?.description || product.description}
-                    </p>
+                    <div 
+                      className="text-base text-muted-foreground leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: selectedVariant?.description || product.description || ''
+                      }}
+                    />
                   )}
                 </div>
 
