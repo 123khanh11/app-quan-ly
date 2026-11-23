@@ -263,7 +263,6 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                                   if (variant) {
                                     setSelectedVariant(variant)
                                     setSelectedImageIndex(0)
-                                    setSelectedVariantForModal(variant)
                                   }
                                 }}
                                 className={`px-6 py-3 rounded-lg border-2 transition-colors font-semibold text-base ${
@@ -277,6 +276,18 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                             )
                           })}
                         </div>
+                        {/* View All Colors Button */}
+                        <button
+                          onClick={() => {
+                            const firstColorVariant = product.variants.find(v => v.color)
+                            if (firstColorVariant) {
+                              setSelectedVariantForModal(firstColorVariant)
+                            }
+                          }}
+                          className="mt-2 text-sm text-primary hover:text-orange-600 font-semibold transition-colors"
+                        >
+                          Xem tất cả ›
+                        </button>
                       </div>
                     )}
 
@@ -294,7 +305,6 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                                   if (variant) {
                                     setSelectedVariant(variant)
                                     setSelectedImageIndex(0)
-                                    setSelectedVariantForModal(variant)
                                   }
                                 }}
                                 className={`px-6 py-3 rounded-lg border-2 transition-colors font-semibold text-base ${
@@ -308,6 +318,18 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
                             )
                           })}
                         </div>
+                        {/* View All Sizes Button */}
+                        <button
+                          onClick={() => {
+                            const firstSizeVariant = product.variants.find(v => v.size)
+                            if (firstSizeVariant) {
+                              setSelectedVariantForModal(firstSizeVariant)
+                            }
+                          }}
+                          className="mt-2 text-sm text-primary hover:text-orange-600 font-semibold transition-colors"
+                        >
+                          Xem tất cả ›
+                        </button>
                       </div>
                     )}
                   </div>
@@ -438,8 +460,8 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
             ? product?.variants
                 .filter(
                   v =>
-                    v.color === selectedVariantForModal.color &&
-                    v.size === selectedVariantForModal.size
+                    (selectedVariantForModal.color && v.color === selectedVariantForModal.color) ||
+                    (selectedVariantForModal.size && v.size === selectedVariantForModal.size)
                 )
                 .map(v => ({
                   sku: v.sku,

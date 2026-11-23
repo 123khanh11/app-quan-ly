@@ -1,0 +1,21 @@
+BUILD RESULT
+============
+Status: SUCCESS ✓
+
+Build Command: npm run build
+Build Tool: Vite v6.3.5
+
+Output Summary:
+- 1670 modules transformed
+- dist/index.html: 2.27 kB (gzip: 1.09 kB)
+- dist/assets/index-DuJERQsz.css: 107.76 kB (gzip: 17.67 kB)
+- dist/assets/index-NeY2Rko4.js: 492.51 kB (gzip: 137.71 kB)
+- Build time: 7.50s
+
+No TypeScript errors or warnings.
+
+Changes Made:
+1. Removed setSelectedVariantForModal() calls from color and size button onClick handlers
+2. Added "Xem tất cả ›" buttons below color and size variant grids
+3. Fixed modal filter logic to show ALL variants with matching color OR size (not both)
+4. Maintained mobile-first design with grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 layout
