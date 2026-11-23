@@ -90,8 +90,8 @@ export function ShopHeader({ onNavigate, onSelectCategory }: { onNavigate?: (pag
 
   return (
     <div className="w-full">
-      {/* Mobile: Header Row 1 - Logo + Hamburger + Icons - HIDDEN */}
-      <div className="hidden bg-blue-950 text-white py-2 px-2 w-full md:hidden">
+      {/* Mobile: Header Row 1 - Logo + Hamburger + Icons */}
+      <div className="flex bg-blue-950 text-white py-2 px-2 w-full md:hidden">
         <div className="flex items-center justify-between gap-2">
           {/* Logo - Mobile Small */}
           <a href="/" className="flex items-center flex-shrink-0">
