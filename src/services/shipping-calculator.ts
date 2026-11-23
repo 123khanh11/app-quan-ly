@@ -65,8 +65,9 @@ export function calculateTotalWeight(items: CartItem[]): number {
   items.forEach((item) => {
     // Weight per item: default 500g if not specified
     const itemWeight = item.weight || 500
-    // Total weight for this item: weight * quantity
-    totalWeight += itemWeight * item.quantity
+    // ✅ FIX: Lấy weight của 1 item, không nhân với quantity
+    // (vì weight đã được nhập từ form là tổng khối lượng)
+    totalWeight += itemWeight
   })
 
   // Ensure minimum weight: 1kg (1000g)
