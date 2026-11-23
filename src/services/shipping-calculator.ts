@@ -11,13 +11,15 @@ import { calculateShippingFee, getAvailableServices } from './ghn-db'
 
 /**
  * Product item with shipping info
+ * ✅ Weight phải lấy từ product_variants.weight_kg trong Supabase
  */
 export interface CartItem {
   product_id: string
+  variant_id?: string
   name: string
   price: number
   quantity: number
-  weight?: number // gram (mặc định: 500g)
+  weight_kg?: number // ✅ Weight từ product variant (kg)
   length?: number // cm (mặc định: 20cm)
   width?: number // cm (mặc định: 20cm)
   height?: number // cm (mặc định: 20cm)
@@ -52,6 +54,7 @@ const SHOP_INFO = {
 
 /**
  * Tính tổng cân nặng từ giỏ hàng
+ * ✅ Lấy weight_kg từ product_variants trong Supabase
  * @param items - Danh sách sản phẩm trong giỏ
  * @returns Tổng cân nặng (gram)
  */
@@ -63,11 +66,15 @@ export function calculateTotalWeight(items: CartItem[]): number {
   let totalWeight = 0
 
   items.forEach((item) => {
-    // Weight per item: default 500g if not specified
-    const itemWeight = item.weight || 500
-    // ✅ FIX: Lấy weight của 1 item, không nhân với quantity
-    // (vì weight đã được nhập từ form là tổng khối lượng)
-    totalWeight += itemWeight
+    // ✅ Lấy weight_kg từ product variant (Supabase)
+    // Nếu không có, dùng default 500g (0.5kg)
+    const weightKg = item.weight_kg || 0.5
+    
+    // Convert to gram: weight_kg * 1000
+    const itemWeightGram = weightKg * 1000
+    
+    // ✅ Cộng lại (không nhân với quantity vì weight_kg đã là của 1 sản phẩm)
+    totalWeight += itemWeightGram
   })
 
   // Ensure minimum weight: 1kg (1000g)
