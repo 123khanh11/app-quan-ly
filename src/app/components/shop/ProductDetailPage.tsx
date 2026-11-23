@@ -191,7 +191,99 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
               </p>
             </div>
 
-            {/* 3. Image + Desktop Details Grid */}
+            {/* 3. Variants Selector - Mobile Primary (visible on mobile, hidden on desktop) */}
+            {product.variants.length > 0 && (
+              <div className="w-full space-y-4 overflow-auto">
+                <h3 className="font-bold text-foreground text-lg">Chọn Loại Sản Phẩm</h3>
+                <p className="text-xs text-muted-foreground">(Tổng {product.variants.length} variants)</p>
+                
+                {/* Color Variants */}
+                {product.variants.some(v => v.color) && (
+                  <div>
+                    <p className="text-sm font-semibold mb-2">Màu Sắc</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {[...new Set(product.variants.map(v => v.color).filter(Boolean))].map((color) => {
+                        const variant = product.variants.find(v => v.color === color && (v.size === selectedVariant?.size || !selectedVariant?.size))
+                        return (
+                          <button
+                            key={color}
+                            onClick={() => {
+                              if (variant) {
+                                setSelectedVariant(variant)
+                                setSelectedImageIndex(0)
+                              }
+                            }}
+                            className={`px-6 py-3 rounded-lg border-2 transition-colors font-semibold text-base ${
+                              selectedVariant?.color === color
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary'
+                            }`}
+                          >
+                            {color}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {/* View All Colors Button */}
+                    <button
+                      onClick={() => {
+                        const firstColorVariant = product.variants.find(v => v.color)
+                        if (firstColorVariant) {
+                          setSelectedVariantForModal(firstColorVariant)
+                        }
+                      }}
+                      className="mt-2 text-sm text-primary hover:text-orange-600 font-semibold transition-colors"
+                    >
+                      Xem tất cả ›
+                    </button>
+                  </div>
+                )}
+
+                {/* Size Variants */}
+                {product.variants.some(v => v.size) && (
+                  <div>
+                    <p className="text-sm font-semibold mb-2">Kích Thước</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {[...new Set(product.variants.map(v => v.size).filter(Boolean))].map((size) => {
+                        const variant = product.variants.find(v => v.size === size && (v.color === selectedVariant?.color || !selectedVariant?.color))
+                        return (
+                          <button
+                            key={size}
+                            onClick={() => {
+                              if (variant) {
+                                setSelectedVariant(variant)
+                                setSelectedImageIndex(0)
+                              }
+                            }}
+                            className={`px-6 py-3 rounded-lg border-2 transition-colors font-semibold text-base ${
+                              selectedVariant?.size === size
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {/* View All Sizes Button */}
+                    <button
+                      onClick={() => {
+                        const firstSizeVariant = product.variants.find(v => v.size)
+                        if (firstSizeVariant) {
+                          setSelectedVariantForModal(firstSizeVariant)
+                        }
+                      }}
+                      className="mt-2 text-sm text-primary hover:text-orange-600 font-semibold transition-colors"
+                    >
+                      Xem tất cả ›
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 4. Image + Desktop Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Left Column: Product Image */}
               <div>
