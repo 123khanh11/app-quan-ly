@@ -176,7 +176,10 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       cartItems.forEach((item) => {
         if (selectedItems.has(`${item.product_id}-${item.color}-${item.size}`)) {
           const itemQuantity = item.quantity || 1
-          const itemWeight = ((item.weight ?? 500) || 500) * itemQuantity // gram
+          // ✅ FIXED: Don't multiply weight by quantity - weight is per unit
+          // Weight should be multiplied by quantity to get total weight for this line item
+          const itemWeightPerUnit = (item.weight ?? 500) || 500 // gram per unit
+          const itemWeight = itemWeightPerUnit * itemQuantity // total weight for all units of this item
           const itemLength = (item.length ?? 20) || 20 // cm
           const itemWidth = (item.width ?? 20) || 20 // cm
           const itemHeight = (item.height ?? 20) || 20 // cm
@@ -192,9 +195,9 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           console.log(`   - Product ID: ${item.product_id}`)
           console.log(`   - Variant ID: ${item.variant_id}`)
           console.log(`   - Quantity: ${itemQuantity}`)
-          console.log(`   - Weight (from cart): ${item.weight}g`)
-          console.log(`   - Weight (after default): ${item.weight ?? 500}g`)
-          console.log(`   - Total weight this item: ${itemWeight}g`)
+          console.log(`   - Weight per unit (from cart): ${item.weight}g`)
+          console.log(`   - Weight per unit (after default): ${itemWeightPerUnit}g`)
+          console.log(`   - Total weight for this line (qty × weight): ${itemWeight}g`)
           console.log(`   - Dimensions: L:${itemLength}cm, W:${itemWidth}cm, H:${itemHeight}cm`)
           console.log(`   - Full item object:`, JSON.stringify(item))
         }
