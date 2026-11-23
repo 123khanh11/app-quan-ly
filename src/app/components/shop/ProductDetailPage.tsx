@@ -64,6 +64,11 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
         }
         
         console.log('Loaded product:', productData) // DEBUG
+        console.log('Product variants with prices:', productData.variants.map(v => ({
+          size: v.size,
+          color: v.color,
+          variant_price: v.variant_price
+        }))) // DEBUG
         setProduct(productData)
         if (productData.variants.length > 0) {
           setSelectedVariant(productData.variants[0])
