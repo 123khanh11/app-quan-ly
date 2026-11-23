@@ -25,6 +25,15 @@ function ProductDetailPageRoute() {
     <ProductDetailPageComponent 
       productId={productId}
       onBack={() => navigate('/')}
+      onNavigate={(page) => {
+        if (page === 'checkout') {
+          navigate('/cart')
+        } else if (page === 'favorites') {
+          navigate('/favorites')
+        } else if (page === 'cart') {
+          navigate('/cart')
+        }
+      }}
     />
   );
 }

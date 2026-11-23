@@ -22,9 +22,10 @@ interface ProductVariant {
 interface ProductDetailPageProps {
   productId: string
   onBack?: () => void
+  onNavigate?: (page: string) => void
 }
 
-export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps) {
+export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDetailPageProps) {
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -377,14 +378,48 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
               </div>
             </div>
 
-            {/* 6. Add to Cart Button */}
-            <button
-              onClick={handleAddToCart}
-              className="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
-            >
-              <ShoppingCart size={20} />
-              Thêm Vào Giỏ Hàng
-            </button>
+            {/* 6. Action Buttons - Add to Cart + Buy Now */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Add to Cart Button */}
+              <button
+                onClick={handleAddToCart}
+                className="bg-muted text-foreground font-bold py-3 rounded-lg hover:bg-muted/80 transition-colors flex items-center justify-center gap-2"
+              >
+                <ShoppingCart size={20} />
+                <span className="hidden sm:inline">Thêm Vào Giỏ</span>
+                <span className="sm:hidden">Giỏ</span>
+              </button>
+
+              {/* Buy Now Button */}
+              <button
+                onClick={() => {
+                  handleAddToCart()
+                  setTimeout(() => onNavigate?.('checkout'), 500)
+                }}
+                className="bg-primary text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="hidden sm:inline">🛍️ Mua Ngay</span>
+                <span className="sm:hidden">Mua</span>
+              </button>
+            </div>
+
+            {/* 7. Quick Checkout Summary - Mobile Only */}
+            {selectedVariant && (
+              <div className="md:hidden bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-lg p-4 space-y-3">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground mb-1">Thanh toán nhanh</p>
+                  <p className="text-3xl font-bold text-primary">
+                    {(selectedVariant?.variant_price || product.product_price || 0).toLocaleString('vi-VN')}đ
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    x {quantity} = {((selectedVariant?.variant_price || product.product_price || 0) * quantity).toLocaleString('vi-VN')}đ
+                  </p>
+                </div>
+                <div className="bg-white rounded p-2 text-center text-sm text-muted-foreground border border-orange-200">
+                  <p>{selectedVariant.color ? `Màu: ${selectedVariant.color}` : ''} {selectedVariant.size ? `| Kích: ${selectedVariant.size}` : ''}</p>
+                </div>
+              </div>
+            )}
 
             {/* 7. Copy Link Button */}
             <button
