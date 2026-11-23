@@ -71,6 +71,7 @@ export function ProductDetailPage({ productId, onBack }: ProductDetailPageProps)
           color: v.color,
           variant_price: v.variant_price
         }))) // DEBUG
+        console.log('⚠️ TOTAL VARIANTS:', productData.variants.length) // DEBUG
         setProduct(productData)
         if (productData.variants.length > 0) {
           setSelectedVariant(productData.variants[0])
