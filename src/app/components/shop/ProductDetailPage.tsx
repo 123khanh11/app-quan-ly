@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase, getProductsByCategory, getProductDetails, ProductDetail } from '@/services/supabase'
+import { promotionService, ProductPromotion } from '@/services/promotionService'
 import { ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
 import { useNavigate } from 'react-router-dom'
@@ -34,6 +35,9 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
   const [quantity, setQuantity] = useState(1)
   const [similarProducts, setSimilarProducts] = useState<any[]>([])
   const [selectedVariantForModal, setSelectedVariantForModal] = useState<ProductDetail['variants'][0] | null>(null)
+  const [promotions, setPromotions] = useState<ProductPromotion[]>([])
+  const [currentPromo, setCurrentPromo] = useState<ProductPromotion | null>(null)
+  const [finalPrice, setFinalPrice] = useState(0)
   const { addToCart } = useCart()
   const navigate = useNavigate()
 
@@ -65,18 +69,14 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
           throw new Error('Product not found')
         }
         
-        console.log('Loaded product:', productData) // DEBUG
-        console.log('Product variants with prices:', productData.variants.map(v => ({
-          size: v.size,
-          color: v.color,
-          variant_price: v.variant_price
-        }))) // DEBUG
-        console.log('⚠️ TOTAL VARIANTS:', productData.variants.length) // DEBUG
         setProduct(productData)
         if (productData.variants.length > 0) {
           setSelectedVariant(productData.variants[0])
-          console.log('Selected variant:', productData.variants[0]) // DEBUG
         }
+
+        // Load promotions for this product
+        const promos = await promotionService.getProductPromotions(productData.product_id)
+        setPromotions(promos)
 
         // Load similar products (same category)
         if (productData.category_id) {
@@ -92,6 +92,20 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
     }
     loadProductData()
   }, [productId])
+
+  // Update promotion and final price when quantity or variant changes
+  useEffect(() => {
+    if (!product || !selectedVariant) return
+
+    // Calculate applicable promotion
+    const promo = promotionService.calculatePromotion(promotions, quantity)
+    setCurrentPromo(promo)
+
+    // Calculate final price
+    const price = selectedVariant.variant_price || product.product_price || 0
+    const discountedPrice = promotionService.calculateDiscountedPrice(price, promo)
+    setFinalPrice(discountedPrice)
+  }, [quantity, promotions, product, selectedVariant])
 
   const handleAddToCart = async () => {
     if (!product || !selectedVariant) {
@@ -176,12 +190,62 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
               {product.product_name}
             </h1>
 
-            {/* 2. Mobile-only Price */}
-            <div className="border-t border-b border-border py-4 md:hidden">
+            {/* 2. Current Promotion Badge */}
+            {currentPromo && (
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">
+                    {currentPromo.promotion_type === 'free_shipping' && '📦'}
+                    {currentPromo.promotion_type === 'percentage_discount' && '💰'}
+                    {currentPromo.promotion_type === 'fixed_discount' && '💵'}
+                  </span>
+                  <div>
+                    <p className="font-bold text-primary text-lg">
+                      {promotionService.getPromoLabel(currentPromo)}
+                    </p>
+                    {currentPromo.description && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {currentPromo.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. All Available Promotions */}
+            {promotions.length > 0 && (
+              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                <h3 className="font-bold text-green-700 mb-2">⚡ Các Khuyến Mại Khả Dụng</h3>
+                <ul className="space-y-2">
+                  {promotions.map((promo) => (
+                    <li key={promo.id} className="text-sm text-green-800">
+                      <span className="font-semibold">Mua từ {promo.min_quantity} sản phẩm:</span>
+                      <span className="ml-2">{promotionService.getPromoLabel(promo)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* 5. Mobile-only Price */}
+            <div className="border-t border-b border-border py-4 md:hidden space-y-2">
               <p className="text-sm text-muted-foreground mb-1">Giá</p>
-              <p className="text-4xl font-bold text-primary">
-                {(selectedVariant?.variant_price || product.product_price || 0).toLocaleString('vi-VN')}đ
-              </p>
+              {currentPromo && currentPromo.promotion_type !== 'free_shipping' && (
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl line-through text-muted-foreground">
+                    {(selectedVariant?.variant_price || product.product_price || 0).toLocaleString('vi-VN')}đ
+                  </p>
+                  <p className="text-4xl font-bold text-primary">
+                    {finalPrice.toLocaleString('vi-VN')}đ
+                  </p>
+                </div>
+              )}
+              {!currentPromo || currentPromo.promotion_type === 'free_shipping' ? (
+                <p className="text-4xl font-bold text-primary">
+                  {(selectedVariant?.variant_price || product.product_price || 0).toLocaleString('vi-VN')}đ
+                </p>
+              ) : null}
             </div>
 
 
@@ -244,11 +308,31 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
                 )}
 
                 {/* Desktop-only Price */}
-                <div className="border-t border-b border-border py-4 hidden md:block">
-                  <p className="text-sm text-muted-foreground mb-1">Giá</p>
-                  <p className="text-4xl font-bold text-primary">
-                    {(selectedVariant?.variant_price || product.product_price || 0).toLocaleString('vi-VN')}đ
-                  </p>
+                <div className="border-t border-b border-border py-4 hidden md:block space-y-2">
+                  <p className="text-sm text-muted-foreground mb-2">Giá</p>
+                  {currentPromo && currentPromo.promotion_type !== 'free_shipping' && (
+                    <div className="space-y-2">
+                      <div className="flex items-baseline gap-3">
+                        <p className="text-2xl line-through text-muted-foreground">
+                          {(selectedVariant?.variant_price || product.product_price || 0).toLocaleString('vi-VN')}đ
+                        </p>
+                        <span className="bg-red-500 text-white px-3 py-1 rounded text-sm font-bold">
+                          -{Math.round(((selectedVariant?.variant_price || product.product_price || 0) - finalPrice) / (selectedVariant?.variant_price || product.product_price || 0) * 100)}%
+                        </span>
+                      </div>
+                      <p className="text-4xl font-bold text-primary">
+                        {finalPrice.toLocaleString('vi-VN')}đ
+                      </p>
+                      <p className="text-sm text-green-600 font-semibold">
+                        💰 Tiết kiệm: {((selectedVariant?.variant_price || product.product_price || 0) - finalPrice).toLocaleString('vi-VN')}đ
+                      </p>
+                    </div>
+                  )}
+                  {!currentPromo || currentPromo.promotion_type === 'free_shipping' ? (
+                    <p className="text-4xl font-bold text-primary">
+                      {(selectedVariant?.variant_price || product.product_price || 0).toLocaleString('vi-VN')}đ
+                    </p>
+                  ) : null}
                 </div>
 
                 {/* Variants Selector - Visible on all screen sizes */}
@@ -401,11 +485,16 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground mb-1">Thanh toán nhanh</p>
                   <p className="text-3xl font-bold text-primary">
-                    {(selectedVariant?.variant_price || product.product_price || 0).toLocaleString('vi-VN')}đ
+                    {finalPrice.toLocaleString('vi-VN')}đ
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    x {quantity} = {((selectedVariant?.variant_price || product.product_price || 0) * quantity).toLocaleString('vi-VN')}đ
+                    x {quantity} = {(finalPrice * quantity).toLocaleString('vi-VN')}đ
                   </p>
+                  {currentPromo && currentPromo.promotion_type !== 'free_shipping' && (
+                    <p className="text-xs text-green-600 font-semibold mt-2">
+                      💰 Tiết kiệm: {((selectedVariant?.variant_price || product.product_price || 0 - finalPrice) * quantity).toLocaleString('vi-VN')}đ
+                    </p>
+                  )}
                 </div>
                 <div className="bg-white rounded p-2 text-center text-sm text-muted-foreground border border-orange-200">
                   <p>{selectedVariant.color ? `Màu: ${selectedVariant.color}` : ''} {selectedVariant.size ? `| Kích: ${selectedVariant.size}` : ''}</p>
