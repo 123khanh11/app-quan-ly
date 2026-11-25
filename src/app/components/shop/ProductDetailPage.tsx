@@ -483,19 +483,46 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
             {selectedVariant && (
               <div className="md:hidden bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-300 rounded-lg p-4 space-y-3">
                 <div className="text-center">
-                  <p className="text-xs text-muted-foreground mb-1">Thanh toán nhanh</p>
-                  <p className="text-3xl font-bold text-primary">
-                    {finalPrice.toLocaleString('vi-VN')}đ
+                  <p className="text-xs text-muted-foreground mb-2">Thanh toán nhanh</p>
+                  
+                  {/* Price per item */}
+                  <p className="text-2xl font-bold text-primary">
+                    {finalPrice.toLocaleString('vi-VN')}đ/cái
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  
+                  {/* Quantity total */}
+                  <p className="text-sm text-muted-foreground mt-1">
                     x {quantity} = {(finalPrice * quantity).toLocaleString('vi-VN')}đ
                   </p>
+
+                  {/* Discount display */}
                   {currentPromo && currentPromo.promotion_type !== 'free_shipping' && (
-                    <p className="text-xs text-green-600 font-semibold mt-2">
-                      💰 Tiết kiệm: {((selectedVariant?.variant_price || product.product_price || 0 - finalPrice) * quantity).toLocaleString('vi-VN')}đ
+                    <p className="text-xs text-green-600 font-semibold mt-1">
+                      💰 Tiết kiệm: {((selectedVariant?.variant_price || product.product_price || 0) - finalPrice).toLocaleString('vi-VN')}đ/cái
                     </p>
                   )}
+
+                  {/* Shipping fee */}
+                  <div className="border-t border-orange-200 mt-3 pt-3 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Phí ship:</span>
+                      {currentPromo?.promotion_type === 'free_shipping' ? (
+                        <span className="text-green-600 font-bold">Miễn phí 📦</span>
+                      ) : (
+                        <span>40,000đ</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Total */}
+                  <div className="text-center mt-2">
+                    <p className="text-xs text-muted-foreground">Tổng cộng:</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {(finalPrice * quantity + (currentPromo?.promotion_type === 'free_shipping' ? 0 : 40000)).toLocaleString('vi-VN')}đ
+                    </p>
+                  </div>
                 </div>
+                
                 <div className="bg-white rounded p-2 text-center text-sm text-muted-foreground border border-orange-200">
                   <p>{selectedVariant.color ? `Màu: ${selectedVariant.color}` : ''} {selectedVariant.size ? `| Kích: ${selectedVariant.size}` : ''}</p>
                 </div>
