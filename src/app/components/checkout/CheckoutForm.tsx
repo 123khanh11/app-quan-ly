@@ -297,7 +297,10 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     .filter((item) => selectedItems.has(`${item.product_id}-${item.color}-${item.size}`))
     .reduce((sum, item) => sum + item.price * item.quantity, 0)
 
-  const totalWithShipping = selectedTotal + (selectedItems.size > 0 ? shippingFee : 0)
+  // Apply free shipping promotion if applicable
+  const isFreeShipping = appliedPromotion?.promotion_type === 'free_shipping'
+  const finalShippingFee = isFreeShipping ? 0 : shippingFee
+  const totalWithShipping = selectedTotal + (selectedItems.size > 0 ? finalShippingFee : 0)
 
   const shippingBreakdown = shippingData ? getShippingFeeBreakdown(shippingData) : []
 
@@ -350,7 +353,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         order: {
           user_id: userId,
           total: totalWithShipping,
-          shipping_fee: shippingFee,
+          shipping_fee: finalShippingFee,
           payment_method: paymentMethod,
           payment_status: paymentMethod === 'bank_transfer' ? 'pending' : 'cod',
           order_status: 'pending',
@@ -515,7 +518,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           <div className="flex justify-between text-sm border-t border-border pt-2">
             <span>Vận Chuyển:</span>
             <span className="font-semibold">
-              {shippingLoading ? '⏳ Đang tính...' : `${shippingFee.toLocaleString('vi-VN')}đ`}
+              {shippingLoading ? '⏳ Đang tính...' : (isFreeShipping ? 'Miễn phí 📦' : `${shippingFee.toLocaleString('vi-VN')}đ`)}
             </span>
           </div>
           <div className="flex justify-between text-base font-bold border-t border-border pt-2">

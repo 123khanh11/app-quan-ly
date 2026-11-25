@@ -307,8 +307,13 @@ export function CartPage() {
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 max-h-96 overflow-y-auto">
                   <CheckoutForm 
                     onClose={() => setIsCheckingOut(false)} 
-                    onShippingFeeChange={setShippingFee}
+                    onShippingFeeChange={(fee) => {
+                      // Apply promotion discount if applicable
+                      const finalFee = appliedPromotion?.promotion_type === 'free_shipping' ? 0 : fee
+                      setShippingFee(finalFee)
+                    }}
                     onLoadingChange={setLoadingShipping}
+                    appliedPromotion={appliedPromotion}
                   />
                 </div>
               )}
