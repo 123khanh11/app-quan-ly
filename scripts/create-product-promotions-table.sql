@@ -20,6 +20,12 @@ ON public.product_promotions(min_quantity);
 -- Enable RLS
 ALTER TABLE public.product_promotions ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Allow select product_promotions" ON public.product_promotions;
+DROP POLICY IF EXISTS "Allow insert product_promotions" ON public.product_promotions;
+DROP POLICY IF EXISTS "Allow update product_promotions" ON public.product_promotions;
+DROP POLICY IF EXISTS "Allow delete product_promotions" ON public.product_promotions;
+
 -- Policy cho SELECT (tất cả người dùng có thể xem)
 CREATE POLICY "Allow select product_promotions"
 ON public.product_promotions FOR SELECT
@@ -39,6 +45,12 @@ USING (auth.role() = 'authenticated');
 CREATE POLICY "Allow delete product_promotions"
 ON public.product_promotions FOR DELETE
 USING (auth.role() = 'authenticated');
+
+-- Drop existing trigger if it exists
+DROP TRIGGER IF EXISTS update_product_promotions_timestamp ON public.product_promotions;
+
+-- Drop existing function if it exists
+DROP FUNCTION IF EXISTS update_product_promotions_timestamp();
 
 -- Tạo trigger để tự động update updated_at
 CREATE OR REPLACE FUNCTION update_product_promotions_timestamp()
