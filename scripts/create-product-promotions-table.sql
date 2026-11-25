@@ -1,42 +1,55 @@
--- Create product_promotions table
-CREATE TABLE IF NOT EXISTS product_promotions (
+-- Tạo table product_promotions để lưu khuyến mại theo số lượng
+CREATE TABLE IF NOT EXISTS public.product_promotions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-  min_quantity INTEGER NOT NULL DEFAULT 1,
+  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  min_quantity INTEGER NOT NULL CHECK (min_quantity > 0),
   promotion_type TEXT NOT NULL CHECK (promotion_type IN ('free_shipping', 'percentage_discount', 'fixed_discount')),
-  promotion_value DECIMAL(10, 2) NOT NULL,
+  promotion_value DECIMAL(10, 2),
   description TEXT,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index for faster queries
-CREATE INDEX IF NOT EXISTS idx_product_promotions_product_id ON product_promotions(product_id);
-CREATE INDEX IF NOT EXISTS idx_product_promotions_active ON product_promotions(is_active);
+-- Tạo index để tìm kiếm nhanh
+CREATE INDEX IF NOT EXISTS idx_product_promotions_product_id
+ON public.product_promotions(product_id);
+
+CREATE INDEX IF NOT EXISTS idx_product_promotions_min_quantity
+ON public.product_promotions(min_quantity);
 
 -- Enable RLS
-ALTER TABLE product_promotions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_promotions ENABLE ROW LEVEL SECURITY;
 
--- Allow public read (for customer app)
-CREATE POLICY "Allow public read" ON product_promotions
-  FOR SELECT USING (is_active = true);
+-- Policy cho SELECT (tất cả người dùng có thể xem)
+CREATE POLICY "Allow select product_promotions"
+ON public.product_promotions FOR SELECT
+USING (true);
 
--- Allow authenticated users to manage (for admin app)
-CREATE POLICY "Allow authenticated users to manage" ON product_promotions
-  FOR ALL USING (auth.role() = 'authenticated');
+-- Policy cho INSERT (authenticated users)
+CREATE POLICY "Allow insert product_promotions"
+ON public.product_promotions FOR INSERT
+WITH CHECK (auth.role() = 'authenticated');
 
--- Create updated_at trigger
-CREATE OR REPLACE FUNCTION update_product_promotions_updated_at()
+-- Policy cho UPDATE (authenticated users)
+CREATE POLICY "Allow update product_promotions"
+ON public.product_promotions FOR UPDATE
+USING (auth.role() = 'authenticated');
+
+-- Policy cho DELETE (authenticated users)
+CREATE POLICY "Allow delete product_promotions"
+ON public.product_promotions FOR DELETE
+USING (auth.role() = 'authenticated');
+
+-- Tạo trigger để tự động update updated_at
+CREATE OR REPLACE FUNCTION update_product_promotions_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at = NOW();
+  NEW.updated_at = CURRENT_TIMESTAMP;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trigger_product_promotions_updated_at ON product_promotions;
-CREATE TRIGGER trigger_product_promotions_updated_at
-  BEFORE UPDATE ON product_promotions
-  FOR EACH ROW
-  EXECUTE FUNCTION update_product_promotions_updated_at();
+CREATE TRIGGER update_product_promotions_timestamp
+BEFORE UPDATE ON public.product_promotions
+FOR EACH ROW
+EXECUTE FUNCTION update_product_promotions_timestamp();

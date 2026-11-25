@@ -7,7 +7,6 @@ export interface ProductPromotion {
   promotion_type: 'free_shipping' | 'percentage_discount' | 'fixed_discount'
   promotion_value: number
   description?: string
-  is_active: boolean
   created_at: string
   updated_at: string
 }
@@ -22,7 +21,6 @@ export const promotionService = {
         .from('product_promotions')
         .select('*')
         .eq('product_id', productId)
-        .eq('is_active', true)
         .order('min_quantity', { ascending: true })
 
       if (error) throw error
