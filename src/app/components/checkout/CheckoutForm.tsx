@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useCart } from '@/app/context/CartContext'
 import { supabase } from '@/services/supabase'
+import { promotionService } from '@/services/promotionService'
 import { useShippingFee, formatShippingFee, getShippingFeeBreakdown } from '@/hooks/useShippingFee'
 import { PaymentModal } from './PaymentModal'
 
@@ -42,6 +43,7 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
   const [loadingDistricts, setLoadingDistricts] = useState(false)
   const [loadingWards, setLoadingWards] = useState(false)
   const [shippingFee, setShippingFee] = useState<number>(DEFAULT_SHIPPING_FEE)
+  const [appliedPromotion, setAppliedPromotion] = useState<any>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null)
@@ -76,6 +78,32 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     }
     getUserId()
   }, [])
+
+  // Check for free shipping promotion
+  useEffect(() => {
+    const checkPromotions = async () => {
+      let hasFreeShippingPromo = false
+
+      for (const item of cartItems) {
+        const promotions = await promotionService.getProductPromotions(item.product_id)
+        const promo = promotionService.calculatePromotion(promotions, item.quantity)
+        
+        if (promo && promo.promotion_type === 'free_shipping') {
+          hasFreeShippingPromo = true
+          setAppliedPromotion(promo)
+          break
+        }
+      }
+
+      if (!hasFreeShippingPromo) {
+        setAppliedPromotion(null)
+      }
+    }
+
+    if (cartItems.length > 0) {
+      checkPromotions()
+    }
+  }, [cartItems])
 
   // Load provinces
   useEffect(() => {
