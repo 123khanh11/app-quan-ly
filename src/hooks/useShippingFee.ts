@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 export interface ShippingFeeParams {
   to_district_id: number
@@ -12,6 +12,14 @@ export interface ShippingFeeParams {
   cod_value?: number
   coupon?: string
 }
+
+// Cache key: district_id:ward_code:weight:length:width:height
+type ShippingCacheKey = string
+interface ShippingCacheEntry {
+  data: ShippingFeeData
+  timestamp: number
+}
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes cache
 
 export interface ShippingFeeData {
   total: number
@@ -65,8 +73,45 @@ export function useShippingFee() {
     warning: null,
   })
 
+  // Cache shipping fees to avoid recalculating same address
+  const cacheRef = useRef<Map<ShippingCacheKey, ShippingCacheEntry>>(new Map())
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const lastParamsRef = useRef<ShippingFeeParams | null>(null)
+
+  const getCacheKey = (params: ShippingFeeParams): ShippingCacheKey => {
+    return `${params.to_district_id}:${params.to_ward_code}:${params.weight || 1000}:${params.length || 20}:${params.width || 20}:${params.height || 20}`
+  }
+
+  const getCachedFee = (key: ShippingCacheKey): ShippingFeeData | null => {
+    const entry = cacheRef.current.get(key)
+    if (!entry) return null
+    
+    // Check if cache expired
+    if (Date.now() - entry.timestamp > CACHE_TTL) {
+      cacheRef.current.delete(key)
+      return null
+    }
+    
+    return entry.data
+  }
+
   const calculateFee = useCallback(
     async (params: ShippingFeeParams): Promise<ShippingFeeResult> => {
+      // Check cache first
+      const cacheKey = getCacheKey(params)
+      const cachedData = getCachedFee(cacheKey)
+      
+      if (cachedData) {
+        console.log('💾 [Cache Hit] Shipping fee from cache:', cachedData.total, 'VND')
+        setState({
+          loading: false,
+          data: cachedData,
+          error: null,
+          warning: null,
+        })
+        return { success: true, data: cachedData }
+      }
+
       setState({ loading: true, data: null, error: null, warning: null })
 
       try {
@@ -77,7 +122,7 @@ export function useShippingFee() {
           return { success: false, error }
         }
 
-        console.log('📞 Calculating shipping fee...', params)
+        console.log('📞 Calculating shipping fee...', { district: params.to_district_id, ward: params.to_ward_code, weight: params.weight })
 
         // API endpoint - works on Vercel & local dev
         const response = await fetch('/api/shipping-fee', {
@@ -100,6 +145,12 @@ export function useShippingFee() {
         const result: ShippingFeeResult = await response.json()
 
         if (result.success && result.data) {
+          // Cache the result
+          cacheRef.current.set(cacheKey, {
+            data: result.data,
+            timestamp: Date.now(),
+          })
+
           setState({
             loading: false,
             data: result.data,

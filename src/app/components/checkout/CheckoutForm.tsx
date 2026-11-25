@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useCart } from '@/app/context/CartContext'
 import { supabase } from '@/services/supabase'
 import { promotionService } from '@/services/promotionService'
@@ -33,6 +33,8 @@ interface CheckoutFormProps {
 export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: CheckoutFormProps) {
   const { cartItems, clearCart } = useCart()
   const { loading: shippingLoading, data: shippingData, error: shippingError, warning: shippingWarning, calculateFee } = useShippingFee()
+  
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -182,67 +184,54 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
     loadWards()
   }, [formData.districtId])
 
-  // Calculate shipping fee
+  // Calculate shipping fee with debounce (wait 500ms after user stops changing address)
   useEffect(() => {
-    const calculateShipping = async () => {
-      if (!formData.districtId || !formData.wardCode) {
-        setShippingFee(DEFAULT_SHIPPING_FEE)
-        onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
-        onLoadingChange?.(false)
-        return
-      }
+    // Clear previous timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
 
+    if (!formData.districtId || !formData.wardCode) {
+      setShippingFee(DEFAULT_SHIPPING_FEE)
+      onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
+      onLoadingChange?.(false)
+      return
+    }
+
+    // Debounce: wait 500ms before calculating
+    debounceTimerRef.current = setTimeout(async () => {
       onLoadingChange?.(true)
 
-      // Tính tổng weight + dimensions từ tất cả item trong giỏ
+      // Calculate total weight + dimensions silently (no console spam)
       let totalWeight = 0
       let totalLength = 0
       let totalWidth = 0
       let totalHeight = 0
-      let itemCount = 0
 
       cartItems.forEach((item) => {
         if (selectedItems.has(`${item.product_id}-${item.color}-${item.size}`)) {
           const itemQuantity = item.quantity || 1
-          // ✅ FIXED: Don't multiply weight by quantity - weight is per unit
-          // Weight should be multiplied by quantity to get total weight for this line item
-          const itemWeightPerUnit = (item.weight ?? 500) || 500 // gram per unit
-          const itemWeight = itemWeightPerUnit * itemQuantity // total weight for all units of this item
-          const itemLength = (item.length ?? 20) || 20 // cm
-          const itemWidth = (item.width ?? 20) || 20 // cm
-          const itemHeight = (item.height ?? 20) || 20 // cm
+          const itemWeightPerUnit = (item.weight ?? 500) || 500
+          const itemWeight = itemWeightPerUnit * itemQuantity
+          const itemLength = (item.length ?? 20) || 20
+          const itemWidth = (item.width ?? 20) || 20
+          const itemHeight = (item.height ?? 20) || 20
 
           totalWeight += itemWeight
-          // Tính tổng dimensions (cộng dồn chiều dài, rộng)
           totalLength += itemLength * itemQuantity
-          totalWidth = Math.max(totalWidth, itemWidth) // Lấy chiều rộng lớn nhất
-          totalHeight = Math.max(totalHeight, itemHeight) // Lấy chiều cao lớn nhất
-          itemCount++
-
-          console.log(`📦 [CheckoutForm] Item: ${item.name}`)
-          console.log(`   - Product ID: ${item.product_id}`)
-          console.log(`   - Variant ID: ${item.variant_id}`)
-          console.log(`   - Quantity: ${itemQuantity}`)
-          console.log(`   - Weight per unit (from cart): ${item.weight}g`)
-          console.log(`   - Weight per unit (after default): ${itemWeightPerUnit}g`)
-          console.log(`   - Total weight for this line (qty × weight): ${itemWeight}g`)
-          console.log(`   - Dimensions: L:${itemLength}cm, W:${itemWidth}cm, H:${itemHeight}cm`)
-          console.log(`   - Full item object:`, JSON.stringify(item))
+          totalWidth = Math.max(totalWidth, itemWidth)
+          totalHeight = Math.max(totalHeight, itemHeight)
         }
       })
 
-      // Đảm bảo kích thước tối thiểu
+      // Ensure minimum dimensions
       totalWeight = Math.max(totalWeight, 200)
       totalLength = Math.max(totalLength, 10)
       totalWidth = Math.max(totalWidth, 10)
       totalHeight = Math.max(totalHeight, 10)
 
-      console.log(`📊 Tổng cộng - Khối lượng: ${totalWeight}g, L:${totalLength}cm, W:${totalWidth}cm, H:${totalHeight}cm, Số item: ${itemCount}`)
-      console.log(`📍 Giao đến - District: ${formData.districtId}, Ward: ${formData.wardCode}`)
-      
-      // Determine which service type will be used
-      let serviceType = totalWeight >= 20000 ? 5 : 2
-      console.log(`🔧 Service Type: ${serviceType} (${totalWeight >= 20000 ? 'Heavy (>= 20kg)' : 'Standard (< 20kg)'})`)
+      // Determine service type (silent logging)
+      const serviceType = totalWeight >= 20000 ? 5 : 2
 
       const result = await calculateFee({
         to_district_id: formData.districtId,
@@ -253,26 +242,22 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
         height: totalHeight,
       })
 
-      console.log('📤 API Response:', result)
-
       if (result.success && result.data) {
-        console.log(`✅ Phí ship từ API: ${result.data.total}đ`)
-        console.log(`   - Phí cơ bản: ${result.data.service_fee}đ`)
-        console.log(`   - Phí bảo hiểm: ${result.data.insurance_fee}đ`)
-        console.log(`   - Phí COD: ${result.data.cod_fee}đ`)
-        console.log(`   - Phí khu vực xa (giao): ${result.data.deliver_remote_areas_fee}đ`)
         setShippingFee(result.data.total || DEFAULT_SHIPPING_FEE)
         onShippingFeeChange?.(result.data.total || DEFAULT_SHIPPING_FEE)
       } else {
-        console.log(`⚠️ Lỗi tính phí ship: ${result.error}, dùng mặc định: ${DEFAULT_SHIPPING_FEE}`)
         setShippingFee(DEFAULT_SHIPPING_FEE)
         onShippingFeeChange?.(DEFAULT_SHIPPING_FEE)
       }
       
       onLoadingChange?.(false)
-    }
+    }, 500) // 500ms debounce delay
 
-    calculateShipping()
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
   }, [formData.districtId, formData.wardCode, cartItems, selectedItems, calculateFee, onShippingFeeChange, onLoadingChange])
 
   const handleToggleItem = (itemKey: string) => {
