@@ -1,13 +1,43 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Trash2, ShoppingCart, Plus, Minus } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
+import { promotionService } from '@/services/promotionService'
 import { CheckoutForm } from '@/app/components/checkout/CheckoutForm'
 
 export function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart()
   const [isCheckingOut, setIsCheckingOut] = useState(false)
-  const [shippingFee, setShippingFee] = useState<number>(0)
+  const [shippingFee, setShippingFee] = useState<number>(40000) // Default shipping fee
   const [loadingShipping, setLoadingShipping] = useState(false)
+  const [appliedPromotion, setAppliedPromotion] = useState<any>(null)
+
+  // Check for free shipping promotion
+  useEffect(() => {
+    const checkPromotions = async () => {
+      let hasFreeShippingPromo = false
+
+      // Check each cart item for free shipping promotion
+      for (const item of cartItems) {
+        const promotions = await promotionService.getProductPromotions(item.product_id)
+        const promo = promotionService.calculatePromotion(promotions, item.quantity)
+        
+        if (promo && promo.promotion_type === 'free_shipping') {
+          hasFreeShippingPromo = true
+          setAppliedPromotion(promo)
+          break
+        }
+      }
+
+      // If no free shipping, use default
+      if (!hasFreeShippingPromo) {
+        setAppliedPromotion(null)
+      }
+    }
+
+    if (cartItems.length > 0) {
+      checkPromotions()
+    }
+  }, [cartItems])
 
   const totalWithShipping = cartTotal + shippingFee
 
@@ -244,7 +274,11 @@ export function CartPage() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm md:text-base text-gray-600">Phí vận chuyển:</span>
                   <span className="font-bold text-orange-600 text-base md:text-lg">
-                    {loadingShipping ? '⏳ Đang tính...' : shippingFee === 0 ? 'Chưa tính' : `${shippingFee.toLocaleString('vi-VN')}đ`}
+                    {appliedPromotion && appliedPromotion.promotion_type === 'free_shipping' ? (
+                      <span className="text-green-600">Miễn phí 📦</span>
+                    ) : (
+                      `${shippingFee.toLocaleString('vi-VN')}đ`
+                    )}
                   </span>
                 </div>
               </div>
@@ -252,8 +286,13 @@ export function CartPage() {
               <div className="py-4">
                 <div className="flex justify-between items-center">
                   <span className="text-lg md:text-2xl font-bold text-gray-900">Tổng:</span>
-                  <span className="text-lg md:text-2xl font-bold text-primary">{(cartTotal + shippingFee).toLocaleString('vi-VN')}đ</span>
+                  <span className="text-lg md:text-2xl font-bold text-primary">
+                    {(cartTotal + (appliedPromotion?.promotion_type === 'free_shipping' ? 0 : shippingFee)).toLocaleString('vi-VN')}đ
+                  </span>
                 </div>
+                {appliedPromotion && appliedPromotion.promotion_type === 'free_shipping' && (
+                  <p className="text-xs text-green-600 font-semibold mt-2">✅ {appliedPromotion.description}</p>
+                )}
               </div>
 
               <button
