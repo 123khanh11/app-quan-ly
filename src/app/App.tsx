@@ -7,6 +7,7 @@ import { CartPage } from "@/app/components/shop/Cart";
 import { OrderTrackingPage } from "@/app/components/shop/OrderTracking";
 import { FavoritesPage } from "@/app/components/shop/FavoritesPage";
 import { ProductDetailPage as ProductDetailPageComponent } from "@/app/components/shop/ProductDetailPage";
+import { FloatingCartButton } from "@/app/components/shop/FloatingCartButton";
 import { LoginModal } from "@/app/components/auth/LoginModal";
 import { ShopHeader } from "@/app/components/layout/ShopHeader";
 import { ShopFooter } from "@/app/components/layout/ShopFooter";
@@ -191,6 +192,9 @@ function AppContent() {
         user={user}
         onLogout={handleLogout}
       />
+
+      {/* ── FLOATING CART BUTTON (Mobile Only) ── */}
+      <FloatingCartButton />
     </>
   );
 }
