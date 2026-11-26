@@ -254,7 +254,7 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Left Column: Product Image */}
               <div>
-                <div className="aspect-square bg-muted rounded-lg overflow-hidden flex items-center justify-center relative group">
+                <div className="aspect-square bg-white rounded-lg overflow-hidden flex items-center justify-center relative group border border-border">
                   <img
                     src={
                       displayImages && displayImages.length > 0
@@ -262,7 +262,7 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
                         : selectedVariant?.variant_image || product.product_image
                     }
                     alt={product.product_name}
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    className="w-full h-full object-contain hover:scale-110 transition-transform duration-300"
                   />
                   
                   {/* Navigation Buttons */}
