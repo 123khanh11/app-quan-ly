@@ -63,9 +63,9 @@ export function CartPage() {
           <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">🛒 Giỏ Hàng</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-0 border-t border-gray-200">
+        <div className="border-t border-gray-200">
           {/* Cart Items */}
-          <div className="lg:col-span-2 lg:border-r lg:border-gray-200">
+          <div>
             {/* Desktop: Table View */}
             <div className="hidden md:block bg-card border-0 border-b border-gray-200 overflow-hidden">
               <div className="overflow-x-auto">
@@ -173,38 +173,38 @@ export function CartPage() {
             </div>
 
             {/* Mobile: Card View */}
-            <div className="md:hidden space-y-0 border-b border-gray-200 pb-32">
+            <div className="md:hidden space-y-0 pb-0">
               {cartItems.map((item) => (
                 <div key={`${item.product_id}-${item.color}-${item.size}`} className="bg-white border-0 border-b border-gray-200 rounded-0 overflow-hidden shadow-none">
                   {/* Product Card */}
                   <div className="p-4 space-y-3">
-                    {/* Image & Name Row */}
-                    <div className="flex gap-3">
-                      {item.image_url && (
-                        <img
-                          src={item.image_url}
-                          alt={item.name}
-                          className="w-20 h-20 object-cover rounded bg-gray-100 flex-shrink-0"
-                        />
+                    {/* Image - Full Width */}
+                    {item.image_url && (
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        className="w-full h-48 object-cover rounded bg-gray-100"
+                      />
+                    )}
+
+                    {/* Name */}
+                    <p className="font-semibold text-gray-900 text-sm">{item.name}</p>
+
+                    {/* Color & Size Info */}
+                    <div className="text-xs space-y-1">
+                      {item.color && (
+                        <p className="text-gray-600">
+                          <span className="text-gray-800 font-medium">Màu:</span> {item.color}
+                        </p>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm line-clamp-2">{item.name}</p>
-                        <div className="mt-1.5 space-y-0.5 text-xs">
-                          {item.color && (
-                            <p className="text-gray-600">
-                              <span className="text-gray-800 font-medium">Màu:</span> {item.color}
-                            </p>
-                          )}
-                          {item.size && (
-                            <p className="text-gray-600">
-                              <span className="text-gray-800 font-medium">Size:</span> {item.size}
-                            </p>
-                          )}
-                          {item.sku && (
-                            <p className="text-gray-500">SKU: {item.sku}</p>
-                          )}
-                        </div>
-                      </div>
+                      {item.size && (
+                        <p className="text-gray-600">
+                          <span className="text-gray-800 font-medium">Size:</span> {item.size}
+                        </p>
+                      )}
+                      {item.sku && (
+                        <p className="text-gray-500">SKU: {item.sku}</p>
+                      )}
                     </div>
 
                     {/* Price Row */}
@@ -256,43 +256,72 @@ export function CartPage() {
                 </div>
               ))}
             </div>
+
+            {/* Mobile: Order Summary - Hiển thị ngay dưới sản phẩm */}
+            <div className="md:hidden bg-white rounded-0 p-4 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Tạm Tính:</span>
+                <span className="font-bold text-gray-900 text-base">{cartTotal.toLocaleString('vi-VN')}đ</span>
+              </div>
+
+              {appliedPromotion && appliedPromotion.promotion_type === 'free_shipping' && (
+                <div className="text-xs text-green-600 font-semibold text-right">✅ Miễn phí 📦</div>
+              )}
+
+              <div className="flex justify-between items-center border-t border-gray-200 pt-2">
+                <span className="text-lg font-bold text-gray-900">Tổng:</span>
+                <span className="text-lg font-bold text-primary">
+                  {(cartTotal + (appliedPromotion?.promotion_type === 'free_shipping' ? 0 : shippingFee)).toLocaleString('vi-VN')}đ
+                </span>
+              </div>
+
+              <button
+                onClick={() => setIsCheckingOut(true)}
+                disabled={isCheckingOut}
+                className="w-full mt-3 bg-primary text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition-all active:scale-95 disabled:opacity-50 text-base"
+              >
+                {isCheckingOut ? '⏳ Đang Xử Lý...' : '✅ Thanh Toán Ngay'}
+              </button>
+
+              {isCheckingOut && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 max-h-96 overflow-y-auto">
+                  <CheckoutForm 
+                    onClose={() => setIsCheckingOut(false)} 
+                    onShippingFeeChange={(fee) => {
+                      const finalFee = appliedPromotion?.promotion_type === 'free_shipping' ? 0 : fee
+                      setShippingFee(finalFee)
+                    }}
+                    onLoadingChange={setLoadingShipping}
+                    appliedPromotion={appliedPromotion}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Order Summary */}
-          <div className="lg:col-span-1 lg:pl-0">
-            <div className="bg-white border-0 border-b border-gray-200 lg:border-b-0 lg:border-l lg:border-gray-200 rounded-0 p-4 md:p-6 md:sticky md:top-0 shadow-none fixed bottom-0 left-0 right-0 lg:static">
-              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 hidden md:block">📋 Tóm Tắt Đơn Hàng</h2>
+          {/* Desktop: Order Summary */}
+          <div className="bg-white rounded-0 p-4 md:p-6 md:sticky md:top-0 shadow-none hidden md:block lg:border-l lg:border-gray-200">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4">📋 Tóm Tắt Đơn Hàng</h2>
 
-              <div className="space-y-3 pb-4 border-b border-gray-200">
+              <div className="space-y-2 md:space-y-3">
+                {/* Line 1: Tạm Tính */}
                 <div className="flex justify-between items-center">
-                  <span className="text-sm md:text-base text-gray-600">Tạm tính:</span>
+                  <span className="text-sm md:text-base text-gray-600">Tạm Tính:</span>
                   <span className="font-bold text-gray-900 text-base md:text-lg">{cartTotal.toLocaleString('vi-VN')}đ</span>
                 </div>
-              </div>
 
-              <div className="py-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm md:text-base text-gray-600">Phí vận chuyển:</span>
-                  <span className="font-bold text-orange-600 text-base md:text-lg">
-                    {appliedPromotion && appliedPromotion.promotion_type === 'free_shipping' ? (
-                      <span className="text-green-600">Miễn phí 📦</span>
-                    ) : (
-                      `${shippingFee.toLocaleString('vi-VN')}đ`
-                    )}
-                  </span>
-                </div>
-              </div>
+                {/* Free Shipping Badge */}
+                {appliedPromotion && appliedPromotion.promotion_type === 'free_shipping' && (
+                  <div className="text-xs text-green-600 font-semibold text-right">✅ Miễn phí 📦</div>
+                )}
 
-              <div className="py-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg md:text-2xl font-bold text-gray-900">Tổng:</span>
+                {/* Line 2: Tổng */}
+                <div className="flex justify-between items-center border-t border-gray-200 pt-2 md:pt-3">
+                  <span className="text-lg md:text-xl font-bold text-gray-900">Tổng:</span>
                   <span className="text-lg md:text-2xl font-bold text-primary">
                     {(cartTotal + (appliedPromotion?.promotion_type === 'free_shipping' ? 0 : shippingFee)).toLocaleString('vi-VN')}đ
                   </span>
                 </div>
-                {appliedPromotion && appliedPromotion.promotion_type === 'free_shipping' && (
-                  <p className="text-xs text-green-600 font-semibold mt-2">✅ {appliedPromotion.description}</p>
-                )}
               </div>
 
               <button
@@ -318,7 +347,6 @@ export function CartPage() {
                 </div>
               )}
             </div>
-          </div>
         </div>
       </div>
     </div>
