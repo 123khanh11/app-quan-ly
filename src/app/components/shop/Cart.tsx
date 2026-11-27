@@ -271,7 +271,7 @@ export function CartPage() {
               <div className="flex justify-between items-center border-t border-gray-200 pt-2">
                 <span className="text-lg font-bold text-gray-900">Tổng:</span>
                 <span className="text-lg font-bold text-primary">
-                  {(cartTotal + (appliedPromotion?.promotion_type === 'free_shipping' ? 0 : shippingFee)).toLocaleString('vi-VN')}đ
+                  {cartTotal.toLocaleString('vi-VN')}đ
                 </span>
               </div>
 
