@@ -3,15 +3,22 @@
 import { ShoppingCart } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
 import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 
 export function FloatingCartButton() {
   const { cartItems } = useCart()
   const navigate = useNavigate()
+  const [isClient, setIsClient] = useState(false)
+
+  // Only render on client side to avoid hydration mismatch
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
-  // Hiển thị nút trên mobile only
-  if (totalItems === 0) {
+  // Don't render on server or if no items
+  if (!isClient || totalItems === 0) {
     return null
   }
 
@@ -20,6 +27,7 @@ export function FloatingCartButton() {
       onClick={() => navigate('/cart')}
       className="fixed bottom-6 right-6 md:hidden z-40 w-14 h-14 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-xl hover:shadow-2xl transition-all active:scale-95 flex items-center justify-center group"
       title="Xem giỏ hàng"
+      aria-label={`Giỏ hàng: ${totalItems} sản phẩm`}
     >
       {/* Giỏ hàng icon */}
       <ShoppingCart size={24} className="group-hover:scale-110 transition-transform" />
