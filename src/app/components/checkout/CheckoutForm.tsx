@@ -500,12 +500,24 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
             <span>Tạm Tính:</span>
             <span className="font-semibold">{(selectedTotal || 0).toLocaleString('vi-VN')}đ</span>
           </div>
-          <div className="flex justify-between text-sm border-t border-border pt-2">
-            <span>Vận Chuyển:</span>
-            <span className="font-semibold">
-              {shippingLoading ? '⏳ Đang tính...' : (isFreeShipping ? 'Miễn phí 📦' : `${shippingFee.toLocaleString('vi-VN')}đ`)}
-            </span>
-          </div>
+
+          {/* Only show shipping if user selected address */}
+          {formData.districtId && formData.wardCode && (
+            <div className="flex justify-between text-sm border-t border-border pt-2">
+              <span>Vận Chuyển:</span>
+              <span className="font-semibold">
+                {shippingLoading ? '⏳ Đang tính...' : (isFreeShipping ? 'Miễn phí 📦' : `${shippingFee.toLocaleString('vi-VN')}đ`)}
+              </span>
+            </div>
+          )}
+
+          {/* Info when no address selected */}
+          {(!formData.districtId || !formData.wardCode) && (
+            <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700 mt-2">
+              💡 Chọn địa chỉ gửi hàng để tính phí vận chuyển
+            </div>
+          )}
+
           <div className="flex justify-between text-base font-bold border-t border-border pt-2">
             <span>Tổng Cộng:</span>
             <span className="text-primary">{totalWithShipping.toLocaleString('vi-VN')}đ</span>

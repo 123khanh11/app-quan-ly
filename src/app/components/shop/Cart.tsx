@@ -275,6 +275,9 @@ export function CartPage() {
                 </span>
               </div>
 
+              {/* Info: Phí vận chuyển sẽ được tính tại checkout */}
+              <p className="text-xs text-muted-foreground text-center mt-2">💡 Phí vận chuyển sẽ được tính khi bạn nhập địa chỉ gửi hàng</p>
+
               <button
                 onClick={() => setIsCheckingOut(true)}
                 disabled={isCheckingOut}
@@ -315,11 +318,16 @@ export function CartPage() {
                   <div className="text-xs text-green-600 font-semibold text-right">✅ Miễn phí 📦</div>
                 )}
 
+                {/* Info: Phí sẽ tính khi checkout */}
+                <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700">
+                  💡 Phí vận chuyển sẽ được tính khi bạn chọn địa chỉ gửi hàng tại thanh toán
+                </div>
+
                 {/* Line 2: Tổng */}
                 <div className="flex justify-between items-center border-t border-gray-200 pt-2 md:pt-3">
                   <span className="text-lg md:text-xl font-bold text-gray-900">Tổng:</span>
                   <span className="text-lg md:text-2xl font-bold text-primary">
-                    {(cartTotal + (appliedPromotion?.promotion_type === 'free_shipping' ? 0 : shippingFee)).toLocaleString('vi-VN')}đ
+                    {cartTotal.toLocaleString('vi-VN')}đ
                   </span>
                 </div>
               </div>
