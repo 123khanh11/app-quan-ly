@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { X, Copy, Check } from 'lucide-react'
-import { trackLead, getFbp, getFbc, waitForFbp } from '@/utils/facebookPixel'
+import { getFbp, getFbc, waitForFbp } from '@/utils/facebookPixel'
 
 interface PaymentModalProps {
   orderTotal: number
@@ -61,14 +61,6 @@ export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentM
 
   const handleConfirm = async () => {
     console.log('🔔 [Payment Modal] Confirming payment with:', { fbp, fbc, paymentMethod })
-    // Track Lead event for Meta Pixel (Khách hàng tiềm năng)
-    await trackLead({
-      value: orderTotal,
-      currency: 'VND',
-      payment_method: paymentMethod,
-      fbp,
-      fbc,
-    })
     console.log('🔔 [Payment Modal] Calling onConfirmPayment with:', { fbp, fbc })
     onConfirmPayment(paymentMethod, transferContent, qrUrl, fbp, fbc)
   }

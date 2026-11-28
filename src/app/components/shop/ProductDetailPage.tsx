@@ -6,7 +6,6 @@ import { promotionService, ProductPromotion } from '@/services/promotionService'
 import { ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/app/context/CartContext'
 import { useNavigate } from 'react-router-dom'
-import { trackAddToCart } from '@/utils/facebookPixel'
 import { VariantModal } from './VariantModal'
 
 interface ProductVariant {
@@ -140,18 +139,6 @@ export function ProductDetailPage({ productId, onBack, onNavigate }: ProductDeta
       length: selectedVariant.length_cm ?? 20,
       width: selectedVariant.width_cm ?? 20,
       height: selectedVariant.height_cm ?? 20,
-    })
-
-    // Track AddToCart event for Meta Pixel
-    await trackAddToCart({
-      content_name: product.product_name,
-      content_type: 'product',
-      content_ids: [selectedVariant.variant_id],
-      value: (selectedVariant.variant_price || product.product_price) * quantity,
-      currency: 'VND',
-      quantity: quantity,
-      color: selectedVariant.color,
-      size: selectedVariant.size,
     })
 
     alert(`✅ Đã thêm "${product.product_name}" vào giỏ hàng`)
