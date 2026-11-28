@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { X, Copy, Check } from 'lucide-react'
-import { getFbp, getFbc, waitForFbp } from '@/utils/facebookPixel'
 
 interface PaymentModalProps {
   orderTotal: number
@@ -16,18 +15,10 @@ export function PaymentModal({ orderTotal, onClose, onConfirmPayment }: PaymentM
   const [fbp, setFbp] = useState<string>('')
   const [fbc, setFbc] = useState<string>('')
 
-  // Get fbp + fbc on component mount
+  // Get fbp + fbc on component mount (simplified - no longer waiting)
   useEffect(() => {
-    const getFbpAndFbc = async () => {
-      console.log('📍 [Payment Modal] Attempting to get fbp + fbc...')
-      const fbpValue = await waitForFbp(2000)
-      const fbcValue = getFbc()
-      setFbp(fbpValue)
-      setFbc(fbcValue)
-      console.log('📍 [Payment Modal] fbp:', fbpValue)
-      console.log('📍 [Payment Modal] fbc:', fbcValue)
-    }
-    getFbpAndFbc()
+    setFbp('')
+    setFbc('')
   }, [])
 
   // Generate transfer content and QR when payment method is selected
