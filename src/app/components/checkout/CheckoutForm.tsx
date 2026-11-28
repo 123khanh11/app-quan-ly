@@ -6,7 +6,6 @@ import { supabase } from '@/services/supabase'
 import { promotionService } from '@/services/promotionService'
 import { useShippingFee, formatShippingFee, getShippingFeeBreakdown } from '@/hooks/useShippingFee'
 import { PaymentModal } from './PaymentModal'
-import { facebookPixelService } from '@/services/facebookPixel'
 
 const DEFAULT_SHIPPING_FEE = 50000
 
@@ -298,11 +297,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
       selectedItems.has(`${item.product_id}-${item.color}-${item.size}`)
     )
     
-    if (selectedOrderItems.length > 0) {
-      facebookPixelService.trackPurchase({
+    if (selectedOrderItems.length > 0 && typeof window !== 'undefined' && (window as any).fbq) {
+      const fbq = (window as any).fbq
+      
+      fbq('track', 'Purchase', {
         value: totalWithShipping,
         currency: 'VND',
-        content_name: `Checkout Purchase`,
         content_type: 'product_group',
         num_items: selectedOrderItems.length,
         contents: selectedOrderItems.map(item => ({
@@ -311,6 +311,12 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
           title: item.name,
           price: item.price,
         })),
+      })
+      
+      console.log('📊 Facebook Pixel Purchase event sent:', {
+        value: totalWithShipping,
+        currency: 'VND',
+        num_items: selectedOrderItems.length,
       })
     }
     
