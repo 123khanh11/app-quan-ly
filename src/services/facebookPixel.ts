@@ -22,7 +22,7 @@ interface PurchaseEventData {
 export const facebookPixelService = {
   /**
    * Send Purchase event to Facebook Pixel
-   * This should be called after successful order creation
+   * This should be called when user clicks "Xác Nhận" to start checkout
    */
   trackPurchase: (data: PurchaseEventData) => {
     try {
@@ -57,72 +57,6 @@ export const facebookPixelService = {
       }
     } catch (error) {
       console.error('❌ Error tracking purchase to Facebook Pixel:', error)
-    }
-  },
-
-  /**
-   * Send AddToCart event to Facebook Pixel
-   */
-  trackAddToCart: (data: {
-    value: number
-    currency: string
-    content_name?: string
-    content_id?: string
-    quantity?: number
-  }) => {
-    try {
-      if (typeof window !== 'undefined' && (window as any).fbq) {
-        const fbq = (window as any).fbq
-
-        console.log('📊 Facebook Pixel AddToCart Event:', {
-          value: data.value,
-          currency: data.currency,
-        })
-
-        fbq('track', 'AddToCart', {
-          value: data.value,
-          currency: data.currency,
-          content_name: data.content_name,
-          content_id: data.content_id,
-          quantity: data.quantity || 1,
-        })
-
-        console.log('✅ AddToCart event sent to Facebook Pixel')
-      }
-    } catch (error) {
-      console.error('❌ Error tracking AddToCart:', error)
-    }
-  },
-
-  /**
-   * Send InitiateCheckout event to Facebook Pixel
-   */
-  trackInitiateCheckout: (data: {
-    value: number
-    currency: string
-    num_items: number
-  }) => {
-    try {
-      if (typeof window !== 'undefined' && (window as any).fbq) {
-        const fbq = (window as any).fbq
-
-        console.log('📊 Facebook Pixel InitiateCheckout Event:', {
-          value: data.value,
-          currency: data.currency,
-          num_items: data.num_items,
-        })
-
-        fbq('track', 'InitiateCheckout', {
-          value: data.value,
-          currency: data.currency,
-          num_items: data.num_items,
-          content_type: 'product_group',
-        })
-
-        console.log('✅ InitiateCheckout event sent to Facebook Pixel')
-      }
-    } catch (error) {
-      console.error('❌ Error tracking InitiateCheckout:', error)
     }
   },
 }
