@@ -292,6 +292,28 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    
+    // 📊 Track Purchase event when user starts checkout (clicks Xác Nhận)
+    const selectedOrderItems = cartItems.filter(item => 
+      selectedItems.has(`${item.product_id}-${item.color}-${item.size}`)
+    )
+    
+    if (selectedOrderItems.length > 0) {
+      facebookPixelService.trackPurchase({
+        value: totalWithShipping,
+        currency: 'VND',
+        content_name: `Checkout Purchase`,
+        content_type: 'product_group',
+        num_items: selectedOrderItems.length,
+        contents: selectedOrderItems.map(item => ({
+          id: item.product_id.toString(),
+          quantity: item.quantity,
+          title: item.name,
+          price: item.price,
+        })),
+      })
+    }
+    
     setShowPaymentModal(true)
   }
 
@@ -392,27 +414,6 @@ export function CheckoutForm({ onClose, onShippingFeeChange, onLoadingChange }: 
 
       setCreatedOrderId(orderId)
       clearCart()
-      
-      // 📊 Track Purchase event to Facebook Pixel
-      const selectedOrderItems = cartItems.filter(item => 
-        selectedItems.has(`${item.product_id}-${item.color}-${item.size}`)
-      )
-      
-      facebookPixelService.trackPurchase({
-        value: totalWithShipping,
-        currency: 'VND',
-        content_name: `Order #${orderId}`,
-        content_type: 'product_group',
-        num_items: selectedOrderItems.length,
-        contents: selectedOrderItems.map(item => ({
-          id: item.product_id.toString(),
-          quantity: item.quantity,
-          title: item.name,
-          price: item.price,
-        })),
-        fbp: fbp,
-        fbc: fbc,
-      })
       
       let message = `✅ Đơn hàng được tạo!\nMã Đơn: ${orderId}\nTổng Tiền: ${(totalWithShipping || 0).toLocaleString()} VND`
       
